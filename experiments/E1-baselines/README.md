@@ -10,7 +10,7 @@ full). The gap that selective recompute (E2+) has to close is real.
 - **Engine:** dotLLM worktree `C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse`, branch `feature/chunk-kv-reuse`, commit
   `48909bba` (harness `benchmarks/ChunkKvLab`, library `src/DotLLM.ChunkReuse` from Task 4). **CPU backend**
   (`TransformerModel`, `SimpleKvCache` F32), `ThreadingConfig(0)` = auto threads, Release build. Windows 11, Strix Halo (Zen 5, 16C/32T).
-- **Model:** `bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF`, `Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf` (rev `ae44f08e…`), read in place
+- **Model:** `bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF`, `Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf` (rev `ae44f08e1392f39c0e474af10c3ff8355c8b6688`), read in place
   from the HF hub cache. 36 layers, 8 KV heads × 128, plain NeoX RoPE θ = 5e6. F32 KV = 294,912 B/token (144 MiB per 512-token chunk).
 - **Corpus:** every `*.cs` under `C:\Development\dotLLM\src` (bin/obj excluded), in ordinal path order, CRLF→LF. Each file is tokenised
   **once** (no BOS) and cut into 512-token chunks. The tail of each file is dropped. That gives 1086 documents and about 7.26k chunks.
@@ -107,15 +107,49 @@ missing cross-chunk attention, not to the shift. Tolerances for large-Δ tests s
   90 min, so 16K was run with one seed only and is indicative.
 - rope-precision: 5.8 min.
 
+## Provenance
+
+Common to all three runs (2026-10-31, UTC = local time):
+
+- **Hardware:** AMD Ryzen AI MAX+ 395 w/ Radeon 8060S (Strix Halo), 16C/32T, 127.1 GB RAM (host `STRIX`). CPU backend only.
+- **OS:** Windows 11 Pro 10.0.26200. **.NET SDK** 10.0.401 (`global.json` 10.0.100, rollForward latestMajor), Release build.
+- **dotLLM:** worktree `feature/chunk-kv-reuse` @ `48909bbaf742ea5a1f3867073a94d68519b26135`. Every log reports engine
+  `0.3.0-dev.3628.3+48909bba…`, and the worktree was clean.
+- **Model:** `bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF` @ `ae44f08e1392f39c0e474af10c3ff8355c8b6688` (HF snapshot directory),
+  `Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf`, 2,497,280,736 bytes.
+
+Corpus per run. These commits were **recovered after the fact**, because the original `run.ps1` did not log them:
+
+| Run | Tokenised at (UTC) | Corpus HEAD then (from `git reflog` of `C:\Development\dotLLM`) | Chunks logged | Re-chunked from `git archive <sha> src` |
+|---|---|---|---:|---|
+| `e1.log` (2K/4K/8K × 3) | 14:24:38 | `4a781829` (fast-forwarded at 11:20:29, next at 14:35:20) | 7257 | 7257 chunks, chunk-id sha256 `b02b1e6e…c90dc800` |
+| `rope-precision.log` | 14:52:14 | `fc8fa0b0` (fast-forwarded at 14:35:20) | — (not logged) | 7259 chunks, `e1e3350f…8e98f7cd` |
+| `e1-16k.log` (16K × 1) | 14:58:11 | `fc8fa0b0` | 7259 | 7259 chunks, `e1e3350f…8e98f7cd` |
+
+The chunk counts match the archived commits, and the logged chunk orders are consistent with permutations over 7257 and 7259 chunks.
+However, the checkout's uncommitted state at run time was not recorded (it is clean now) and the chunk ids were not hashed. **These
+results are therefore not exactly reproducible: the corpus commit is inferred, not proven.** One more data point: a rerun of seed 0 at
+2K on `fc8fa0b0` selects different chunks (indices shift with the count) and gives naive KL 0.034 instead of 0.148. A different corpus
+snapshot really does change individual rows.
+
+From now on, `run.ps1` writes a provenance block at the top of every log: UTC time, hardware, OS, `dotnet --version`, the dotLLM commit
+and dirty files, the corpus commit and dirty files, and the model repo, full revision, file and size. It warns if the corpus is dirty.
+The lab logs the corpus chunk-id SHA-256 (`ContextBuilder.ChunkIdHash`, dotLLM `2504aa79`), and `ChunkKvLab corpus-info` recomputes it
+for any directory.
+
 ## Caveats / decisions
 
 - **CPU only.** Vulkan was not run. A public path exists (`VulkanTransformerModel.LoadFromGguf` + `CreateKvCache` +
   `IHostStagedKvCache.UploadLayer`, F32), but CPU-encoded chunks with a Vulkan reference would mix backends. Shared-GPU runs are also
   coordinated through the user. This is the next step for honest TTFT numbers.
-- **Live corpus.** `C:\Development\dotLLM\src` is a live checkout. It advanced between the 2K–8K run and the 16K run (7257 → 7259
-  chunks; now at dev `fc8fa0b0`), so chunk ids in the two runs are not the same chunks. Each run tokenises once, so it is self-consistent.
-  For E2+, pin the corpus (e.g. `git archive <sha> src` into a scratch folder).
+- **Live corpus.** `C:\Development\dotLLM\src` is a live checkout. It advanced between the 2K–8K run and the 16K run, so chunk
+  indices in the two runs are not the same chunks. Each run tokenises once, so it is self-consistent. See Provenance for the recovered
+  commits and the reproducibility limit. **From E2 on, the corpus is pinned** (a fixed commit extracted with `git archive`, or a frozen
+  copy). The chunk-id SHA-256 the lab now logs must match.
 - **Fingerprint** includes the engine's MinVer informational version (commit SHA). The harness keeps chunks in memory only, so this is
   fine now. **Persisted-format decision for Phase S:** pin a format version instead.
-- KL and top-1 are measured on teacher-forced continuation positions. The first context-dependent prediction (the continuation's first
-  token, predicted from the last context token) is not in the KL set. It is covered by greedy exact match.
+- **The prediction of continuation[0] is not measured for any method.** Every method's evaluation starts by feeding continuation[0]
+  at position L. So teacher-forced row 0 and greedy[0] both predict continuation[1], and greedy[0] is the argmax of that same row 0.
+  The logits at position L-1 (the last context token, which would predict continuation[0]) are discarded by the full and prefix-reuse
+  prefill. Naive concatenation never computes them, because no context token is forwarded. All metrics therefore cover predictions
+  whose query token was computed fresh over the method's cache, not the last context token's own (possibly stale) output.
