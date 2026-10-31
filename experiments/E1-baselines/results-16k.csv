@@ -1,0 +1,4 @@
+Method,Seed,ContextTokens,Top1Agreement,MeanKl,ExactMatch,TtftMs,PrefillTokensComputed,CacheBytes
+full,0,16384,1,0,1,946465.9,16384,0
+prefix_reuse,0,16384,1,0,1,714044.6,8192,2415919104
+naive_concat,0,16384,0.734375,0.6680417508524056,0.125,1209.7,0,4831838208

@@ -1,0 +1,4 @@
+Method,Seed,ContextTokens,MatchedChunks,ContinuationIsSuccessor,BuildMs,FirstTokenMs,KlMax,KlMedian,KlFirst16,KlLast16,EncodeMsPerChunk,GreedyText
+full,0,16384,16,1,946260.0,205.8,0,0,0,0,," +\n                    $'on {requests[i].Adapter.GetType().Name}');\n        }\n\n       "
+prefix_reuse,0,16384,16,1,713856.7,187.9,0,0,0,0,," +\n                    $'on {requests[i].Adapter.GetType().Name}');\n        }\n\n       "
+naive_concat,0,16384,16,1,1039.3,170.4,5.46266,0.31074,0.845863,0.99748,3431.5," +\n                    'for Mamba-3.');\n        }\n\n        var output = new"
