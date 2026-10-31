@@ -70,7 +70,7 @@ The user wants: research first, leading into implementation; fast local code mod
 
 Reported by a research agent from abstracts and snippets on 2026-10-30:
 
-- Newer selectors report beating CacheBlend at equal recompute budget: ProphetKV (query relevance), CacheClip (auxiliary model; says CacheBlend's picks cluster at chunk starts), SpecCache (ACL 2026).
+- Newer selectors report beating CacheBlend at equal recompute budget: ProphetKV (query relevance), CacheClip (auxiliary model; argues early-layer selection misses deep-layer dependencies — the chunk-start clustering finding is from arXiv 2603.20218, corrected after verification), SpecCache (ACL 2026).
 - "Contiguity, Not Importance" (Sep 2026): after a document edit, recomputing a contiguous window around the edit beats scattered important tokens; relevant to incremental update on file changes.
 - Trained alternatives: KV Packet (NeurIPS 2026), SemPIC, COMB; plus a concatenation-aware fine-tune + selective recompute paper.
 - Evaluation caveats: an experimental study of chunk-level caching and a paper arguing PIC accuracy is overstated (Boxoffice dataset generator).
