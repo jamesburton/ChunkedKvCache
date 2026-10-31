@@ -1,0 +1,30 @@
+Loading model...
+Vulkan inference (AMD Radeon(TM) 8060S Graphics)
+device: vulkan (AMD Radeon(TM) 8060S Graphics)
+── dotllm | Qwen 36L/2560H | unknown | vulkan AMD Radeon(TM) 8060S Graphics… ───
+
+The capital of France is Paris. The capital of Germany is Berlin. The capital of Italy is Rome. The capital of Spain is Madrid. The capital of the United Kingdom is London. The capital of the United States is Washington, D.C. The capital of Canada is Ottawa. The capital of Australia is Canberra. The capital of Japan is Tokyo
+
+╭─────────────────────────────────────────────────────────────────────╮
+│                                                                     │
+│  Generation Complete  64.91 tok/s                                   │
+│                                                                     │
+│    Performance                                                      │
+│    Prefill              67.4 ms        5 tokens        74.19 tok/s  │
+│    Decode              970.5 ms       63 tokens        64.91 tok/s  │
+│    Sampling             40.2 ms       64 tokens                     │
+│    ──────────────────────────────────────────────────────           │
+│    Total             1,173.4 ms       69 tokens        58.80 tok/s  │
+│    Load             33,370.3 ms                                     │
+│                                                                     │
+│    Memory                                                           │
+│    Weights          2375.9 MiB   (memory-mapped)                    │
+│    Compute          3861.2 MiB                                      │
+│    KV Cache           19.4 MiB   (69 slots)                         │
+│    ──────────────────────────────────────────────────────           │
+│    Total            6256.5 MiB                                      │
+│                                                                     │
+│    length | 5 prompt, 64 generated                                  │
+│    sampler: greedy (argmax)                                         │
+│                                                                     │
+╰─────────────────────────────────────────────────────────────────────╯
