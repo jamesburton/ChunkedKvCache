@@ -100,6 +100,15 @@ User answers on release and Flint: "published" means a push to dotLLM `dev` (eve
 - **Model availability:** `LLMs.md` records Qwen3-4B-Instruct-2507 and Llama-3.1-8B as passing on dotLLM Vulkan; the first task is to re-verify that on current `dev`.
 - **Compute budget:** multi-seed comparisons run at 4K-32K context; 128K and 262K are single-configuration confirmation runs, scheduled so the shared box is not tied up for days.
 
+## 10c. Solution-level cache-building tooling (user request, 2026-10-31)
+
+The user wants tools that run over a .NET solution to pre-generate cache blocks per method and/or per file, so methods and files can be compared, plus tools to select which files go into a context. Roslyn can give deeper information for .NET solutions than syntax alone. Planned shape **[my call]**:
+
+- A `dotllm`-style CLI verb group (working name `chunkcache`): `build` (open a solution or project with Roslyn's MSBuildWorkspace, chunk by method / type / file, encode and store the chunks), `select` (choose files or symbols for a context: explicit paths and globs, a symbol and its dependency neighbourhood from the reference graph, or recently changed files from git), `compare` (run the same task over different chunkings / selectors / budgets and emit a quality-versus-prefill table), `status` (which chunks are stale after edits), and `evict`.
+- Roslyn supplies: semantic symbol resolution across projects (definitions, references, call and inheritance edges, using/import edges), symbol-level boundaries including partial classes and generated-code detection, and a project dependency graph. The chunk key hashes the chunk's token ids plus the model fingerprint, so an edit invalidates only the chunks it touches.
+- Order of work: Tasks 8 and 9 of the phase R/P plan already build the Roslyn chunker and reference graph as library code (the foundation); the CLI, the persistent store and the selection tools belong to the Phase S plan, written after the E4 gate. The experiment harness (`ChunkKvLab`) gets a `--select` option early if it helps Task 8 pick corpora.
+- Non-goals for now: languages other than C# (tree-sitter later), IDE integration.
+
 ## 10. Left to the builder
 
 Chunking granularity and tree-sitter integration from C#; the on-disk format and eviction policy; exact experiment ordering inside each phase after Phase R; selector implementations; which public benchmark to adopt; naming and the public API shape (agreed with the dotLLM session).
