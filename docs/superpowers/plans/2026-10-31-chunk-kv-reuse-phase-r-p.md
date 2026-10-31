@@ -128,7 +128,7 @@
 ### Task 7: Baseline selectors and the baseline gate (G1)
 
 **Files:**
-- Create (dotLLM): `src/DotLLM.ChunkReuse/Selectors/` containing `IRecomputeSelector.cs`, `FirstKSelector.cs`, `ChunkStartsSelector.cs`, `DeviationTopKSelector.cs`, `RandomSelector.cs`, `QueryRelevanceSelector.cs`
+- Create (dotLLM): `src/DotLLM.ChunkReuse/Selectors/` containing `IRecomputeSelector.cs`, `FirstKSelector.cs`, `ChunkStartsSelector.cs`, `DeviationTopKSelector.cs`, `RandomSelector.cs`, `QueryRelevanceSelector.cs` (ProphetKV-style), `CombinedSelector.cs` (arXiv 2603.20218), and a `ContiguousRuns` decorator that expands any selector's picks into contiguous runs
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/SelectorTests.cs`
 - Create (here): `experiments/E2-baseline-selectors/`
 
@@ -143,6 +143,8 @@
 - [ ] **Step 6:** Commit; **GATE G1** — report to the user with the quality-versus-budget curves and whether the baselines behave as published.
 
 ### Task 8: Code corpus, chunkers and task generator
+
+Note (Step 0): report normalised scores and filter tasks the reference run itself fails or gets right without the required chunk, as in the Boxoffice evaluation paper (arXiv 2609.31415).
 
 **Files:**
 - Create (dotLLM): `src/DotLLM.ChunkReuse/Corpus/FixedSizeChunker.cs`, `SymbolChunker.cs` (Roslyn), `CrossFileTaskGenerator.cs`
@@ -175,6 +177,8 @@
 - [ ] **Step 5:** Commit.
 
 ### Task 10: Per-layer deviation profile (E3)
+
+Note (Step 0): arXiv 2603.20218 already profiles per-layer deviation; this task extends it by token role from the reference graph and must not claim the profile itself as new.
 
 **Files:**
 - Create (dotLLM): `benchmarks/ChunkKvLab/E3Command.cs`
