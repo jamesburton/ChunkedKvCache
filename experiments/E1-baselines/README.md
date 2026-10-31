@@ -80,7 +80,7 @@ Chunk encode (amortised, not in TTFT): about 3.4–3.9 s per 512-token chunk on 
   still prefills 25–50 % of the tokens (depending on how far the shuffle happens to match). On CPU this costs 33–77 % of full TTFT, because the suffix tokens are also the ones with the
   longest attention span.
 - **TTFT on CPU** (indicative): full prefill grows faster than linearly (2K 20 s → 4K 50 s → 8K 196 s → 16K 946 s), so attention
-  dominates at 8K+. Naive assembly is 0.1–1.0 s (a host F32 copy plus RoPE rotation of 144 MiB per chunk).
+  dominates at 8K+. Naive assembly is 0.1–1.0 s (a host F32 copy plus RoPE rotation of 144 MiB per chunk). Fairness note: naive TTFT includes copying and rotating all L reused tokens, but prefix reuse pays nothing to load its m reused tokens, because the cache is truncated in place (as dotLLM's in-memory `PrefixCache` does). A persisted prefix cache would pay a comparable copy. This does not change any conclusion (seconds vs minutes).
 
 ## RoPE-shift precision at large offsets (Task 4 open item)
 
