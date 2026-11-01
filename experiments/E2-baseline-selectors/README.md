@@ -182,10 +182,16 @@ EPIC native (k = 16, 112 tokens = 2.7 %): 0.0563 [0.0413, 0.0712].
 All-row top-1 at 20 % (2K/4K): query 0.948 / 0.958, deviation 0.938 / 0.922, first_k 0.938 / 0.901, random 0.875 / 0.917, naive
 0.875 / 0.906.
 
-**All-row vs post-query KL:** the two metrics rank the selectors the same way at 4K at every budget, and at 2K at 20 %. They differ
-at 2K at lower budgets:
-- At 2K 5 %, `query` is mid-pack on all-row KL (0.0645) but the **worst** structured selector post-query (0.0663, against
-  0.054–0.060).
+**All-row vs post-query KL:** the two metrics agree on the ends of the ranking but not on the middle. Ranking the plain selectors
+by mean KL:
+- `query` is first and `random` last on **both** metrics at 4K at every budget and at 2K from 10 % up.
+- `random` is last on both metrics in every cell.
+- The full order is identical on both metrics only at 4K 10 %. Elsewhere the middle reorders (first_k, chunk_starts, deviation,
+  combined, deviation_oracle), and those gaps are within seed noise. For example, at 4K 20 % all-row gives query > oracle >
+  chunk_starts > combined = deviation > first_k > random, while post-query gives query > combined = deviation > chunk_starts > oracle >
+  first_k > random.
+- At 2K 5 %, `query` is second on all-row KL (0.0645, after combined) but the **worst** structured selector post-query (0.0663,
+  against 0.054–0.060).
 - At 2K, `deviation` keeps improving post-query from 5 % to 20 % (0.0578 → 0.0505 → 0.0438 → 0.0369). Its all-row "plateau" at 2K
   (0.065 → 0.052) is partly an artefact of the query rows.
 
