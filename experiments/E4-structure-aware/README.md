@@ -8,30 +8,40 @@
   +0.02 [−0.06, +0.08], +0.01 [−0.06, +0.07], −0.01 [−0.11, +0.07]; the intervals still admit a loss of up to 0.11) and is
   **worse at 5 %** (−0.11 [−0.22, −0.02]). With fixed 512-token chunks it
   is **worse at every budget** (−0.13 to −0.23, all CIs below 0).
-- **Hybrid(QR)** (graph picks, then query relevance) is the best runnable arm from 10 % up, but not significantly: +0.04 to
-  +0.05 over query relevance pooled (CIs include 0; exact-match wins/losses 4/0, 5/1, 3/1) and −0.10 [−0.17, −0.03] at 5 %.
+- **Hybrid(QR)** (graph picks, then query relevance) is the best runnable arm from 10 % up, but not significantly. Both
+  chunkers pooled (n = 75): 0.78 / 0.87 / 0.90 of the gap at 10 / 15 / 20 % against query relevance's 0.74 / 0.83 / 0.86
+  (+0.04, CIs include 0; exact-match wins/losses 4/0, 5/1, 3/1) and −0.10 [−0.17, −0.03] at 5 %. Symbol only (n = 43): 0.75 /
+  0.84 / 0.89 against 0.70 / 0.80 / 0.83 (+0.05, n.s.). Fixed only: within about ±0.01 of query relevance from 10 % up (at 20 %
+  −0.008 [−0.011, −0.000]). It is not uniformly ≥ QR: per seed, fixed seed 1 at 20 % is 0.86 vs 0.90 and symbol seed 1 at
+  10 % is 0.64 vs 0.70.
 - **What the graph adds is confined to contexts where the query prefix references a symbol declared in a stale context
-  chunk** (45 % of instances: 60–100 % on AFClaude, 0–25 % on codesharp). There Hybrid(QR) beats query relevance at 15 %
-  (+0.12 [+0.01, +0.16], EM 4/0), and on AFClaude/symbol graph alone beats it at 15–20 % (+0.12 [+0.02, +0.16],
-  +0.14 [+0.04, +0.17]) — but on AFClaude query relevance is the weakest structured selector and plain ChunkStarts is as good
-  as the graph. Without such targets the graph's lower tiers (in-context edges, imports) displace chunk starts and cost
-  −0.06 [−0.12, −0.00] at 5 %. **Share of the budget the graph itself chose** (the rest is chunk-start fill): 38 / 23 / 16 /
-  12 % at 5 / 10 / 15 / 20 % overall; 66 / 42 / 29 / 22 % where the query has targets; 15 / 8 / 5 / 4 % (in-context edges and
-  imports only) where it has none. So at ≥ 10 % most of the graph arm is fill, which is why Graph tracks ChunkStarts.
+  chunk** (45 % of instances: 60–100 % on AFClaude, 0–25 % on codesharp). In that subset (n = 34, 8 clusters, mostly AFClaude,
+  so confounded with the corpus) Hybrid(QR) − QR is −0.15 [−0.41, −0.02] at 5 % (a significant loss) and +0.12 at 10 / 15 /
+  20 %, with only the 15 % CI excluding 0 (+0.12 [+0.01, +0.16], EM 4/0). On AFClaude/symbol graph alone beats QR at 15–20 %
+  (+0.12 [+0.02, +0.16], +0.14 [+0.04, +0.17]) and beats ChunkStarts, that cell's best baseline, at 15 % (+0.09 [+0.03,
+  +0.11], 4 clusters). Symbol pooled, Graph − ChunkStarts at 15 % is +0.03 [+0.00, +0.07]. Without query targets the graph's
+  lower tiers (in-context edges, imports) displace chunk starts and cost −0.06 [−0.12, −0.00] at 5 %. About 40 pairwise comparisons are reported with no multiplicity adjustment, so an isolated CI that just clears 0 is expected by chance.
+  **Share of the budget the graph itself chose** (the rest is chunk-start fill): 38 / 23 / 16 / 12 % at 5 / 10 / 15 / 20 %
+  overall; 66 / 42 / 29 / 22 % where the query has targets; 15 / 8 / 5 / 4 % (in-context edges and imports only) where it has
+  none. These shares include the target-chunk-start tier (the first 16 tokens of each chunk holding a target), which is itself
+  chunk-start-like, so they overstate the new signal. At ≥ 10 % most of the graph arm is fill.
 - **The idea's ceiling is real but small, and mostly at 5 %:** the ORACLE that recomputes the masked callee's 16-token
-  definition window, then the same chunk-start fill, recovers 0.80 of the gap at 5 % against 0.65 for ChunkStarts
-  (+0.15 [+0.03, +0.30]) and 0.73 for query relevance; at 20 % it is only +0.04 ahead. Re-encoding the whole required chunk
+  definition window, then the same chunk-start fill, recovers 0.80 of the gap at 5 % against 0.65 for ChunkStarts with symbol
+  chunks (+0.15 [+0.03, +0.30]; query relevance 0.70); with fixed chunks 0.78 vs 0.63 (+0.15 [−0.01, +0.60], not significant).
+  At 20 % it is only +0.04 ahead. Re-encoding the whole required chunk
   (ORACLE-chunk, mean 320 tokens ≈ 16 %) recovers only 0.56, the definition window alone (≈ 14 tokens) 0.19. Without the 7
   instances whose required chunk is chunk 0 (exact under naive, so both oracles recompute nothing): 0.61 [0.45, 0.77] and
   0.21 [0.16, 0.27], and definition window + fill 0.82 vs ChunkStarts 0.65 at 5 % (set `kept-valid-reqstale`). Staleness
   elsewhere (every chunk start) matters more than the one chunk the answer needs.
-- **The 95 % / 20 % bar** (exact match ≥ 0.95 × full at ≤ 20 % recompute) **holds for fixed-512 chunks** (query relevance and
-  Hybrid(QR) EM 1.00 at 20 %, 0.94 / 0.97 at 15 %; n = 32) and **not for symbol chunks** (best runnable 0.81 at 20 %, ORACLE
-  0.91). Pooled over chunkers: not met (best runnable 0.88).
+- **The 95 % / 20 % bar** (exact match ≥ 0.95 × full at ≤ 20 % recompute) **holds as a point estimate for fixed-512 chunks**
+  (query relevance and Hybrid(QR) EM 1.00 at 20 %, 0.94 / 0.97 at 15 %) — on only 32 instances / 10 clusters, filtered to
+  tasks the full prefill solves (full EM = 1), where naive concatenation already scores 0.53. It is **not met for symbol
+  chunks** (best runnable 0.81 at 20 %, ORACLE 0.91). Pooled over chunkers: not met (best runnable 0.88).
 - **Selection overhead is negligible for the graph** (median 0.1 ms selection + ≈ 1 ms graph lookup per request with a
   prebuilt graph; unit test 0.31 ms per 10K tokens), against 1.4 s for the layer-1 deviation probe and 16.5 s for this lab's
-  query-attention probe (≤ 256 query rows, scalar managed code). On this run-per-`Forward` recompute path its picks are also
-  contiguous: 13 forwards / 6.1 s at 20 % against 188 / 16.1 s for query relevance at the same token budget.
+  query-attention probe (≤ 256 query rows, scalar managed code). On this run-per-`Forward` recompute path the graph arm needs
+  13 forwards / 6.1 s at 20 % against 188 / 16.1 s for query relevance at the same token budget; that contiguity comes mostly
+  from the ChunkStarts fill (ChunkStarts alone: 8.8 forwards / 5.8 s).
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="figures/gap-dark.png"><img alt="Share of the naive-to-full masked-call NLL gap recovered versus recompute budget, symbol and fixed chunkers, with 95% bands for query relevance, graph and hybrid" src="figures/gap-light.png"></picture>
 
@@ -49,14 +59,16 @@ recovered, arm − baseline, with 95 % CIs in `pairs.csv` / `summary.md`.
 
 | cell | n / clusters | Graph vs QR | Hybrid(QR) vs QR | verdict |
 |---|---|---|---|---|
-| AFClaude, symbol | 19 / 4 | worse at 5 % (−0.18); **beats QR at 15/20 %** (+0.12, +0.14, CIs > 0); ≈ ChunkStarts | worse at 5 %; +0.14 / +0.14 / +0.16 at 10–20 % (CI > 0 only at 15 %) | **partly met**: beats QR, only matches ChunkStarts |
+| AFClaude, symbol | 19 / 4 | worse at 5 % (−0.18); **beats QR at 15/20 %** (+0.12, +0.14, CIs > 0); beats ChunkStarts (the cell's best baseline) at 15 % (+0.09 [+0.03, +0.11]), level at 20 % | worse at 5 %; +0.14 / +0.14 / +0.16 at 10–20 % (CI > 0 only at 15 %) | **met at 15 %** (4 clusters; see the multiplicity note), not at 5 % |
 | DocAgent, symbol | 12 / 4 | worse at every budget (−0.04 to −0.25) | = QR (±0.01) from 10 %, worse at 5 % | **not met** (Hybrid matches only through QR) |
 | codesharp, symbol | 12 / 6 | ≈ QR at 5–15 %, worse at 20 % (−0.09) | identical to QR (no graph picks in most contexts) | **not met** |
 | AFClaude, fixed | 15 / 3 | worse (−0.15 to −0.48) | ≈ QR from 10 % | **not met** |
 | DocAgent, fixed | 9 / 3 | worse (points −0.05 to −0.11; CIs degenerate with 3 clusters) | ≈ QR | **not met** |
 | codesharp, fixed | 8 / 4 | worse (−0.24 to −0.34) | = QR | **not met** |
 | pooled, symbol | 43 / 14 | not distinguishable at 10–20 % (CIs ∋ 0), worse at 5 % | +0.05 at 10–20 % (n.s.), worse at 5 % | **partly met**: no detectable difference, no beat |
-| pooled, fixed | 32 / 10 | worse at every budget | matches at 10–20 % | **not met** for the graph |
+| pooled, fixed | 32 / 10 | worse at every budget | within ±0.01 at 10–20 % (−0.008 [−0.011, −0.000] at 20 %) | **not met** for the graph |
+
+About 40 pairwise comparisons are reported with no multiplicity adjustment, so an isolated CI that just clears 0 is expected by chance.
 
 Against the **CacheBlend-like** layer-1 deviation selector (INCEPTION's literal wording; run on symbol/seed 0 only, n = 23,
 set `kept-valid-s0|symbol|pooled` in `summary.md`), Graph is level with it (−0.04 [−0.25, +0.12] at 5 %, +0.01 [−0.04, +0.08] at 20 %) at 0.1 ms instead of a 1.4 s probe, and Hybrid(QR)
@@ -77,7 +89,8 @@ but query relevance itself only moves 0.83 → 0.86 between those budgets.
 - **Seeds** (distractor sample and order around the same call sites; table "Per chunker and seed" in `summary.md`). Gap at
   20 % for QR / Graph / Hybrid(QR): symbol 0.84 /
   0.84 / 0.90 (seed 0), 0.79 / 0.83 / 0.86 (1), 0.92 / 0.76 / 0.93 (2); fixed 0.99 / 0.82 / 0.99, 0.90 / 0.79 / 0.86, 1.01 /
-  0.90 / 1.00. Hybrid(QR) ≥ QR > Graph holds in every fixed seed; with symbol chunks the QR-vs-Graph order changes with the seed.
+  0.90 / 1.00. QR > Graph in every fixed seed; Hybrid(QR) is within about ±0.06 of QR per seed at 20 % (below it in fixed seed 1:
+  0.86 vs 0.90); with symbol chunks the QR-vs-Graph order changes with the seed.
 - **Sensitivity sets.** `kept-all` (no per-context re-validation, 88 instances) gives the same picture within 0.01–0.02. The
   unfiltered sample (2 contexts per corpus with every task: 15 instances, reference EM 0.20) is too weak to rank arms: at
   10 / 20 % ChunkStarts 0.54 / 0.90, QR 0.56 / 0.80, Graph 0.53 / 0.80, Hybrid(QR) 0.63 / 0.84 of the NLL gap, every arm EM 0.20.
@@ -175,8 +188,11 @@ Job queue `jobs.csv`, driver `run.ps1` (2 jobs in parallel × 16 threads; a para
 one 32-thread job). dotLLM `b03b3642` (0 dirty files in all 21 job logs), Release, CPU `TransformerModel`, F32 `SimpleKvCache`;
 `bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF` @ `ae44f08e1392f39c0e474af10c3ff8355c8b6688` (Q4_K_M, 2,497,280,736 bytes); AMD
 Ryzen AI MAX+ 395, Windows 11 Pro 10.0.26200, .NET SDK 10.0.401; corpora = the Task 8 snapshots (`../corpus.md`, chunk-id hash
-enforced). **Total 233.8 min wall.** The `utc` line of each log's provenance block was written when the job was queued, not
-when it started (`run.ps1` now writes it at start); job start times are in `logs/queue.log`.
+enforced). **Total 233.8 min wall.** Provenance caveats: the `utc` line of each log's provenance block was written while the
+job waited in the queue (in effect the previous job's launch time), not when it started; real start times are in
+`logs/queue.log`. The committed `run.ps1` is the fixed version (it writes the block at start), not the exact script that ran.
+The codesharp source repo's HEAD moved during the run (logged), but the corpus is the pinned `git archive` snapshot with its
+chunk-id hash enforced, so results are unaffected.
 
 **Subset (CPU time).** One context costs 4–9 min with every arm (full prefill 16–27 s, one evaluation ≈ 3 s per task and arm,
 a scattered recompute up to 20 s with one `Forward` per contiguous run, the query probe ≈ 16 s per task), so the full grid
