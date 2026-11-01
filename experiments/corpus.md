@@ -86,17 +86,20 @@ an exact match). Raw per-task scores are in `corpus/<name>.validation.csv`, so o
 
 | corpus | tasks generated | validated | ref. EM with chunk | ref. EM without | mean mask NLL with / without (nats) | **kept** | reference fails | solved without | below margin |
 |---|---:|---:|---:|---:|---|---:|---:|---:|---:|
-| AFClaude (small) | 29 (all usable sites) | 29 | 69 % | 14 % | 4.85 / 10.71 | **16 (55 %)** | 9 | 4 | 0 |
+| AFClaude (small) | 29 of 30 cross-file sites (13 definition chunks) | 29 | 69 % | 14 % | 4.85 / 10.71 | **16 (55 %)** | 9 | 4 | 0 |
 | DocAgent (medium) | 100 | 100 | 41 % | 13 % | 6.89 / 13.01 | **27 (27 %)** | 59 | 13 | 1 |
 | codesharp (large) | 100 | 87 (53 of 60 plans; time cap) | 38 % | 15 % | 7.57 / 15.10 | **21 (24 %)** | 54 | 12 | 0 |
 
 Kept tasks cover 9 / 17 / 21 distinct definition chunks in 10 / 17 / 21 contexts. Median masked-call NLL gain of kept tasks:
 6.9 / 4.3 / 7.4 nats. The reference solves 38–69 % of tasks with the chunk, so the task set is neither trivial nor impossible
 and no difficulty retune was needed. The required chunk matters: removing it cuts exact match to 13–15 % and doubles the
-masked-call NLL. 13–15 % of tasks are answerable without the chunk (usually another distractor or the prefix shows the same
-call pattern); they are dropped.
+masked-call NLL. 13–15 % of tasks are answerable without the chunk; they are dropped. Of those 29 solved-without tasks, the
+callee name already appears in the prefix in 17, in a distractor chunk in 0, and in neither in 12 (a guessable name).
+Mean continuation NLL per token (divided by each task's actual continuation length; 1 / 1 / 8 tasks are shorter than 32
+because they reach the end of the file) with / without the chunk: 1.331 / 1.560, 1.027 / 1.222, 1.457 / 1.749 nats.
 
-**Cost:** one plan (2K context, 1–4 tasks) takes 29–47 s on CPU (mean 35.5 / 45.2 / 42.9 s); the first measured plan (2 tasks)
+**Cost:** one plan (2K context, 1–4 tasks) takes 28.8–48.9 s (AFClaude), 30.7–64.6 s (DocAgent) and 31.2–76.8 s (codesharp) on
+CPU (mean 35.5 / 45.2 / 42.9 s); the first measured plan (2 tasks)
 took 44 s. Total model time 84.1 min (9.5 + 36.3 + 38.3). The codesharp run was capped at 38 min and stopped after 53 of 60
 plans (87 of 100 tasks validated). The 13 unvalidated tasks are in `codesharp.plans.jsonl` (plans 53–59).
 
@@ -104,6 +107,11 @@ plans (87 of 100 tasks validated). The 13 unvalidated tasks are in `codesharp.pl
 AFClaude yields only 29 usable call sites in total (2 calling files), so its kept set is small (16); DocAgent's 100 tasks come
 from 14 calling files. Plans can be regenerated at larger context sizes with the same seed; task ids (`path:line:col`) are
 seed- and size-independent, so the kept set can be carried over (validity was established at 2K).
+- Exact match (and the masked NLL) covers only the masked call tokens (`MaskTokenCount` from `MaskTokenOffset`), not the rest
+  of the 32-token continuation.
+- For zero-argument methods the masked text (e.g. `.Build()`) can occur verbatim inside the required chunk itself (its
+  declaration or a recursive/sibling call); this holds for 6 kept tasks. That is a legitimate copy from the required chunk,
+  not a leak from a distractor, but E4 should know such tasks are copy-style.
 
 Reproduce one corpus: extract `git archive <commit> src` of the repo into a fresh directory `D`, then from `experiments/corpus`:
 `./run.ps1 -Name codesharp -Corpus D -SourceRepo C:\Development\codesharp -CorpusCommit 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 -ExpectHash bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb -MaxMinutes 38`
