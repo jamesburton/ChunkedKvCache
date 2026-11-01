@@ -1,15 +1,15 @@
 # provenance
-utc: 2026-11-01 13:25:04
-dotLLM: 1f418f2a000b789a20ccd489845c7e2591061006 dirty=0
+utc: 2026-11-01 13:49:50
+dotLLM: 7b5328e649552e194cb7a08eb97ba12f649595d7 dirty=0
 model (tokenizer only): /c/Users/james/.cache/huggingface/hub/models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF/snapshots/ae44f08e1392f39c0e474af10c3ff8355c8b6688/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
 command: graph-info --corpus t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 --chunker symbol --chunk 512 --repeat 3 --plans 100 --seed 0 --expect-hash 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
 
-corpus C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 2.2 s
+corpus C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 2.3 s
 chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
-build 1/3: 2.62 s (compile 0.11, bind 2.47, map 0.03); per 100K tokens 3.442 s (compile 0.147, bind 3.254, map 0.037)
-build 2/3: 1.28 s (compile 0.06, bind 1.20, map 0.02); per 100K tokens 1.686 s (compile 0.078, bind 1.584, map 0.023)
-build 3/3: 1.23 s (compile 0.01, bind 1.19, map 0.02); per 100K tokens 1.612 s (compile 0.015, bind 1.570, map 0.027)
-build time per 100K tokens: min 1.612 s, median 1.686 s over 3 runs
+build 1/3: 2.74 s (compile 0.12, bind 2.58, map 0.04); per 100K tokens 3.607 s (compile 0.154, bind 3.398, map 0.051)
+build 2/3: 1.35 s (compile 0.07, bind 1.26, map 0.02); per 100K tokens 1.778 s (compile 0.086, bind 1.662, map 0.031)
+build 3/3: 1.51 s (compile 0.01, bind 1.46, map 0.04); per 100K tokens 1.990 s (compile 0.017, bind 1.926, map 0.048)
+build time per 100K tokens: min 1.778 s, median 1.990 s over 3 runs
 edges 3772 (49.62 per 1K tokens); cross-chunk 3533 (93.7 %), cross-file 2695 (71.4 %); mapping-mismatch chunks 0
   Definition         0 (0.0 % of edges, 0.00 per 1K tokens), cross-chunk n/a
   Use             3211 (85.1 % of edges, 42.24 per 1K tokens), cross-chunk 92.7 %
@@ -17,8 +17,12 @@ edges 3772 (49.62 per 1K tokens); cross-chunk 3533 (93.7 %), cross-file 2695 (71
   Call             485 (12.9 % of edges, 6.38 per 1K tokens), cross-chunk 98.8 %
 distinct use-end tokens 3660 (4.8 % of tokens), definition-end tokens 908 (1.2 %)
 chunks sharing their token content: 21 in 9 groups; largest: 3x "\n    public override ImmutableArray<DiagnosticDescriptor> Su..."; 3x "\n    private static bool IsPubliclyVisible(ISymbol symbol)\n ..."; 3x "\n    private static bool HasExcludeAttribute(ISymbol symbol)..."
-plans: 48 (task budget 100, seed 0) in 1.5 s
+plans: 48 (task budget 100, seed 0) in 1.9 s
 contexts: 48, mean 2046 tokens / 16.9 chunks; unidentified chunks 61/810; cross-chunk edges 183 (1.86 per 1K context tokens, explicit-chunk overload 183); tokens on an edge end 0.3 %
   by kind: Definition 0 (0.00/1K), Use 159 (1.62/1K), Import 5 (0.05/1K), Call 19 (0.19/1K)
-calling-file -> context edges (not in EdgesForContext: the query is not a chunk): 14.0 per context, 24.3 % into the required chunk(s)
-EdgesForContext: 0.093 ms per context, 0.454 ms per 10K context tokens
+calling-file -> context edges (not in EdgesForContext: the query is not a chunk), 100 tasks:
+  query prefix                   per task 0.71 (into required 0.22), per context 1.48 (into required 0.46)
+  masked call                    per task 1.00 (into required 1.00), per context 2.08 (into required 2.08)
+  elsewhere in the calling file  per task 8.52 (into required 1.68), per context 17.75 (into required 3.50)
+  query-prefix edges by kind: Definition 0, Use 54, Import 0, Call 17
+EdgesForContext: 0.096 ms per context, 0.470 ms per 10K context tokens

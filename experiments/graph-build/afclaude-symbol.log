@@ -1,15 +1,15 @@
 # provenance
-utc: 2026-11-01 13:24:57
-dotLLM: 1f418f2a000b789a20ccd489845c7e2591061006 dirty=0
+utc: 2026-11-01 13:49:42
+dotLLM: 7b5328e649552e194cb7a08eb97ba12f649595d7 dirty=0
 model (tokenizer only): /c/Users/james/.cache/huggingface/hub/models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF/snapshots/ae44f08e1392f39c0e474af10c3ff8355c8b6688/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
 command: graph-info --corpus t8-corpus-AFClaude-b3f29c30-20261101111141 --chunker symbol --chunk 512 --repeat 3 --plans 100 --seed 0 --expect-hash 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
 
 corpus C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), symbol-512: 74 chunks, 12744 tokens (chunk tokens median 107, max 510); Decode(Encode(file)) == file for 9/9; 0.5 s
 chunk-id sha256 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
-build 1/3: 1.23 s (compile 0.05, bind 1.17, map 0.01); per 100K tokens 9.644 s (compile 0.365, bind 9.167, map 0.090)
-build 2/3: 0.21 s (compile 0.01, bind 0.20, map 0.00); per 100K tokens 1.682 s (compile 0.052, bind 1.597, map 0.033)
-build 3/3: 0.23 s (compile 0.01, bind 0.21, map 0.00); per 100K tokens 1.798 s (compile 0.113, bind 1.652, map 0.033)
-build time per 100K tokens: min 1.682 s, median 1.798 s over 3 runs
+build 1/3: 1.25 s (compile 0.05, bind 1.18, map 0.02); per 100K tokens 9.806 s (compile 0.376, bind 9.262, map 0.142)
+build 2/3: 0.20 s (compile 0.01, bind 0.18, map 0.00); per 100K tokens 1.534 s (compile 0.055, bind 1.444, map 0.035)
+build 3/3: 0.23 s (compile 0.01, bind 0.21, map 0.00); per 100K tokens 1.824 s (compile 0.109, bind 1.679, map 0.036)
+build time per 100K tokens: min 1.534 s, median 1.824 s over 3 runs
 edges 514 (40.33 per 1K tokens); cross-chunk 365 (71.0 %), cross-file 159 (30.9 %); mapping-mismatch chunks 0
   Definition         0 (0.0 % of edges, 0.00 per 1K tokens), cross-chunk n/a
   Use              426 (82.9 % of edges, 33.43 per 1K tokens), cross-chunk 66.9 %
@@ -17,8 +17,12 @@ edges 514 (40.33 per 1K tokens); cross-chunk 365 (71.0 %), cross-file 159 (30.9 
   Call              87 (16.9 % of edges, 6.83 per 1K tokens), cross-chunk 90.8 %
 distinct use-end tokens 499 (3.9 % of tokens), definition-end tokens 263 (2.1 %)
 chunks sharing their token content: 0 in 0 groups; largest: 
-plans: 16 (task budget 100, seed 0) in 0.8 s
+plans: 16 (task budget 100, seed 0) in 1.0 s
 contexts: 16, mean 2044 tokens / 17.4 chunks; unidentified chunks 0/279; cross-chunk edges 226 (6.91 per 1K context tokens, explicit-chunk overload 226); tokens on an edge end 1.0 %
   by kind: Definition 0 (0.00/1K), Use 190 (5.81/1K), Import 0 (0.00/1K), Call 36 (1.10/1K)
-calling-file -> context edges (not in EdgesForContext: the query is not a chunk): 36.5 per context, 10.8 % into the required chunk(s)
-EdgesForContext: 0.246 ms per context, 1.205 ms per 10K context tokens
+calling-file -> context edges (not in EdgesForContext: the query is not a chunk), 29 tasks:
+  query prefix                   per task 2.66 (into required 0.48), per context 4.81 (into required 0.88)
+  masked call                    per task 1.00 (into required 1.00), per context 1.81 (into required 1.81)
+  elsewhere in the calling file  per task 32.31 (into required 4.10), per context 58.56 (into required 7.44)
+  query-prefix edges by kind: Definition 0, Use 58, Import 0, Call 19
+EdgesForContext: 0.243 ms per context, 1.188 ms per 10K context tokens
