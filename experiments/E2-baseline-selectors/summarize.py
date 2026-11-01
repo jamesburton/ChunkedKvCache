@@ -39,23 +39,26 @@ for size in sizes:
               f"{stat(rs, 'Top1Agreement', '{:.3f}')} | {stat(rs, 'Top1PostQuery', '{:.3f}')} | {stat(rs, 'ExactMatch', '{:.2f}')} | "
               f"{stat(rs, 'OracleJaccard', '{:.2f}')} | {calls:.0f} | {rec:.1f} |")
 
-# Compact KL matrix: selector x budget, per size (mean KL; fraction of naive KL recovered)
-print("\n### Mean KL by selector and budget (share of the naive-concat KL removed, mean over seeds of per-seed ratios)\n")
-for size in sizes:
-    naive = {r["Seed"]: float(r["MeanKl"]) for r in rows if int(r["ContextTokens"]) == size and r["Method"] == "naive_concat"}
-    budgets = sorted({k[2] for k in groups if k[0] == size and k[2] in (5.0, 10.0, 15.0, 20.0)})
-    names = sorted({k[1] for k in groups if k[0] == size and k[1] not in order})
-    print(f"\n{size} tokens (naive KL mean {sum(naive.values()) / len(naive):.4f})\n")
-    print("| selector | " + " | ".join(f"{b:.0f}%" for b in budgets) + " |")
-    print("|---|" + "---:|" * len(budgets))
-    for n in names:
-        cells = []
-        for b in budgets:
-            rs = groups.get((size, n, b), [])
-            if not rs:
-                cells.append("")
-                continue
-            kl = sum(float(r["MeanKl"]) for r in rs) / len(rs)
-            rec = sum(1 - float(r["MeanKl"]) / naive[r["Seed"]] for r in rs) / len(rs)
-            cells.append(f"{kl:.4f} ({rec:+.0%})")
-        print(f"| {n} | " + " | ".join(cells) + " |")
+# Compact matrices: selector x budget, per size (mean; share of the naive-concat value removed, mean of per-seed ratios).
+# First KL over all 64 rows, then KL over the post-query rows 16-63 only (rows 0-15 are the query the query-relevance
+# selector was built from, an in-sample advantage for it).
+for col, title in (("MeanKl", "Mean KL, all 64 rows"), ("KlPostQuery", "Mean KL, post-query rows 16-63")):
+    print(f"\n### {title}, by selector and budget (share of the naive-concat value removed, mean over seeds of per-seed ratios)\n")
+    for size in sizes:
+        naive = {r["Seed"]: float(r[col]) for r in rows if int(r["ContextTokens"]) == size and r["Method"] == "naive_concat"}
+        budgets = sorted({k[2] for k in groups if k[0] == size and k[2] in (5.0, 10.0, 15.0, 20.0)})
+        names = sorted({k[1] for k in groups if k[0] == size and k[1] not in order})
+        print(f"\n{size} tokens (naive mean {sum(naive.values()) / len(naive):.4f})\n")
+        print("| selector | " + " | ".join(f"{b:.0f}%" for b in budgets) + " |")
+        print("|---|" + "---:|" * len(budgets))
+        for n in names:
+            cells = []
+            for b in budgets:
+                rs = groups.get((size, n, b), [])
+                if not rs:
+                    cells.append("")
+                    continue
+                kl = sum(float(r[col]) for r in rs) / len(rs)
+                rec = sum(1 - float(r[col]) / naive[r["Seed"]] for r in rs) / len(rs)
+                cells.append(f"{kl:.4f} ({rec:+.0%})")
+            print(f"| {n} | " + " | ".join(cells) + " |")

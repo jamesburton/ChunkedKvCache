@@ -10,12 +10,22 @@
 | query | 10.0 | 819 | 3 | 0.0347 [0.0263, 0.0513] | 0.0349 [0.0199, 0.0564] | 0.927 [0.891, 0.953] | 0.924 [0.875, 0.958] | 0.71 [0.25, 1.00] | 0.09 [0.07, 0.12] | 334 | 63.2 |
 | query | 20.0 | 1638 | 3 | 0.0179 [0.0134, 0.0245] | 0.0176 [0.0079, 0.0257] | 0.948 [0.891, 0.984] | 0.944 [0.875, 1.000] | 0.75 [0.25, 1.00] | 0.17 [0.12, 0.22] | 634 | 116.5 |
 
-### Mean KL by selector and budget (share of the naive-concat KL removed, mean over seeds of per-seed ratios)
+### Mean KL, all 64 rows, by selector and budget (share of the naive-concat value removed, mean over seeds of per-seed ratios)
 
 
-8192 tokens (naive KL mean 0.5495)
+8192 tokens (naive mean 0.5495)
 
 | selector | 10% | 20% |
 |---|---:|---:|
 | deviation | 0.1177 (+78%) | 0.1083 (+79%) |
 | query | 0.0347 (+93%) | 0.0179 (+96%) |
+
+### Mean KL, post-query rows 16-63, by selector and budget (share of the naive-concat value removed, mean over seeds of per-seed ratios)
+
+
+8192 tokens (naive mean 0.6037)
+
+| selector | 10% | 20% |
+|---|---:|---:|
+| deviation | 0.1157 (+80%) | 0.1013 (+82%) |
+| query | 0.0349 (+94%) | 0.0176 (+97%) |

@@ -1,15 +1,25 @@
 # E2 — baseline recompute selectors: quality versus budget (gate G1)
 
-**Result in brief.** On Qwen3-4B-Instruct-2507 (CPU, code chunks, 2K/4K with all selectors and 8K with the best two, 3 seeds), every structured selector removes about half of
-the naive-concatenation KL with only 5 % of the tokens recomputed, and random selection removes almost none. **ProphetKV-style query
-relevance is the only selector that keeps improving with budget.** It removes 83 % of the naive KL at 20 % at both sizes, while
-the others plateau at 50–65 %. At 8K (3 seeds) it removes 96 %, versus 79 % for layer-1 deviation. Caveat: greedy exact match does
-not follow KL in 3 of 9 contexts. In 8 of 30 cells deviation keeps full's greedy path where query does not (see "Query relevance wins
-on KL; deviation more often keeps the greedy path"). The CacheBlend-like layer-1 deviation selector beats random, as published. It does **not** beat the
-static EPIC first-k or chunk-start baselines at equal budget. Its picks contain the chunk starts: at 20 % its selection is identical to
-"16 chunk-start tokens + deviation" in every seed and size. This is the chunk-start clustering reported by arXiv 2603.20218. Contiguous runs (w = 8) give
-no consistent gain. The numeric noise floor is exactly 0: dotLLM's CPU kernels are batch-invariant, so every non-zero KL here is
-a real method effect.
+**Result in brief.** Model and setup: Qwen3-4B-Instruct-2507, CPU, code chunks, 3 seeds; 2K/4K with all selectors, 8K with the best two.
+The headline metric is KL on the **post-query rows** (16–63). Rows 0–15 are the 16 query tokens the query-relevance selector was
+built from (see "Query").
+
+- Every structured selector removes about half (2K) to 60 % (4K) of the naive-concatenation KL with only 5 % of the tokens recomputed.
+  Random selection removes almost none.
+- **ProphetKV-style query relevance is the best selector from 10 % budget up at 4K and 8K, and at 15–20 % at 2K.**
+  - Post-query, it removes 80 % / 83 % of the naive KL at 20 % at 2K / 4K. Layer-1 deviation removes 71 % / 60 %.
+  - At 8K (3 seeds) query removes 97 %, against 82 % for deviation.
+  - At **2K 5 % it is the worst structured selector post-query**: 0.066 against 0.054–0.060 for the others.
+- The CacheBlend-like layer-1 deviation selector beats random, as published.
+  - At 4K it does **not** beat the static EPIC first-k or chunk-start baselines at equal budget.
+  - At 2K, post-query, it pulls ahead of them from 15 % up.
+  - Its picks contain the chunk starts. At 20 % its selection is identical to "16 chunk-start tokens + deviation" in every seed and
+    size, which is the chunk-start clustering reported by arXiv 2603.20218.
+- Contiguous runs (w = 8) give no consistent gain.
+- Greedy exact match does not follow KL: in 8 of 30 query-vs-deviation cells (4 of 9 contexts) deviation keeps full's greedy path
+  where query does not, and the opposite happens in 1 cell. The data neither support nor rule out a generation advantage for
+  deviation; see "Query relevance wins on KL; greedy EM is mixed".
+- The numeric noise floor is exactly 0: dotLLM's CPU kernels are batch-invariant, so every non-zero KL here is a real method effect.
 
 ## Setup
 
@@ -31,6 +41,10 @@ a real method effect.
   request time. It is the only post-context text any selector may read. The selection is made before anything is forwarded after the
   context. Evaluation then feeds the continuation from position L, exactly as in E1. Query rows 0–15 are therefore part of the prompt
   in serving terms. Use the "post-query" columns for the generation-like rows.
+  **Why rows 0–15 favour the query selector:** it picks the context tokens those 16 query tokens attend to most, so it refreshes
+  exactly the K/V that rows 0–15 read. That is an in-sample advantage on those rows. It is legitimate at request time, because the
+  query is known, but the all-row KL overstates the selector's edge on the generation that follows. Post-query KL is the headline
+  metric below; all-row KL is kept for comparison with E1.
 - **Budget:** `round(L × p / 100)` tokens for p ∈ {5, 10, 15, 20}: 102/205/307/410 at 2K and 205/410/614/819 at 4K. Every selector
   returns exactly that many distinct positions. All selectors except the `random` control rank chunk 0 last. Chunk 0 sits at offset
   0, so its isolated encoding equals the full prefill there and recomputing it is wasted budget. The `random` control also excludes
@@ -54,9 +68,16 @@ a real method effect.
 
 ## Results
 
-Mean over 3 seeds, [min, max] in `summary.md`. KL is in nats; lower is better. In parentheses: the share of the naive-concat KL
-removed (mean of per-seed ratios). Reference rows: `full` = 0 by definition. `naive_concat` = 0.1308 [0.1040, 0.1484] at 2K and 0.1738
-[0.0616, 0.2489] at 4K. Top-1 is 0.875 / 0.906.
+Mean over 3 seeds; [min, max] where shown, and for every cell in `summary.md`. KL is in nats; lower is better. In parentheses: the
+share of the naive-concat value removed (mean of per-seed ratios). Reference rows: `full` = 0 by definition. `naive_concat`:
+
+| size | all-row KL | post-query KL | top-1 |
+|---|---|---|---|
+| 2K | 0.1308 [0.1040, 0.1484] | 0.1274 [0.0707, 0.1700] | 0.875 |
+| 4K | 0.1738 [0.0616, 0.2489] | 0.1415 [0.0803, 0.1755] | 0.906 |
+
+All numbers come from `python -I summarize.py results.csv > summary.md` and `python -I summarize.py results-8k-all.csv >
+summary-8k.md`. Each summary has both an all-row and a post-query selector × budget table.
 
 **Numeric noise floor** (3 seeds × 2 sizes, all bitwise equal to `full`: KL 0, top-1 1.000, EM 1.000):
 - `noise_prefill_block128` is the same ids prefilled in 128-token blocks instead of 512.
@@ -67,7 +88,38 @@ numerics. The second row is also the end-to-end pipeline check: assembly, recomp
 prefill exactly. The only non-bitwise numeric path left in the methods is the RoPE re-rotation of K. E1 measured it at ≤ 3e-5 of the
 head norm at 16K, which is far below every effect below. So any KL > 0 here is a method effect, not noise.
 
-### Mean KL with seed spread (mean [min, max] over 3 seeds; plain selectors, the lowest and highest swept budget)
+### Post-query KL (rows 16–63), the headline metric
+
+Seed spread (mean [min, max] over 3 seeds; plain selectors at the lowest and highest swept budget):
+
+| selector | 2K 5 % | 2K 20 % | 4K 5 % | 4K 20 % |
+|---|---|---|---|---|
+| naive_concat | 0.1274 [0.0707, 0.1700] | — | 0.1415 [0.0803, 0.1755] | — |
+| first_k | 0.0588 [0.0349, 0.0825] | 0.0510 [0.0317, 0.0693] | 0.0495 [0.0414, 0.0553] | 0.0466 [0.0354, 0.0580] |
+| chunk_starts | 0.0597 [0.0313, 0.0880] | 0.0466 [0.0244, 0.0809] | 0.0481 [0.0441, 0.0519] | 0.0455 [0.0362, 0.0619] |
+| deviation | 0.0578 [0.0355, 0.0908] | 0.0369 [0.0201, 0.0562] | 0.0497 [0.0432, 0.0536] | 0.0444 [0.0350, 0.0625] |
+| combined | 0.0541 [0.0365, 0.0788] | 0.0369 [0.0201, 0.0562] | 0.0470 [0.0414, 0.0523] | 0.0444 [0.0350, 0.0625] |
+| query | 0.0663 [0.0501, 0.0902] | **0.0251 [0.0158, 0.0373]** | **0.0420 [0.0358, 0.0519]** | **0.0173 [0.0096, 0.0297]** |
+| random | 0.1301 [0.0712, 0.1726] | 0.1053 [0.0698, 0.1506] | 0.1318 [0.0822, 0.1703] | 0.0970 [0.0658, 0.1257] |
+| deviation_oracle (not runnable) | 0.0604 [0.0331, 0.0875] | 0.0366 [0.0293, 0.0446] | 0.0512 [0.0460, 0.0603] | 0.0466 [0.0319, 0.0725] |
+
+By budget (mean; share of naive post-query KL removed):
+
+| selector | 2K 5 % | 2K 10 % | 2K 15 % | 2K 20 % | 4K 5 % | 4K 10 % | 4K 15 % | 4K 20 % |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| first_k | 0.0588 (+53 %) | 0.0538 (+57 %) | 0.0537 (+55 %) | 0.0510 (+59 %) | 0.0495 (+59 %) | 0.0420 (+66 %) | 0.0447 (+62 %) | 0.0466 (+60 %) |
+| chunk_starts | 0.0597 (+54 %) | 0.0540 (+58 %) | 0.0499 (+58 %) | 0.0466 (+65 %) | 0.0481 (+61 %) | 0.0456 (+63 %) | 0.0481 (+59 %) | 0.0455 (+60 %) |
+| deviation | 0.0578 (+54 %) | 0.0505 (+60 %) | 0.0438 (+66 %) | 0.0369 (+71 %) | 0.0497 (+59 %) | 0.0468 (+60 %) | 0.0479 (+56 %) | 0.0444 (+60 %) |
+| combined | 0.0541 (+56 %) | 0.0513 (+59 %) | 0.0438 (+66 %) | 0.0369 (+71 %) | 0.0470 (+61 %) | 0.0458 (+61 %) | 0.0489 (+55 %) | 0.0444 (+60 %) |
+| query | 0.0663 (+43 %) | 0.0473 (+61 %) | 0.0370 (+70 %) | **0.0251 (+80 %)** | 0.0420 (+64 %) | 0.0345 (+67 %) | 0.0258 (+75 %) | **0.0173 (+83 %)** |
+| random | 0.1301 (−2 %) | 0.1268 (−1 %) | 0.1119 (+11 %) | 0.1053 (+15 %) | 0.1318 (+5 %) | 0.1190 (+12 %) | 0.0971 (+25 %) | 0.0970 (+21 %) |
+| deviation_oracle (not runnable) | 0.0604 (+53 %) | 0.0544 (+57 %) | 0.0431 (+64 %) | 0.0366 (+69 %) | 0.0512 (+57 %) | 0.0509 (+55 %) | 0.0464 (+59 %) | 0.0466 (+57 %) |
+
+EPIC native (k = 16), post-query: 0.0602 [0.0330, 0.0835] at 2K (2.3 %) and 0.0495 [0.0442, 0.0540] at 4K (2.7 %). The `+runs`
+variants are in `summary.md`. Their relation to the plain selectors is as described for all-row KL below; for example post-query
+`query+runs` at 4K 20 % is 0.0248 against 0.0173 for plain `query`.
+
+### All-row KL (rows 0–63, E1-comparable) with seed spread (mean [min, max] over 3 seeds; plain selectors, the lowest and highest swept budget)
 
 | selector | 2K 5 % | 2K 20 % | 4K 5 % | 4K 20 % |
 |---|---|---|---|---|
@@ -83,7 +135,7 @@ head norm at 16K, which is far below every effect below. So any KL > 0 here is a
 The [min, max] for every selector, budget and runs variant, and for top-1, post-query KL, EM, oracle Jaccard, forward calls and
 recompute time, is in `summary.md` (2K/4K) and `summary-8k.md`.
 
-### Mean KL vs budget
+### All-row KL vs budget (rows 0–63; includes the 16 query rows that favour `query`)
 
 2K (naive 0.1308):
 
@@ -127,10 +179,17 @@ EPIC native (k = 16, 48 tokens = 2.3 %): 0.0678 [0.0613, 0.0753].
 
 EPIC native (k = 16, 112 tokens = 2.7 %): 0.0563 [0.0413, 0.0712].
 
-Top-1 agreement follows KL. At 20 %: query 0.948 / 0.958 (2K/4K), deviation 0.938 / 0.922, first_k 0.938 / 0.901, random 0.875 /
-0.917, naive 0.875 / 0.906. Post-query KL (rows 16–63) gives the same ranking: query 0.0251 / 0.0173 at 20 %, deviation 0.0369 /
-0.0444, random 0.1053 / 0.0970. Full per-row tables with [min, max], fwd calls, recompute time and the Jaccard with the oracle selection
-are in `summary.md`.
+All-row top-1 at 20 % (2K/4K): query 0.948 / 0.958, deviation 0.938 / 0.922, first_k 0.938 / 0.901, random 0.875 / 0.917, naive
+0.875 / 0.906.
+
+**All-row vs post-query KL:** the two metrics rank the selectors the same way at 4K at every budget, and at 2K at 20 %. They differ
+at 2K at lower budgets:
+- At 2K 5 %, `query` is mid-pack on all-row KL (0.0645) but the **worst** structured selector post-query (0.0663, against
+  0.054–0.060).
+- At 2K, `deviation` keeps improving post-query from 5 % to 20 % (0.0578 → 0.0505 → 0.0438 → 0.0369). Its all-row "plateau" at 2K
+  (0.065 → 0.052) is partly an artefact of the query rows.
+
+Full tables with [min, max], forward calls, recompute time and the Jaccard with the oracle selection are in `summary.md`.
 
 ### 8K follow-up (the two best runnable score-based selectors, 10 % and 20 %, 3 seeds)
 
@@ -139,49 +198,79 @@ seeds 1–2 (`results-8k-s12.csv`, `e2-8k-s12.log`). The first 8K process stoppe
 were rerun with `-FirstSeed 1 -Seeds 2`. They are merged in `results-8k-all.csv` and `summary-8k.md`. `naive_concat` again reproduces
 E1 exactly: 0.59840 / 0.69475 / 0.35528.
 
-| method | budget | KL mean [min, max] | KL post-query | top-1 | greedy EM |
+| method | budget | post-query KL mean [min, max] | all-row KL mean [min, max] | top-1 | greedy EM |
 |---|---:|---|---|---|---|
-| naive_concat | 0 | 0.5495 [0.3553, 0.6947] | 0.6037 | 0.760 [0.641, 0.891] | 0.42 [0.12, 1.00] |
-| deviation | 10 % | 0.1177 [0.0761, 0.1751] (+78 %) | 0.1157 | 0.891 [0.812, 0.953] | 0.71 [0.25, 1.00] |
-| deviation | 20 % | 0.1083 [0.0882, 0.1397] (+79 %) | 0.1013 | 0.880 [0.781, 0.953] | 0.96 [0.88, 1.00] |
-| query | 10 % | **0.0347 [0.0263, 0.0513] (+93 %)** | 0.0349 | **0.927 [0.891, 0.953]** | 0.71 [0.25, 1.00] |
-| query | 20 % | **0.0179 [0.0134, 0.0245] (+96 %)** | 0.0176 | **0.948 [0.891, 0.984]** | 0.75 [0.25, 1.00] |
+| naive_concat | 0 | 0.6037 [0.4530, 0.7638] | 0.5495 [0.3553, 0.6947] | 0.760 [0.641, 0.891] | 0.42 [0.12, 1.00] |
+| deviation | 10 % | 0.1157 [0.0707, 0.1805] (+80 %) | 0.1177 [0.0761, 0.1751] (+78 %) | 0.891 [0.812, 0.953] | 0.71 [0.25, 1.00] |
+| deviation | 20 % | 0.1013 [0.0505, 0.1417] (+82 %) | 0.1083 [0.0882, 0.1397] (+79 %) | 0.880 [0.781, 0.953] | 0.96 [0.88, 1.00] |
+| query | 10 % | **0.0349 [0.0199, 0.0564] (+94 %)** | 0.0347 [0.0263, 0.0513] (+93 %) | **0.927 [0.891, 0.953]** | 0.71 [0.25, 1.00] |
+| query | 20 % | **0.0176 [0.0079, 0.0257] (+97 %)** | 0.0179 [0.0134, 0.0245] (+96 %) | **0.948 [0.891, 0.984]** | 0.75 [0.25, 1.00] |
 
-At 8K the gap widens. Query relevance has 3–6× lower KL than layer-1 deviation in every seed, and deviation barely improves from 10 %
-to 20 %.
+At 8K the gap widens. In every seed, deviation's KL is 3.2–6.4× query's post-query, and 2.9–7.2× all-row. Deviation barely improves
+from 10 % to 20 %.
 
-### Query relevance wins on KL; deviation more often keeps the greedy path
+### Query relevance wins on KL; greedy EM is mixed
 
 Teacher-forced KL and top-1 and free-running greedy exact match do not agree on every cell, so the comparison is reported in full.
 Over all 30 query-vs-deviation cells (2K/4K × 3 seeds × 4 budgets, plus 8K × 3 seeds × 2 budgets):
-- **KL:** query is lower in **26 of 30** cells.
-- **top-1:** query is ≥ deviation in **24 of 30** cells.
+- **KL:** query is lower in **26 of 30** cells on all-row KL and **25 of 30** on post-query KL. The post-query exceptions are 2K seed 1
+  at 5/10 %, 2K seed 2 at 5/10 %, and 4K seed 2 at 10 %.
+- **top-1:** query is ≥ deviation in **24 of 30** cells, on both all-row and post-query top-1.
 - **Greedy EM:** deviation is higher in **8**, query is higher in **1**, and **21** are ties.
 
-The 8 deviation-better EM cells come from only **3 of the 9 contexts**: 2K seed 2 (5/15/20 %), 4K seed 1 (5/15 %) and 8K seed 0
-(10/20 %). Inside each of those contexts the query cache's greedy path leaves full's greedy path at the same early step (EM
-0.125–0.25) at every budget, while its KL is 2–6× lower (for example 8K seed 0 at 20 %: KL 0.025 vs 0.140, top-1 0.89 vs 0.78). That
-pattern points to a near-tie at one greedy step in those contexts, which the query-refreshed cache resolves to the other token. It
-does not show generally worse generation.
+Every cell where EM differs:
+
+| context | budget | EM query / deviation | all-row KL query / deviation | post-query KL query / deviation |
+|---|---:|---|---|---|
+| 2K seed 2 | 5 % | 0.125 / 1.0 | 0.0633 / 0.0616 | 0.0584 / 0.0355 |
+| 2K seed 2 | 15 % | 0.125 / 0.5 | 0.0270 / 0.0783 | 0.0244 / 0.0256 |
+| 2K seed 2 | 20 % | 0.125 / 1.0 | 0.0174 / 0.0687 | 0.0158 / 0.0201 |
+| 4K seed 1 | 5 % | 0.25 / 1.0 | 0.0557 / 0.0723 | 0.0382 / 0.0523 |
+| 4K seed 1 | 15 % | 0.25 / 1.0 | 0.0224 / 0.0554 | 0.0116 / 0.0357 |
+| 8K seed 0 | 10 % | 0.25 / 0.875 | 0.0513 / 0.1751 | 0.0564 / 0.1805 |
+| 8K seed 0 | 20 % | 0.25 / 0.875 | 0.0245 / 0.1397 | 0.0257 / 0.1417 |
+| 8K seed 2 | 10 % | 0.875 / 1.0 | 0.0263 / 0.0761 | 0.0284 / 0.0961 |
+| 8K seed 1 | 10 % | **1.0 / 0.25** (query better) | 0.0266 / 0.1019 | 0.0199 / 0.0707 |
+
+The 8 deviation-better cells come from **4 of the 9 contexts**: 2K seed 2, 4K seed 1, 8K seed 0 and 8K seed 2. Within a context,
+query's EM depends on the budget:
+- At 2K seed 2, query's EM is 1.0 at 10 %.
+- At 4K seed 1, it is 1.0 at 10 % and 20 %.
+- At 8K seed 2, it is 1.0 at 20 %.
+
+The KL gap in these cells also varies. In 2K seed 2 at 5 % query's KL is *higher* than deviation's on both metrics. In the other seven deviation-better cells query's KL is lower by 1.3–5.7× all-row and by 1.05–5.5× post-query. So no consistent per-context explanation, such as a single near-tie, is supported.
 
 EM is quantised: one flip at step t sets it to t/16. Each context has a single 16-token greedy window, and that window lies inside the
-16-token query span. So the data **do not support** "deviation preserves generation better". They also do not rule it out. A
-per-step check is needed before drawing any conclusion: log the full-vs-method margin at the divergence step, or evaluate several
-continuations per context. Deviation's 8K mean EM of 0.96 vs 0.75 at 20 % is driven by seed 0 alone.
+16-token query span. The only supported conclusion is that the data **can neither support nor rule out** "deviation preserves
+generation better". Deciding it needs per-step evidence, such as the full-vs-method logit margin at the divergence step, or several
+continuations per context. Deviation's 8K mean EM at 20 % (0.96 vs 0.75) comes from seed 0 alone.
 
 
 ## Findings, and whether the baselines behave as published
 
-1. **Every structured selector beats naive concat**, as expected. Each one removes ≈ 50 % (2K) / ≈ 60 % (4K) of the naive KL at 5 %.
-   The only selector that does not is the **random control**: it is at −6…+25 %, inside its seed spread at low budget. That matches
-   2609.17983 (Random ≈ 0 recovery) and is why it is the control.
-2. **Deviation and query relevance beat random**: yes, by a wide margin at every budget and size (for example 4K 10 %: 0.052 / 0.037 vs
-   0.139).
-3. **Query relevance (ProphetKV) is the strongest selector and the only one that scales with budget.** It goes from +50–64 % at 5 % to
-   +83 % at 20 %. Its top-1 at 20 % (0.95–0.96) is the highest. This is ProphetKV's own claim (beats CacheBlend and EPIC). It is the
-   bar a structure-aware selector must beat (E4).
-4. **CacheBlend-style layer-1 deviation does not beat the static baselines.** It is within ≈ 0.01 nats of `first_k` / `chunk_starts` (mean over seeds)
-   at every budget, and EPIC at its native 2.3–2.7 % already reaches most of what deviation reaches at 20 %. Two measured reasons:
+1. **Every structured selector beats naive concat**, as expected. Post-query, each one removes 43–56 % (2K) and 57–64 % (4K) of the
+   naive KL at 5 %, including the oracle. All-row, the ranges are 47–51 % and 57–64 %. The only selector that does not is the **random control**: −2…+25 %
+   post-query (−1…+23 % all-row), close to naive at low budget. That matches 2609.17983 (Random ≈ 0 recovery) and is why it is the
+   control.
+2. **Deviation and query relevance beat random**: yes, by a wide margin at every budget and size. For example, post-query at 4K 10 %:
+   deviation 0.047, query 0.035, random 0.119.
+3. **Query relevance (ProphetKV) is the strongest selector at 4K and 8K, and at 2K from 15 % up.** Post-query it goes from +43 % (2K)
+   / +64 % (4K) at 5 % to +80 % / +83 % at 20 %, and to +97 % at 8K. Its all-row top-1 at 20 % (0.95–0.96) is the highest.
+   - At **2K 5 %** it is the **worst** structured selector post-query (0.066 against 0.054–0.060).
+   - Its "scales with budget, others plateau" pattern holds **at 4K**: the others stay at 55–66 % post-query from 5 % to 20 %.
+   - At 2K, deviation and combined also keep improving post-query (+54 % → +71 %), so query is not the only selector that scales
+     there.
+
+   Part of query's all-row advantage comes from rows 0–15, the query it was built from (see "Query"). Post-query the 2K/4K 20 % margin
+   over deviation is +80 % vs +71 % at 2K and +83 % vs +60 % at 4K. This agrees with ProphetKV's own claim (beats CacheBlend and EPIC)
+   at medium and high budget. It is the bar a structure-aware selector must beat (E4).
+4. **CacheBlend-style layer-1 deviation does not beat the static baselines at 4K, and does only from 15 % up at 2K (post-query).**
+   - At 4K it is within ≈ 0.005 nats of `first_k` / `chunk_starts` post-query at every budget, and within ≈ 0.01 nats all-row.
+   - At 2K post-query it is within 0.004 nats at 5–10 % and ahead from 15 %: 0.044 / 0.037 at 15 / 20 %, against 0.054 / 0.051 for first_k and
+     0.050 / 0.047 for chunk_starts.
+   - EPIC at its native 2.3–2.7 % (post-query 0.060 / 0.050) already reaches most of what deviation reaches at 20 % at 4K.
+
+   Two measured reasons:
    - (a) **Its picks are the chunk starts.** `combined` (16 chunk-start tokens per chunk + deviation) produced the *identical*
      selection to `deviation` (identical KL, forward-call count and oracle Jaccard) in 6 of 6 seed × size cases at 20 %, 4 of 6 at 15 %
      and 1 of 6 at 10 %. So the layer-1 deviation top-20 % contains the first 16 tokens of every stale chunk, and smaller budgets
@@ -195,7 +284,8 @@ continuations per context. Deviation's 8K mean EM of 0.96 vs 0.75 at 20 % is dri
    0.05–0.06 nats, versus a noise floor of 0. That is consistent with 2603.20218's cleaned evaluation (CacheBlend r = 15 % trails full
    by 7–18 %). Caveat: we use one fixed set, not gradual per-layer filtering.
 5. **Most of naive concat's loss sits at chunk starts.** The first 16 tokens of each chunk (2.3–2.7 % of the context) remove half of
-   the KL at 2K and ≈ 2/3 at 4K. Additional static budget adds little (plateau). This supports EPIC's attention-sink explanation.
+   the KL at 2K and ≈ 2/3 at 4K. Additional *static* budget adds little: post-query, first_k goes from 53 % to 59 % at 2K and stays at
+   59–66 % at 4K. This supports EPIC's attention-sink explanation.
    It is also why chunk-start-based selectors (FirstK, ChunkStarts, Combined) and Deviation coincide.
 6. **Contiguous runs (w = 8) give no consistent gain at equal budget.** The ± differences are within seed spread. Runs **hurt** the
    best selector (query: 4K 5 % 0.046 → 0.063, 20 % 0.018 → 0.028). Runs do cut the number of forwards 3–10× (for example query 4K
@@ -218,9 +308,12 @@ continuations per context. Deviation's 8K mean EM of 0.96 vs 0.75 at 20 % is dri
   has EM 0.06: the greedy paths diverge at the second token, which suggests a near-tie there. One flip changes EM by up to 15/16. KL and
   top-1 over 64 rows are the primary metrics.
 - **Seed variance is large.** Naive KL at 4K ranges from 0.06 to 0.25. With 3 seeds, differences under ≈ 0.005–0.01 nats between
-  selectors are not separable. Per seed, `query` has the lowest KL in every seed × size cell at 15 % and 20 % (12 of 12), but only
-  in 6 of 12 at 5–10 %. `random` has the highest KL among the plain selectors in 23 of 24 cells. The exception is 2K seed 2 at 15 %, where `chunk_starts` is
-  worse. The order among first_k / chunk_starts / deviation / combined changes from seed to seed.
+  selectors are not separable. Per seed, `query` has the lowest KL among the plain selectors:
+  - all-row: 12 of 12 seed × size cells at 15–20 %, but only 6 of 12 at 5–10 %;
+  - post-query: 6 of 6 at 20 %, 5 of 6 at 15 %, 3 of 6 at 10 %, and 3 of 6 at 5 % (0 of 3 at 2K 5 %).
+
+  `random` has the highest KL in 24 of 24 cells post-query, and in 23 of 24 all-row (the all-row exception is 2K seed 2 at 15 %, where
+  `chunk_starts` is worse). The order among first_k / chunk_starts / deviation / combined changes from seed to seed.
 - **One continuation per context, code corpus only** (C#, 512-token fixed chunks). The query is a continuation prefix, not a natural
   question. ProphetKV's advantage may differ on QA-style queries (E4 / Task 8 tasks).
 - **CPU recompute times** are one `Forward` per contiguous run (≈ 55–90 ms per single-token run). They show relative cost
