@@ -1,0 +1,72 @@
+# provenance
+utc: 2026-11-01 12:02:45
+command: tasks name=codesharp count=100 seed=0 validate=1 max-minutes=38 context=2048 continuation=32 prefix=256 per-context=4 chunker=symbol-512
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ 4e558849762504a889e642ca2550075ea38b8ca8 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 src of C:\Development\codesharp (frozen snapshot, 1390 .cs files); source repo HEAD 0c97c38c6583a1d3522846d0f290a2c7e488eafa, dirty files now: 0; expected chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.5 s; engine 0.3.0-dev.3628.8+4e558849762504a889e642ca2550075ea38b8ca8
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files ( excluded), symbol-512: 7586 chunks, 1535738 tokens (chunk tokens median 157, max 512); Decode(Encode(file)) == file for 1390/1390; 8.7 s
+chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+call sites (8.0 s): CallSiteCounts { Invocations = 20040, Unresolved = 4007, External = 10351, SameFile = 3123, DuplicateDefinition = 0, NotMaskable = 0, CrossFile = 2559, DefinitionChunks = 1181 }
+generated 100 tasks in 60 plans (4.7 s); options TaskGeneratorOptions { ContextTokens = 2048, ContinuationTokens = 32, PrefixTokens = 256, TasksPerContext = 4, MaxDistractors = 2147483647 }; 60 distinct definition chunks, 57 calling files; mean context 2048 tokens, mean 14.3 chunks, mean prefix 245, mask 8.6 tokens
+tokenisation at the mask boundary: Encode(prefix+continuation) starts with Encode(prefix)++masked ids for 100/100
+[plan 0 ctx 2047 tasks 4] 55.1 s; reference-fails (EM 0/0, NLL 16.55/24.16)  reference-fails (EM 0/0, NLL 19.83/24.15)  reference-fails (EM 0/0, NLL 7.05/9.96)  reference-fails (EM 0/0, NLL 17.20/21.03)  at 1.3 min
+[plan 1 ctx 2047 tasks 1] 31.8 s; reference-fails (EM 0/0, NLL 8.95/12.78)  at 1.8 min
+[plan 2 ctx 2048 tasks 1] 32.2 s; solved-without (EM 1/1, NLL 0.02/0.04)  at 2.4 min
+[plan 3 ctx 2046 tasks 1] 31.2 s; reference-fails (EM 0/0, NLL 0.74/1.61)  at 2.9 min
+[plan 4 ctx 2048 tasks 1] 32.9 s; kept (EM 1/0, NLL 0.11/5.00)  at 3.4 min
+[plan 5 ctx 2048 tasks 2] 40.2 s; kept (EM 1/0, NLL 2.24/5.20)  reference-fails (EM 0/0, NLL 6.64/10.23)  at 4.1 min
+[plan 6 ctx 2048 tasks 2] 36.3 s; kept (EM 1/0, NLL 0.10/6.94)  solved-without (EM 1/1, NLL 0.20/0.28)  at 4.7 min
+[plan 7 ctx 2047 tasks 1] 31.3 s; kept (EM 1/0, NLL 0.08/28.24)  at 5.2 min
+[plan 8 ctx 2048 tasks 4] 53.1 s; reference-fails (EM 0/0, NLL 6.76/23.39)  reference-fails (EM 0/0, NLL 3.30/10.68)  reference-fails (EM 0/0, NLL 6.82/15.12)  reference-fails (EM 0/0, NLL 7.11/21.51)  at 6.1 min
+[plan 9 ctx 2048 tasks 3] 47.0 s; reference-fails (EM 0/0, NLL 1.22/7.35)  reference-fails (EM 0/0, NLL 5.62/22.70)  reference-fails (EM 0/0, NLL 1.62/13.01)  at 6.9 min
+[plan 10 ctx 2047 tasks 4] 53.4 s; reference-fails (EM 0/0, NLL 7.11/21.53)  reference-fails (EM 0/0, NLL 4.17/12.66)  reference-fails (EM 0/0, NLL 5.74/16.14)  kept (EM 1/0, NLL 1.47/9.37)  at 7.8 min
+[plan 11 ctx 2048 tasks 1] 60.9 s; reference-fails (EM 0/0, NLL 21.40/26.31)  at 8.8 min
+[plan 12 ctx 2048 tasks 1] 43.3 s; reference-fails (EM 0/0, NLL 5.18/25.12)  at 9.5 min
+[plan 13 ctx 2048 tasks 2] 46.6 s; solved-without (EM 1/1, NLL 0.26/2.26)  reference-fails (EM 0/0, NLL 2.67/10.86)  at 10.3 min
+[plan 14 ctx 2048 tasks 1] 44.0 s; reference-fails (EM 0/0, NLL 11.74/25.88)  at 11.0 min
+[plan 15 ctx 2048 tasks 1] 41.4 s; solved-without (EM 1/1, NLL 0.14/0.13)  at 11.7 min
+[plan 16 ctx 2048 tasks 1] 42.8 s; reference-fails (EM 0/0, NLL 2.32/5.56)  at 12.4 min
+[plan 17 ctx 2048 tasks 3] 52.0 s; solved-without (EM 1/1, NLL 0.46/1.28)  kept (EM 1/0, NLL 0.13/2.02)  solved-without (EM 1/1, NLL 0.52/2.37)  at 13.3 min
+[plan 18 ctx 2047 tasks 1] 39.6 s; reference-fails (EM 0/0, NLL 1.67/5.19)  at 14.0 min
+[plan 19 ctx 2047 tasks 3] 49.9 s; reference-fails (EM 0/0, NLL 26.78/56.07)  reference-fails (EM 0/0, NLL 18.59/30.71)  reference-fails (EM 0/0, NLL 2.71/2.31)  at 14.8 min
+[plan 20 ctx 2048 tasks 1] 56.8 s; solved-without (EM 1/1, NLL 0.06/0.06)  at 15.7 min
+[plan 21 ctx 2048 tasks 1] 62.7 s; reference-fails (EM 0/0, NLL 17.81/28.22)  at 16.8 min
+[plan 22 ctx 2048 tasks 2] 47.0 s; reference-fails (EM 0/0, NLL 5.45/17.75)  kept (EM 1/0, NLL 0.42/18.11)  at 17.6 min
+[plan 23 ctx 2048 tasks 1] 40.0 s; reference-fails (EM 0/1, NLL 1.09/0.78)  at 18.2 min
+[plan 24 ctx 2048 tasks 1] 46.8 s; kept (EM 1/0, NLL 1.75/11.91)  at 19.0 min
+[plan 25 ctx 2048 tasks 3] 56.3 s; reference-fails (EM 0/0, NLL 4.92/6.66)  reference-fails (EM 0/0, NLL 22.36/41.82)  reference-fails (EM 0/0, NLL 12.34/13.13)  at 19.9 min
+[plan 26 ctx 2047 tasks 1] 58.0 s; reference-fails (EM 0/0, NLL 8.82/33.39)  at 20.9 min
+[plan 27 ctx 2048 tasks 2] 76.8 s; solved-without (EM 1/1, NLL 0.75/0.87)  reference-fails (EM 0/0, NLL 2.33/3.44)  at 22.2 min
+[plan 28 ctx 2048 tasks 1] 41.0 s; kept (EM 1/0, NLL 0.11/14.77)  at 22.9 min
+[plan 29 ctx 2048 tasks 1] 34.4 s; kept (EM 1/0, NLL 0.90/10.41)  at 23.4 min
+[plan 30 ctx 2047 tasks 2] 43.7 s; reference-fails (EM 0/0, NLL 5.14/12.78)  reference-fails (EM 0/0, NLL 4.43/10.34)  at 24.2 min
+[plan 31 ctx 2047 tasks 1] 37.5 s; reference-fails (EM 0/0, NLL 2.04/6.09)  at 24.8 min
+[plan 32 ctx 2048 tasks 1] 35.9 s; reference-fails (EM 0/0, NLL 29.17/28.29)  at 25.4 min
+[plan 33 ctx 2048 tasks 1] 37.4 s; kept (EM 1/0, NLL 0.06/0.90)  at 26.0 min
+[plan 34 ctx 2048 tasks 2] 40.4 s; reference-fails (EM 0/0, NLL 5.88/19.36)  reference-fails (EM 0/0, NLL 6.80/19.97)  at 26.7 min
+[plan 35 ctx 2047 tasks 3] 49.3 s; kept (EM 1/0, NLL 0.40/9.68)  reference-fails (EM 0/0, NLL 11.44/15.75)  reference-fails (EM 0/0, NLL 12.68/20.63)  at 27.5 min
+[plan 36 ctx 2048 tasks 4] 54.3 s; solved-without (EM 1/1, NLL 0.00/0.00)  solved-without (EM 1/1, NLL 0.04/0.12)  reference-fails (EM 0/0, NLL 7.66/16.11)  solved-without (EM 1/1, NLL 0.41/0.39)  at 28.4 min
+[plan 37 ctx 2048 tasks 1] 36.6 s; kept (EM 1/0, NLL 0.71/8.10)  at 29.0 min
+[plan 38 ctx 2048 tasks 1] 36.4 s; solved-without (EM 1/1, NLL 0.60/0.14)  at 29.6 min
+[plan 39 ctx 2048 tasks 1] 34.7 s; reference-fails (EM 0/0, NLL 1.81/6.20)  at 30.2 min
+[plan 40 ctx 2048 tasks 1] 35.7 s; kept (EM 1/0, NLL 0.50/7.38)  at 30.8 min
+[plan 41 ctx 2048 tasks 2] 42.4 s; kept (EM 1/0, NLL 0.06/5.37)  reference-fails (EM 0/0, NLL 9.45/13.86)  at 31.5 min
+[plan 42 ctx 2048 tasks 1] 37.1 s; kept (EM 1/0, NLL 0.70/2.78)  at 32.1 min
+[plan 43 ctx 2048 tasks 1] 34.6 s; reference-fails (EM 0/0, NLL 6.81/10.94)  at 32.7 min
+[plan 44 ctx 2047 tasks 1] 32.6 s; reference-fails (EM 0/0, NLL 2.46/30.59)  at 33.3 min
+[plan 45 ctx 2048 tasks 1] 34.1 s; kept (EM 1/0, NLL 0.00/11.78)  at 33.8 min
+[plan 46 ctx 2048 tasks 3] 46.9 s; reference-fails (EM 0/0, NLL 91.09/94.08)  reference-fails (EM 0/0, NLL 2.34/8.35)  reference-fails (EM 0/0, NLL 91.75/97.34)  at 34.6 min
+[plan 47 ctx 2048 tasks 1] 35.9 s; reference-fails (EM 0/0, NLL 2.30/11.06)  at 35.2 min
+[plan 48 ctx 2048 tasks 2] 38.2 s; kept (EM 1/0, NLL 0.48/13.52)  reference-fails (EM 0/0, NLL 25.58/42.31)  at 35.8 min
+[plan 49 ctx 2047 tasks 1] 36.4 s; kept (EM 1/0, NLL 0.25/15.58)  at 36.4 min
+[plan 50 ctx 2048 tasks 1] 34.5 s; reference-fails (EM 0/0, NLL 28.37/41.24)  at 37.0 min
+[plan 51 ctx 2046 tasks 1] 33.5 s; kept (EM 1/0, NLL 0.19/4.23)  at 37.6 min
+[plan 52 ctx 2048 tasks 2] 42.8 s; reference-fails (EM 0/0, NLL 2.16/4.18)  kept (EM 1/0, NLL 0.53/3.57)  at 38.3 min
+time cap 38 min reached: validated 53 of 60 plans
+validated 87 tasks in 53 plans: reference EM with chunk 33/87 (38 %), without 13/87; mean mask NLL with 7.570 / without 15.098 nats; kept 21/87 (24 %); reasons kept 21, reference-fails 54, solved-without 12; 38.3 min total
+wall time 38.3 min; exit 0
