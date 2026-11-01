@@ -1,0 +1,24 @@
+# provenance
+utc: 2026-11-01 13:25:22
+dotLLM: 1f418f2a000b789a20ccd489845c7e2591061006 dirty=0
+model (tokenizer only): /c/Users/james/.cache/huggingface/hub/models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF/snapshots/ae44f08e1392f39c0e474af10c3ff8355c8b6688/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+command: graph-info --corpus t8-corpus-codesharp-8e2adbd8-20261101111016 --chunker symbol --chunk 512 --repeat 3 --plans 100 --seed 0 --expect-hash bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+
+corpus C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), symbol-512: 7586 chunks, 1535738 tokens (chunk tokens median 157, max 512); Decode(Encode(file)) == file for 1390/1390; 8.3 s
+chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+build 1/3: 11.17 s (compile 0.21, bind 10.82, map 0.14); per 100K tokens 0.727 s (compile 0.014, bind 0.705, map 0.009)
+build 2/3: 6.04 s (compile 0.20, bind 5.71, map 0.12); per 100K tokens 0.393 s (compile 0.013, bind 0.372, map 0.008)
+build 3/3: 3.29 s (compile 0.16, bind 3.01, map 0.12); per 100K tokens 0.214 s (compile 0.011, bind 0.196, map 0.008)
+build time per 100K tokens: min 0.214 s, median 0.393 s over 3 runs
+edges 33134 (21.58 per 1K tokens); cross-chunk 32707 (98.7 %), cross-file 21677 (65.4 %); mapping-mismatch chunks 0
+  Definition         1 (0.0 % of edges, 0.00 per 1K tokens), cross-chunk 100.0 %
+  Use            25555 (77.1 % of edges, 16.64 per 1K tokens), cross-chunk 98.7 %
+  Import           770 (2.3 % of edges, 0.50 per 1K tokens), cross-chunk 100.0 %
+  Call            6808 (20.5 % of edges, 4.43 per 1K tokens), cross-chunk 98.7 %
+distinct use-end tokens 32081 (2.1 % of tokens), definition-end tokens 9410 (0.6 %)
+chunks sharing their token content: 132 in 43 groups; largest: 15x "\n    /// <inheritdoc/>\n    public ToolRiskClass RiskClass =>..."; 13x "\n    /// <inheritdoc/>\n    public ToolRiskClass RiskClass =>..."; 12x "\n    /// <inheritdoc/>\n    public ToolRiskClass RiskClass =>..."
+plans: 60 (task budget 100, seed 0) in 2.6 s
+contexts: 60, mean 2048 tokens / 14.3 chunks; unidentified chunks 40/857; cross-chunk edges 1 (0.01 per 1K context tokens, explicit-chunk overload 1); tokens on an edge end 0.0 %
+  by kind: Definition 0 (0.00/1K), Use 1 (0.01/1K), Import 0 (0.00/1K), Call 0 (0.00/1K)
+calling-file -> context edges (not in EdgesForContext: the query is not a chunk): 3.1 per context, 70.7 % into the required chunk(s)
+EdgesForContext: 0.065 ms per context, 0.318 ms per 10K context tokens
