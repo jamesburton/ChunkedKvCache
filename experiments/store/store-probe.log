@@ -1,10 +1,10 @@
-# dotLLM commit 27191c9f94ab8387fdded66d6debfb81b5a18fd7 (feature/chunk-store) dirty=0; Release build made at 6d3e3116 + uncommitted StoreProbe (identical to 0c6a3ac0); 2026-11-01T21:48:39Z; CPU ~87% busy with other ChunkKvLab jobs; --threads 8
-loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 1.1 s; engine 0.3.0-dev.3628.22+6d3e311650555186f45232f9e405909e33a730ac
+# dotLLM commit 63cebfbd3597385dde22fa25b4cccb1b94456900 (feature/chunk-store) dirty=0, Release build of this commit; 2026-11-01T22:23:30+00:00; CPU load before 93% with 2 other ChunkKvLab process(es); --threads 8
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 1.2 s; engine 0.3.0-dev.3628.26+63cebfbd3597385dde22fa25b4cccb1b94456900
 corpus C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/t8-corpus-AFClaude-b3f29c30-20261101111141: 9 documents, 21 chunks; chunk-id sha256 be56c35bf9afd54b63d0b8e7548c11e2e14e1729bd21cd3d8c646e202da34da5
-store C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/store-probe; key: backend cpu, dtype F32, engine '0.3.0-dev.3628.22+6d3e311650555186f45232f9e405909e33a730ac'
+store C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/store-probe; key: backend cpu, dtype F32, kv-output version 1 (build 0.3.0-dev.3628.26+63cebfbd3597385dde22fa25b4cccb1b94456900)
 analytic F32 K+V bytes per token: 294912 over 36 layers = 8192 per token per layer
 chunk,tokens,encode_ms,put_ms,get_ms,file_bytes,payload_bytes_per_token_per_layer,header_bytes,bit_exact
-1,512,10244.2,161.1,197.5,150997444,8192.0,452,1
-1,512,12438.0,0.5,288.2,150997444,8192.0,452,1
-16,512,11565.5,191.9,186.5,150997444,8192.0,452,1
+1,512,11628.8,207.3,228.8,150997444,8192.0,452,1
+1,512,10403.9,0.5,231.1,150997444,8192.0,452,1
+16,512,9668.0,177.7,199.4,150997444,8192.0,452,1
 store total bytes 301994888, entries 2
