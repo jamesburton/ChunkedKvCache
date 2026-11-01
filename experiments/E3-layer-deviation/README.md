@@ -28,7 +28,7 @@ capture curves against random, position-only and layer-1 baselines, on cross-fil
    the smallest offset in their chunk (equal chunk prefixes) captures 0.22–0.26 at k = 10 % in layers 1–11 vs 0.25–0.28 for
    the per-layer oracle top-k, and 0.15–0.16 vs 0.19–0.23 in layers 12–35; its overlap with the oracle set is 0.55–0.74
    early and 0.32–0.41 late. **The layer-1 top-k set (CacheBlend's probe layer) captures no more than the position set at any
-   depth** (within ±0.01): at 2K the layer-1 probe mostly rediscovers chunk starts. This matches 2603.20218's "early-layer
+   depth** (within ≈ 0.01; largest gap 0.011, fixed chunker, layers 2–3): at 2K the layer-1 probe mostly rediscovers chunk starts. This matches 2603.20218's "early-layer
    picks sit at chunk starts"; the addition is that position alone matches the layer-1 set at every layer.
 4. **Definition and use sites carry no extra deviation once position is controlled.** Against Other tokens in the same
    offset bin, DefinitionSite is 0.87–1.19× and UseSite 0.88–1.14× in every layer band ≥ 1, both chunkers
@@ -55,7 +55,8 @@ capture curves against random, position-only and layer-1 baselines, on cross-fil
 
 ### What this means for Task 11
 
-- **E5 (layer-tiered recompute): do not test it in Task 11.** (a) Deviation is not confined to deep layers: the layers 2–11
+- **E5 (layer-tiered recompute): do not test it in Task 11.** The plan's trigger ("if E3 pointed to depth concentration") fires
+  in the weak sense: deviation grows with depth (≈ 5× in relative terms from layer 1 to the peak). We still recommend no: (a) Deviation is not confined to deep layers: the layers 2–11
   mean (0.17 symbol) is already about half the layers 12–35 mean (0.33–0.38), and chunk starts are most enriched there. (b) Mechanically,
   `SelectiveRecomputer` cannot refresh a token's deep-layer K/V without running that token through its shallow layers first,
   so "recompute only layers ≥ T" saves no FLOPs per token (it only leaves the freshly computed shallow K/V unwritten); the
