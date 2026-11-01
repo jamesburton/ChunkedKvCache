@@ -140,6 +140,8 @@ def pairs(df, inst, sel, label, idx, budgets):
         cmp = [("graph", "query"), ("graph", "chunk_starts"), ("hybrid_query", "query"), ("hybrid_dev", "deviation"),
                ("graph", best), ("hybrid_query", best), ("hybrid_dev", best), ("oracle_def_fill", "chunk_starts"), ("oracle_def_fill", "graph"),
                ("query", "chunk_starts")]
+        # paired against every baseline wherever both arms ran (FirstK/Deviation/Random: symbol seed 0, 5 and 20 % only)
+        cmp += [(a, base) for a in ["graph", "hybrid_query", "hybrid_dev", "oracle_def_fill"] for base in ["first_k", "deviation", "random"]]
         for a, base in dict.fromkeys(cmp):
             ca, cb = f"{a}@{key}", f"{base}@{key}"
             if ca not in nll or cb not in nll:
@@ -196,6 +198,10 @@ def main(dirs):
         # what the graph signal can add: instances whose query prefix references a symbol declared in a stale context chunk
         "kept-valid-targets": (inst["mode"] == "kept") & inst.valid & (inst.query_targets > 0),
         "kept-valid-notargets": (inst["mode"] == "kept") & inst.valid & (inst.query_targets == 0),
+        # the only cell with every baseline (FirstK, Deviation = CacheBlend-like, Random): symbol chunks, seed 0
+        "kept-valid-s0": (inst["mode"] == "kept") & inst.valid & (inst.seed == 0),
+        # oracles without the instances whose required chunk is chunk 0 (exact under naive, so both oracles recompute nothing)
+        "kept-valid-reqstale": (inst["mode"] == "kept") & inst.valid & (inst.required_first == 0),
     }
     cur, prs, low = [], [], []
     for sname, smask in sets.items():
@@ -304,6 +310,27 @@ def write_summary(df, inst, sets, cur, prs, low, ov, budgets):
             if r.d_gap_hi >= 0:
                 w(f"| {r.set} | {r.arm} | {r.budget:g} | {r.baseline} | {r.baseline_budget:g} | {fmt(r.d_gap, r.d_gap_lo, r.d_gap_hi)} |")
         w("")
+    w("## Per chunker and seed (kept-valid): share of the naive->full NLL gap recovered (point estimates)\n")
+    nll = wide(df, inst, "mask_nll")
+    arms = [("chunk_starts", "ChunkStarts"), ("query", "QR"), ("graph", "Graph"), ("hybrid_query", "Hybrid(QR)")]
+    w("| chunker | seed | n | " + " | ".join(f"{l} {b} %" for _, l in arms for b in (5, 20)) + " |")
+    w("|---|---:|---:|" + "---:|" * (2 * len(arms)))
+    for (ch, sd), g in inst[(inst["mode"] == "kept") & inst.valid].groupby(["chunker", "seed"]):
+        n = nll.loc[g.index]
+        den = (n.naive - n.full).sum()
+        cells = [f"{(n.naive - n[f'{a}@{float(b)}']).sum() / den:.2f}" for a, _ in arms for b in (5, 20)]
+        w(f"| {ch} | {sd} | {len(g)} | " + " | ".join(cells) + " |")
+    w("")
+    w("## Graph picks vs fill (share of the budget chosen by the graph; the rest is chunk-start fill)\n")
+    w("| set | budget % | graph picks / budget tokens (mean) | share |")
+    w("|---|---:|---:|---:|")
+    kv = df[df.inst.isin(inst.index[(inst["mode"] == "kept") & inst.valid])]
+    for label, sub in [("all kept-valid", kv), ("query targets > 0", kv[kv.query_targets > 0]), ("no query targets", kv[kv.query_targets == 0])]:
+        for b in budgets:
+            r = sub[(sub.arm == "graph") & (sub.budget_pct == b)]
+            if len(r):
+                w(f"| {label} | {b:g} | {r.graph_picks.mean():.1f} / {r.budget_tokens.mean():.0f} | {r.graph_picks.sum() / r.budget_tokens.sum():.2f} |")
+    w("")
     w("## Overhead and recompute cost per arm\n")
     w("| arm | budget % | rows | score/probe ms (median) | selection ms (median / max) | forward calls (mean) | recompute ms (mean) | memo share | graph picks (mean) |")
     w("|---|---:|---:|---:|---|---:|---:|---:|---:|")

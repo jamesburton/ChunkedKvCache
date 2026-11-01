@@ -9,13 +9,15 @@ raw results, logs and provenance.
 
 1. **The core hypothesis is not supported.** A reference-graph selector (Roslyn: definitions the query uses, their chunk
    starts, cross-chunk edges, imports) does **not** beat the best existing selector (ProphetKV-like query relevance) at equal
-   recompute budget. It matches it with symbol chunks at 10–20 % and is worse at 5 % and with fixed 512-token chunks (E4).
-   Graph + query relevance (Hybrid) is the best runnable arm from 10 % up, by +0.04–0.05 of the naive→full gap, within noise.
-   **Success criterion: partly met** (a match without a beat, symbol chunks only; per-cell table in
+   recompute budget. With symbol chunks it is not distinguishable from it at 10–20 % (differences +0.02 to −0.01 of the
+   naive→full gap; CIs admit losses up to 0.11) and is worse at 5 % and with fixed 512-token chunks (E4). Graph + query
+   relevance (Hybrid) is the best runnable arm from 10 % up, by +0.04–0.05 of the gap, within noise.
+   **Success criterion: partly met** (no detectable difference and no beat, symbol chunks only; per-cell table in
    `experiments/E4-structure-aware/README.md`).
 2. **Where the graph has a signal it helps a little; mostly it has none.** Only 45 % of task instances have a query that
    references a symbol declared in a stale context chunk (0–25 % on the large repo). On those, Hybrid beats query relevance at
-   15 % (+0.12 [+0.01, +0.16]); elsewhere the graph adds nothing. The ceiling of the idea (an oracle that knows which
+   15 % (+0.12 [+0.01, +0.16]); elsewhere the graph adds nothing. The graph itself chooses 38 % of a 5 % budget and 12 % of a
+   20 % budget (the rest is chunk-start fill), which is why it tracks chunk starts. The ceiling of the idea (an oracle that knows which
    definition the answer needs) is +0.15 of the gap at 5 % and +0.04 at 20 % over chunk starts.
 3. **Chunk starts are the dominant, nearly free signal** (E2, E3, E4): equal prefixes of every stale chunk recover 0.65–0.82
    of the gap at 5–20 % with no model probe; CacheBlend-style layer-1 deviation mostly rediscovers them.
@@ -68,12 +70,14 @@ Graph 0.79, Hybrid 0.79, oracle 0.91; fixed ChunkStarts 0.91, QR 1.00, Graph 0.8
 INCEPTION 4.5: "E4 matches or beats CacheBlend quality at the same recompute budget, or matches its quality at a lower budget,
 with negligible selection overhead"; the Task 11 brief sharpens it to the best baseline.
 
-- **Against the best baseline (query relevance): partly met.** Symbol chunks pooled: Graph matches at 10–20 %, loses at 5 %
+- **Against the best baseline (query relevance): partly met.** Symbol chunks pooled: Graph is not distinguishable from it at
+  10–20 % (CIs contain 0 but admit losses up to 0.11), loses at 5 %
   (−0.11 [−0.22, −0.02]); Hybrid is ahead by +0.05 at 10–20 % but not significantly. Fixed chunks: Graph is worse at every
   budget (not met); Hybrid only matches because it falls back to query relevance. Per corpus: AFClaude/symbol is the one cell
   where the graph beats query relevance (15–20 %), but there plain chunk starts are as good as the graph; DocAgent and
   codesharp: not met (codesharp contexts almost never contain a definition the query uses).
-- **Against CacheBlend-like deviation: met in the narrow sense.** Graph matches it at 5 % and 20 % at negligible cost and
+- **Against CacheBlend-like deviation (symbol, seed 0, n = 23): met in the narrow sense.** Graph is level with it at 5 % and
+  20 % (−0.04 [−0.25, +0.12], +0.01 [−0.04, +0.08]) at negligible cost and
   Hybrid(QR) is ahead at 20 % (+0.07 [+0.00, +0.14]), but chunk starts also match deviation, so this does not credit the graph.
 - **At a lower budget:** no graph arm at a lower budget beats a baseline at a higher one, except where the baseline's own
   curve is flat between the two budgets.
@@ -89,8 +93,8 @@ with negligible selection overhead"; the Task 11 brief sharpens it to the best b
   fixed 16-token windows and target-chunk starts crowd out better picks (−0.10 to −0.15).
 - The masked call's own definition is usually not referenced by the prefix: an oracle that knows it gains +0.15 at 5 %, which
   bounds what query-side structure could add in this setting.
-- The tokens that matter most are not in the needed chunk: re-encoding the whole required chunk recovers only 0.56 of the gap,
-  less than 5 % of chunk starts. Staleness is spread over every chunk boundary.
+- The tokens that matter most are not in the needed chunk: re-encoding the whole required chunk recovers only 0.56 of the gap
+  (0.61 without the instances whose required chunk is already exact at position 0), less than 5 % of chunk starts. Staleness is spread over every chunk boundary.
 
 ## Caveats
 

@@ -3,9 +3,10 @@
 **Result in brief** (Qwen3-4B-Instruct-2507 Q4_K_M, CPU, 2K contexts, 75 valid task instances from 26 call sites in
 14 definition clusters; 95 % cluster-bootstrap CIs; full tables in `summary.md`):
 
-- **The graph selector does not beat the best baseline.** With symbol chunks it **matches** query relevance (ProphetKV-like,
-  the best E2 selector) at 10–20 % (difference in the share of the naive→full gap recovered: +0.02 [−0.06, +0.08],
-  +0.01 [−0.06, +0.07], −0.01 [−0.11, +0.07]) and is **worse at 5 %** (−0.11 [−0.22, −0.02]). With fixed 512-token chunks it
+- **The graph selector does not beat the best baseline.** With symbol chunks it is **not distinguishable from** query
+  relevance (ProphetKV-like, the best E2 selector) at 10–20 % (difference in the share of the naive→full gap recovered:
+  +0.02 [−0.06, +0.08], +0.01 [−0.06, +0.07], −0.01 [−0.11, +0.07]; the intervals still admit a loss of up to 0.11) and is
+  **worse at 5 %** (−0.11 [−0.22, −0.02]). With fixed 512-token chunks it
   is **worse at every budget** (−0.13 to −0.23, all CIs below 0).
 - **Hybrid(QR)** (graph picks, then query relevance) is the best runnable arm from 10 % up, but not significantly: +0.04 to
   +0.05 over query relevance pooled (CIs include 0; exact-match wins/losses 4/0, 5/1, 3/1) and −0.10 [−0.17, −0.03] at 5 %.
@@ -14,11 +15,15 @@
   (+0.12 [+0.01, +0.16], EM 4/0), and on AFClaude/symbol graph alone beats it at 15–20 % (+0.12 [+0.02, +0.16],
   +0.14 [+0.04, +0.17]) — but on AFClaude query relevance is the weakest structured selector and plain ChunkStarts is as good
   as the graph. Without such targets the graph's lower tiers (in-context edges, imports) displace chunk starts and cost
-  −0.06 [−0.12, −0.00] at 5 %.
+  −0.06 [−0.12, −0.00] at 5 %. **Share of the budget the graph itself chose** (the rest is chunk-start fill): 38 / 23 / 16 /
+  12 % at 5 / 10 / 15 / 20 % overall; 66 / 42 / 29 / 22 % where the query has targets; 15 / 8 / 5 / 4 % (in-context edges and
+  imports only) where it has none. So at ≥ 10 % most of the graph arm is fill, which is why Graph tracks ChunkStarts.
 - **The idea's ceiling is real but small, and mostly at 5 %:** the ORACLE that recomputes the masked callee's 16-token
   definition window, then the same chunk-start fill, recovers 0.80 of the gap at 5 % against 0.65 for ChunkStarts
   (+0.15 [+0.03, +0.30]) and 0.73 for query relevance; at 20 % it is only +0.04 ahead. Re-encoding the whole required chunk
-  (ORACLE-chunk, mean 320 tokens ≈ 16 %) recovers only 0.56, the definition window alone (≈ 14 tokens) 0.19: staleness
+  (ORACLE-chunk, mean 320 tokens ≈ 16 %) recovers only 0.56, the definition window alone (≈ 14 tokens) 0.19. Without the 7
+  instances whose required chunk is chunk 0 (exact under naive, so both oracles recompute nothing): 0.61 [0.45, 0.77] and
+  0.21 [0.16, 0.27], and definition window + fill 0.82 vs ChunkStarts 0.65 at 5 % (set `kept-valid-reqstale`). Staleness
   elsewhere (every chunk start) matters more than the one chunk the answer needs.
 - **The 95 % / 20 % bar** (exact match ≥ 0.95 × full at ≤ 20 % recompute) **holds for fixed-512 chunks** (query relevance and
   Hybrid(QR) EM 1.00 at 20 %, 0.94 / 0.97 at 15 %; n = 32) and **not for symbol chunks** (best runnable 0.81 at 20 %, ORACLE
@@ -37,7 +42,9 @@ Data: `curves.csv` (set `kept-valid|<chunker>|pooled`). Arms drawn with two poin
 ### Success criterion (INCEPTION 4.5), per corpus and chunker
 
 "Match or beat the best baseline at equal budget, or match it at a lower budget, with negligible selection overhead."
-Best baseline = query relevance (QR) unless stated; ChunkStarts is as good or better on AFClaude. Differences are in gap
+"Best baseline" in `pairs.csv` is the better of ChunkStarts and QR, the two baselines run in every cell (FirstK, Deviation
+and Random ran on symbol/seed 0 only; that comparison is the `kept-valid-s0` set). It is QR almost everywhere; ChunkStarts is
+as good or better on AFClaude. Differences are in gap
 recovered, arm − baseline, with 95 % CIs in `pairs.csv` / `summary.md`.
 
 | cell | n / clusters | Graph vs QR | Hybrid(QR) vs QR | verdict |
@@ -48,11 +55,11 @@ recovered, arm − baseline, with 95 % CIs in `pairs.csv` / `summary.md`.
 | AFClaude, fixed | 15 / 3 | worse (−0.15 to −0.48) | ≈ QR from 10 % | **not met** |
 | DocAgent, fixed | 9 / 3 | worse (points −0.05 to −0.11; CIs degenerate with 3 clusters) | ≈ QR | **not met** |
 | codesharp, fixed | 8 / 4 | worse (−0.24 to −0.34) | = QR | **not met** |
-| pooled, symbol | 43 / 14 | matches at 10–20 %, worse at 5 % | +0.05 at 10–20 % (n.s.), worse at 5 % | **partly met**: matches, does not beat |
+| pooled, symbol | 43 / 14 | not distinguishable at 10–20 % (CIs ∋ 0), worse at 5 % | +0.05 at 10–20 % (n.s.), worse at 5 % | **partly met**: no detectable difference, no beat |
 | pooled, fixed | 32 / 10 | worse at every budget | matches at 10–20 % | **not met** for the graph |
 
-Against the **CacheBlend-like** layer-1 deviation selector (INCEPTION's literal wording; run on symbol/seed 0 only, n = 23):
-Graph matches it (−0.04 [−0.25, +0.12] at 5 %, +0.01 [−0.04, +0.08] at 20 %) at 0.1 ms instead of a 1.4 s probe, and Hybrid(QR)
+Against the **CacheBlend-like** layer-1 deviation selector (INCEPTION's literal wording; run on symbol/seed 0 only, n = 23,
+set `kept-valid-s0|symbol|pooled` in `summary.md`), Graph is level with it (−0.04 [−0.25, +0.12] at 5 %, +0.01 [−0.04, +0.08] at 20 %) at 0.1 ms instead of a 1.4 s probe, and Hybrid(QR)
 is ahead at 20 % (+0.07 [+0.00, +0.14]). ChunkStarts also matches deviation (as E2/E3 predicted), so this is not evidence for
 the graph signal. **Lower budget:** no graph arm at budget b beats a baseline at a larger budget except where that baseline is
 flat between the two budgets (`lower-budget.csv`); e.g. Hybrid(QR) at 15 % vs query relevance at 20 % is +0.01 [−0.06, +0.08],
@@ -65,8 +72,10 @@ but query relevance itself only moves 0.83 → 0.86 between those budgets.
   selector recovers less (query relevance at 20 %: 0.83 vs 0.97 of the gap). The extra chunk starts and cross-chunk edges of
   symbol chunking are not turned into quality by the graph at equal budget. (The chunkers' valid instance sets differ:
   re-validation drops different tasks.)
-- **Dropping the required chunk is worse than naive reuse** (gap −1.33 pooled): stale K/V of the definition still help.
-- **Seeds** (distractor sample and order around the same call sites). Gap at 20 % for QR / Graph / Hybrid(QR): symbol 0.84 /
+- **Dropping the required chunk is worse than naive reuse** (gap −1.33 [−2.39, −0.52] over the 52 instances where it ran,
+  i.e. all but symbol/seed 0): stale K/V of the definition still help.
+- **Seeds** (distractor sample and order around the same call sites; table "Per chunker and seed" in `summary.md`). Gap at
+  20 % for QR / Graph / Hybrid(QR): symbol 0.84 /
   0.84 / 0.90 (seed 0), 0.79 / 0.83 / 0.86 (1), 0.92 / 0.76 / 0.93 (2); fixed 0.99 / 0.82 / 0.99, 0.90 / 0.79 / 0.86, 1.01 /
   0.90 / 1.00. Hybrid(QR) ≥ QR > Graph holds in every fixed seed; with symbol chunks the QR-vs-Graph order changes with the seed.
 - **Sensitivity sets.** `kept-all` (no per-context re-validation, 88 instances) gives the same picture within 0.01–0.02. The
@@ -182,8 +191,8 @@ every cell draws the same definitions first:
 | fixed, seeds 1–2 | 2 | as fixed | 5/10/15/20 |
 | unfiltered, symbol seed 0 | 2 (every task) | drop_required, ChunkStarts, QR, Graph, Hybrid(QR) | 10/20 |
 
-So the "best baseline" at 10 / 15 % is chosen between ChunkStarts and query relevance; FirstK, Deviation and Random enter at 5 /
-20 % on symbol/seed 0 only. Identical selections are evaluated once (`memo` column: e.g. Graph = ChunkStarts on a context
+So the pooled "best baseline" is chosen between ChunkStarts and query relevance at every budget (the baselines present in every
+cell); FirstK, Deviation and Random are compared on symbol/seed 0 at 5 / 20 % only (`kept-valid-s0`). Identical selections are evaluated once (`memo` column: e.g. Graph = ChunkStarts on a context
 without graph signal, Hybrid(QR) = QR when the graph has no picks).
 
 **Second model (Llama-3.1-8B): deferred.** The 4B subset alone filled the ≈ 4 h CPU budget; an 8B model costs about 2× the
