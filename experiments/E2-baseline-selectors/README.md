@@ -1,6 +1,6 @@
 # E2 — baseline recompute selectors: quality versus budget (gate G1)
 
-**Result in brief.** On Qwen3-4B-Instruct-2507 (CPU, code chunks, 2K/4K, 3 seeds), every structured selector removes about half of
+**Result in brief.** On Qwen3-4B-Instruct-2507 (CPU, code chunks, 2K/4K with all selectors and 8K with the best two, 3 seeds), every structured selector removes about half of
 the naive-concatenation KL with only 5 % of the tokens recomputed, and random selection removes almost none. **ProphetKV-style query
 relevance is the only selector that keeps improving with budget.** It removes 83 % of the naive KL at 20 % at both sizes, while
 the others plateau at 50–65 %. At 8K (3 seeds) it removes 96 %, versus 79 % for layer-1 deviation. Caveat: greedy exact match does
@@ -66,6 +66,22 @@ Both are bitwise identical to the reference. dotLLM's CPU kernels are batch-inva
 numerics. The second row is also the end-to-end pipeline check: assembly, recompute and evaluation at 100 % budget reproduce full
 prefill exactly. The only non-bitwise numeric path left in the methods is the RoPE re-rotation of K. E1 measured it at ≤ 3e-5 of the
 head norm at 16K, which is far below every effect below. So any KL > 0 here is a method effect, not noise.
+
+### Mean KL with seed spread (mean [min, max] over 3 seeds; plain selectors, the lowest and highest swept budget)
+
+| selector | 2K 5 % | 2K 20 % | 4K 5 % | 4K 20 % |
+|---|---|---|---|---|
+| naive_concat | 0.1308 [0.1040, 0.1484] | — | 0.1738 [0.0616, 0.2489] | — |
+| first_k | 0.0661 [0.0604, 0.0734] | 0.0546 [0.0494, 0.0636] | 0.0560 [0.0421, 0.0701] | 0.0501 [0.0440, 0.0603] |
+| chunk_starts | 0.0662 [0.0569, 0.0795] | 0.0628 [0.0366, 0.0807] | 0.0537 [0.0397, 0.0674] | 0.0469 [0.0418, 0.0519] |
+| deviation | 0.0649 [0.0517, 0.0815] | 0.0518 [0.0366, 0.0687] | 0.0555 [0.0409, 0.0723] | 0.0473 [0.0442, 0.0500] |
+| combined | 0.0628 [0.0499, 0.0724] | 0.0518 [0.0366, 0.0687] | 0.0534 [0.0400, 0.0693] | 0.0473 [0.0442, 0.0500] |
+| query | 0.0645 [0.0578, 0.0725] | 0.0222 [0.0174, 0.0296] | 0.0457 [0.0398, 0.0557] | 0.0183 [0.0144, 0.0227] |
+| random | 0.1318 [0.1046, 0.1490] | 0.1015 [0.0820, 0.1253] | 0.1680 [0.0630, 0.2547] | 0.1130 [0.0761, 0.1618] |
+| deviation_oracle (not runnable) | 0.0687 [0.0634, 0.0782] | 0.0397 [0.0365, 0.0458] | 0.0558 [0.0462, 0.0651] | 0.0469 [0.0402, 0.0550] |
+
+The [min, max] for every selector, budget and runs variant, and for top-1, post-query KL, EM, oracle Jaccard, forward calls and
+recompute time, is in `summary.md` (2K/4K) and `summary-8k.md`.
 
 ### Mean KL vs budget
 
