@@ -1,0 +1,33 @@
+# provenance
+utc: 2026-11-01 09:46:14
+command: e2 sizes=8192 seeds=2 first-seed=1 budgets=10,20 selectors=query,deviation contiguous=none query=16 noise=0
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ 8569b51cc0f00aa8dfc8e6bc8e7922299a693a30 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/e2-corpus-4a781829-20261031161333/src = git archive 4a7818290766b69a3bae0999874154185c7fa587 src of C:\Development\dotLLM (frozen snapshot, 1086 .cs files); expected chunk-id sha256 b02b1e6e44ebbf82169f29a42d7847d7ba69203fc52f9d07bef60335c90dc800
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.7 s; engine 0.3.0-dev.3628.7+8569b51cc0f00aa8dfc8e6bc8e7922299a693a30
+corpus C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/e2-corpus-4a781829-20261031161333/src (*.cs): 1086 documents, 7257 chunks of 512 tokens, tokenised once in 14.3 s; chunk-id sha256 b02b1e6e44ebbf82169f29a42d7847d7ba69203fc52f9d07bef60335c90dc800
+selectors query,deviation; contiguous runs (w=8) for ; budgets 10,20 %; query = first 16 continuation tokens
+[seed 1 ctx 8192] request 1804 804 3390 5600 4772 3143 2573 6850 4665 742 1808 2331 4954 4757 217 7182; continuation document successor
+  full                         b= 8192 top1 1.000 KL 0 (post-q 0) EM 1.000  calls 0  recompute 216.4 s  [4.0 min]
+  naive_concat                 b=    0 top1 0.750 KL 0.6947 (post-q 0.7638) EM 0.125  calls 0  recompute 0.0 s  [5.0 min]
+  score sources: deviation 14.2 s, oracle 0.5 s, query 4.2 s
+  query@10.0                   b=  819 top1 0.938 KL 0.02664 (post-q 0.01988) EM 1.000  J(oracle) 0.07  calls 363  recompute 60.8 s  [6.4 min]
+  query@20.0                   b= 1638 top1 0.984 KL 0.01338 (post-q 0.007864) EM 1.000  J(oracle) 0.12  calls 674  recompute 107.8 s  [8.4 min]
+  deviation@10.0               b=  819 top1 0.906 KL 0.1019 (post-q 0.07069) EM 0.250  J(oracle) 0.16  calls 319  recompute 64.2 s  [9.6 min]
+  deviation@20.0               b= 1638 top1 0.906 KL 0.09684 (post-q 0.05047) EM 1.000  J(oracle) 0.32  calls 409  recompute 88.5 s  [11.2 min]
+[seed 1 ctx 8192] done at 11.2 min
+[seed 2 ctx 8192] request 5595 2933 1206 7148 794 2229 5822 3237 5556 3707 90 1638 66 2781 219 2038; continuation document successor
+  full                         b= 8192 top1 1.000 KL 0 (post-q 0) EM 1.000  calls 0  recompute 228.2 s  [15.1 min]
+  naive_concat                 b=    0 top1 0.891 KL 0.3553 (post-q 0.453) EM 1.000  calls 0  recompute 0.0 s  [16.3 min]
+  score sources: deviation 13.8 s, oracle 0.2 s, query 3.9 s
+  query@10.0                   b=  819 top1 0.953 KL 0.02632 (post-q 0.02842) EM 0.875  J(oracle) 0.09  calls 316  recompute 58.8 s  [17.7 min]
+  query@20.0                   b= 1638 top1 0.969 KL 0.01592 (post-q 0.01916) EM 1.000  J(oracle) 0.15  calls 605  recompute 101.1 s  [19.5 min]
+  deviation@10.0               b=  819 top1 0.953 KL 0.07611 (post-q 0.09606) EM 1.000  J(oracle) 0.17  calls 250  recompute 44.4 s  [20.3 min]
+  deviation@20.0               b= 1638 top1 0.953 KL 0.08823 (post-q 0.1117) EM 1.000  J(oracle) 0.29  calls 422  recompute 80.9 s  [21.8 min]
+[seed 2 ctx 8192] done at 21.8 min
+E2 finished in 21.8 min -> C:\Development\ChunkedkvCache\experiments\E2-baseline-selectors\results-8k-s12.csv
+wall time 21.8 min; exit 0
