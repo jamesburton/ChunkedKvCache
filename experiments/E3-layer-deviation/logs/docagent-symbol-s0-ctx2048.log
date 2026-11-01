@@ -1,0 +1,42 @@
+# provenance
+utc: 2026-11-01 14:25:43
+command: ChunkKvLab e3 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 --name docagent --chunker symbol --chunk 512 --seed 0 --count 100 --context 2048 --contexts 8 --query 1 --raw 1 --max-minutes 14 --expect-hash 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7 --out-dir C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw --kept C:\Development\ChunkedkvCache\experiments\corpus\docagent.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\docagent.plans.jsonl
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1)
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ 7178c59724d8b236f254b3eded7be05169cb3967 (branch feature/chunk-kv-reuse); dirty files: 1
+corpus: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 src of C:\Development\CSharpDocAgentFrameworkMCP; source repo HEAD 6683823880bc2a7d62708907c725d9eaedf3a016, dirty files now: 0; expected chunk-id sha256 (symbol-512) 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.7 s; engine 0.3.0-dev.3628.16+7178c59724d8b236f254b3eded7be05169cb3967
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 3.2 s
+chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+graph: 3772 edges in 3.4 s; mapping-mismatch chunks 0
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\docagent.plans.jsonl: 48 plans, identical chunk ids
+plans: 48 generated (seed 0, 1.4 s); contexts: 24 (8 in the first-8 sample, 17 with a kept task); query rows on
+[docagent/symbol/s0/p0 ctx 2045 chunks 18 query 248] 47.6 s; chunk0 max 0, layer0 max rel 2.79E-06; roles cs 18 def 28 use 80 import 1 qsite 0; at 0.9 min
+[docagent/symbol/s0/p1 ctx 2047 chunks 16 query 253] 42.7 s; chunk0 max 0, layer0 max rel 2.23E-06; roles cs 16 def 17 use 61 import 0 qsite 0; at 1.6 min
+[docagent/symbol/s0/p2 ctx 2045 chunks 14 query 252] 36.6 s; chunk0 max 0, layer0 max rel 2.82E-06; roles cs 14 def 14 use 79 import 0 qsite 0; at 2.3 min
+[docagent/symbol/s0/p3 ctx 2045 chunks 14 query 255] 31.7 s; chunk0 max 0, layer0 max rel 3.19E-06; roles cs 14 def 41 use 65 import 1 qsite 2; at 2.8 min
+[docagent/symbol/s0/p4 kept ctx 2048 chunks 12 query 250] 34.0 s; chunk0 max 0, layer0 max rel 2.25E-06; roles cs 12 def 14 use 114 import 0 qsite 0; at 3.4 min
+[docagent/symbol/s0/p5 ctx 2047 chunks 14 query 246] 31.4 s; chunk0 max 0, layer0 max rel 3.19E-06; roles cs 14 def 29 use 53 import 3 qsite 0; at 3.9 min
+[docagent/symbol/s0/p6 ctx 2047 chunks 24 query 250] 31.3 s; chunk0 max 0, layer0 max rel 2.7E-06; roles cs 24 def 69 use 71 import 1 qsite 0; at 4.4 min
+[docagent/symbol/s0/p7 ctx 2046 chunks 10 query 251] 26.9 s; chunk0 max 0, layer0 max rel 3.3E-06; roles cs 10 def 13 use 79 import 0 qsite 0; at 4.9 min
+[docagent/symbol/s0/p9 kept ctx 2043 chunks 20 query 250] 32.9 s; chunk0 max 0, layer0 max rel 3.17E-06; roles cs 20 def 45 use 111 import 1 qsite 1; at 5.4 min
+[docagent/symbol/s0/p10 kept ctx 2048 chunks 15 query 252] 31.1 s; chunk0 max 0, layer0 max rel 2.87E-06; roles cs 15 def 25 use 101 import 0 qsite 3; at 5.9 min
+[docagent/symbol/s0/p12 kept ctx 2048 chunks 22 query 248] 29.0 s; chunk0 max 0, layer0 max rel 2.46E-06; roles cs 22 def 50 use 91 import 0 qsite 0; at 6.4 min
+[docagent/symbol/s0/p13 kept ctx 2046 chunks 20 query 234] 24.5 s; chunk0 max 0, layer0 max rel 3.02E-06; roles cs 20 def 35 use 115 import 2 qsite 1; at 6.8 min
+[docagent/symbol/s0/p14 kept ctx 2045 chunks 23 query 244] 31.4 s; chunk0 max 0, layer0 max rel 2.49E-06; roles cs 23 def 25 use 84 import 5 qsite 0; at 7.3 min
+[docagent/symbol/s0/p17 kept ctx 2040 chunks 14 query 250] 29.3 s; chunk0 max 0, layer0 max rel 2.42E-06; roles cs 14 def 15 use 85 import 0 qsite 0; at 7.8 min
+[docagent/symbol/s0/p19 kept ctx 2048 chunks 22 query 254] 31.9 s; chunk0 max 0, layer0 max rel 2.83E-06; roles cs 22 def 39 use 105 import 3 qsite 0; at 8.4 min
+[docagent/symbol/s0/p26 kept ctx 2044 chunks 14 query 252] 33.3 s; chunk0 max 0, layer0 max rel 2.51E-06; roles cs 14 def 30 use 83 import 1 qsite 1; at 8.9 min
+[docagent/symbol/s0/p29 kept ctx 2048 chunks 16 query 240] 34.9 s; chunk0 max 0, layer0 max rel 3.13E-06; roles cs 16 def 15 use 63 import 2 qsite 0; at 9.5 min
+[docagent/symbol/s0/p31 kept ctx 2047 chunks 12 query 250] 37.3 s; chunk0 max 0, layer0 max rel 2.31E-06; roles cs 12 def 16 use 67 import 12 qsite 0; at 10.1 min
+[docagent/symbol/s0/p32 kept ctx 2041 chunks 19 query 255] 29.1 s; chunk0 max 0, layer0 max rel 2.92E-06; roles cs 19 def 41 use 65 import 12 qsite 2; at 10.6 min
+[docagent/symbol/s0/p33 kept ctx 2048 chunks 19 query 248] 30.2 s; chunk0 max 0, layer0 max rel 3.14E-06; roles cs 19 def 31 use 101 import 1 qsite 0; at 11.1 min
+[docagent/symbol/s0/p36 kept ctx 2045 chunks 13 query 246] 28.5 s; chunk0 max 0, layer0 max rel 2.59E-06; roles cs 13 def 18 use 60 import 2 qsite 0; at 11.6 min
+[docagent/symbol/s0/p41 kept ctx 2048 chunks 18 query 249] 34.3 s; chunk0 max 0, layer0 max rel 3.19E-06; roles cs 18 def 20 use 93 import 0 qsite 0; at 12.2 min
+[docagent/symbol/s0/p44 kept ctx 2048 chunks 16 query 248] 31.1 s; chunk0 max 0, layer0 max rel 2.36E-06; roles cs 16 def 18 use 46 import 0 qsite 3; at 12.7 min
+[docagent/symbol/s0/p46 kept ctx 2046 chunks 12 query 239] 34.1 s; chunk0 max 0, layer0 max rel 2.99E-06; roles cs 12 def 20 use 87 import 7 qsite 0; at 13.2 min
+e3 docagent/symbol/s0: 24 contexts in 13.3 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw\docagent-symbol-s0.*
+wall time 13.3 min; exit 0; total 19.7 min

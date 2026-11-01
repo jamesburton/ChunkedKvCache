@@ -1,0 +1,39 @@
+# provenance
+utc: 2026-11-01 14:39:00
+command: ChunkKvLab e3 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 --name codesharp --chunker symbol --chunk 512 --seed 0 --count 100 --context 2048 --contexts 8 --query 1 --raw 1 --max-minutes 14 --expect-hash bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb --out-dir C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw --kept C:\Development\ChunkedkvCache\experiments\corpus\codesharp.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\codesharp.plans.jsonl
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1)
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ 7178c59724d8b236f254b3eded7be05169cb3967 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 src of C:\Development\codesharp; source repo HEAD 0c97c38c6583a1d3522846d0f290a2c7e488eafa, dirty files now: 0; expected chunk-id sha256 (symbol-512) bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.5 s; engine 0.3.0-dev.3628.16+7178c59724d8b236f254b3eded7be05169cb3967
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), symbol-512: 7586 chunks, 1535738 tokens (chunk tokens median 157, max 512); Decode(Encode(file)) == file for 1390/1390; 10.0 s
+chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+graph: 33134 edges in 13.8 s; mapping-mismatch chunks 0
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\codesharp.plans.jsonl: 60 plans, identical chunk ids
+plans: 60 generated (seed 0, 5.2 s); contexts: 25 (8 in the first-8 sample, 21 with a kept task); query rows on
+[codesharp/symbol/s0/p0 ctx 2047 chunks 15 query 254] 48.1 s; chunk0 max 0, layer0 max rel 2.67E-06; roles cs 15 def 13 use 65 import 0 qsite 0; at 1.3 min
+[codesharp/symbol/s0/p1 ctx 2047 chunks 15 query 247] 36.7 s; chunk0 max 0, layer0 max rel 2.58E-06; roles cs 15 def 11 use 33 import 0 qsite 0; at 1.9 min
+[codesharp/symbol/s0/p2 ctx 2048 chunks 11 query 230] 40.5 s; chunk0 max 0, layer0 max rel 2.86E-06; roles cs 11 def 9 use 66 import 0 qsite 0; at 2.6 min
+[codesharp/symbol/s0/p3 ctx 2046 chunks 15 query 254] 38.9 s; chunk0 max 0, layer0 max rel 2.96E-06; roles cs 15 def 8 use 49 import 1 qsite 0; at 3.2 min
+[codesharp/symbol/s0/p4 kept ctx 2048 chunks 12 query 253] 37.8 s; chunk0 max 0, layer0 max rel 2.94E-06; roles cs 12 def 8 use 44 import 0 qsite 0; at 3.9 min
+[codesharp/symbol/s0/p5 kept ctx 2048 chunks 15 query 228] 35.6 s; chunk0 max 0, layer0 max rel 3.43E-06; roles cs 15 def 15 use 45 import 0 qsite 0; at 4.5 min
+[codesharp/symbol/s0/p6 kept ctx 2048 chunks 11 query 245] 40.0 s; chunk0 max 0, layer0 max rel 2.78E-06; roles cs 11 def 5 use 43 import 0 qsite 0; at 5.1 min
+[codesharp/symbol/s0/p7 kept ctx 2047 chunks 12 query 234] 39.1 s; chunk0 max 0, layer0 max rel 2.69E-06; roles cs 12 def 9 use 68 import 0 qsite 1; at 5.8 min
+[codesharp/symbol/s0/p10 kept ctx 2047 chunks 12 query 248] 39.5 s; chunk0 max 0, layer0 max rel 2.39E-06; roles cs 12 def 10 use 18 import 0 qsite 0; at 6.4 min
+[codesharp/symbol/s0/p17 kept ctx 2048 chunks 16 query 247] 38.3 s; chunk0 max 0, layer0 max rel 3.28E-06; roles cs 16 def 21 use 41 import 2 qsite 0; at 7.1 min
+[codesharp/symbol/s0/p22 kept ctx 2048 chunks 22 query 236] 49.6 s; chunk0 max 0, layer0 max rel 3.16E-06; roles cs 22 def 22 use 40 import 1 qsite 0; at 7.9 min
+[codesharp/symbol/s0/p24 kept ctx 2048 chunks 19 query 246] 46.3 s; chunk0 max 0, layer0 max rel 3.07E-06; roles cs 19 def 19 use 45 import 0 qsite 0; at 8.7 min
+[codesharp/symbol/s0/p28 kept ctx 2048 chunks 13 query 248] 36.8 s; chunk0 max 0, layer0 max rel 2.88E-06; roles cs 13 def 17 use 81 import 1 qsite 0; at 9.3 min
+[codesharp/symbol/s0/p29 kept ctx 2048 chunks 16 query 254] 44.4 s; chunk0 max 0, layer0 max rel 2.74E-06; roles cs 16 def 14 use 35 import 2 qsite 1; at 10.0 min
+[codesharp/symbol/s0/p33 kept ctx 2048 chunks 17 query 253] 60.6 s; chunk0 max 0, layer0 max rel 2.61E-06; roles cs 17 def 13 use 26 import 3 qsite 0; at 11.0 min
+[codesharp/symbol/s0/p35 kept ctx 2047 chunks 12 query 241] 37.7 s; chunk0 max 0, layer0 max rel 2.33E-06; roles cs 12 def 12 use 40 import 0 qsite 0; at 11.7 min
+[codesharp/symbol/s0/p37 kept ctx 2048 chunks 18 query 246] 34.8 s; chunk0 max 0, layer0 max rel 2.79E-06; roles cs 18 def 16 use 47 import 1 qsite 0; at 12.3 min
+[codesharp/symbol/s0/p40 kept ctx 2048 chunks 14 query 245] 34.8 s; chunk0 max 0, layer0 max rel 2.22E-06; roles cs 14 def 10 use 31 import 0 qsite 0; at 12.8 min
+[codesharp/symbol/s0/p41 kept ctx 2048 chunks 14 query 239] 37.8 s; chunk0 max 0, layer0 max rel 2.58E-06; roles cs 14 def 22 use 14 import 3 qsite 0; at 13.5 min
+[codesharp/symbol/s0/p42 kept ctx 2048 chunks 17 query 255] 41.4 s; chunk0 max 0, layer0 max rel 2.63E-06; roles cs 17 def 12 use 38 import 2 qsite 0; at 14.2 min
+time cap 14 min reached after 20 of 25 contexts
+e3 codesharp/symbol/s0: 20 contexts in 14.2 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw\codesharp-symbol-s0.*
+wall time 14.2 min; exit 0; total 33.9 min

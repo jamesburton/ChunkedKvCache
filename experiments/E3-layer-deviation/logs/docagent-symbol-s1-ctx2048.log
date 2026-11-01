@@ -1,0 +1,25 @@
+# provenance
+utc: 2026-11-01 15:11:33
+command: ChunkKvLab e3 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 --name docagent --chunker symbol --chunk 512 --seed 1 --count 100 --context 2048 --contexts 8 --query 1 --raw 1 --max-minutes 14 --expect-hash 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7 --out-dir C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1)
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ 7178c59724d8b236f254b3eded7be05169cb3967 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 src of C:\Development\CSharpDocAgentFrameworkMCP; source repo HEAD 6683823880bc2a7d62708907c725d9eaedf3a016, dirty files now: 0; expected chunk-id sha256 (symbol-512) 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.5 s; engine 0.3.0-dev.3628.16+7178c59724d8b236f254b3eded7be05169cb3967
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 2.3 s
+chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+graph: 3772 edges in 2.8 s; mapping-mismatch chunks 0
+plans: 48 generated (seed 1, 1.5 s); contexts: 8 (8 in the first-8 sample, 0 with a kept task); query rows on
+[docagent/symbol/s1/p0 ctx 2044 chunks 14 query 250] 35.5 s; chunk0 max 0, layer0 max rel 2.74E-06; roles cs 14 def 39 use 81 import 0 qsite 0; at 0.7 min
+[docagent/symbol/s1/p1 ctx 2048 chunks 14 query 249] 32.7 s; chunk0 max 0, layer0 max rel 2.1E-06; roles cs 14 def 10 use 83 import 0 qsite 1; at 1.3 min
+[docagent/symbol/s1/p2 ctx 2046 chunks 15 query 250] 30.6 s; chunk0 max 0, layer0 max rel 2.51E-06; roles cs 15 def 18 use 91 import 0 qsite 1; at 1.8 min
+[docagent/symbol/s1/p3 ctx 2042 chunks 11 query 252] 31.6 s; chunk0 max 0, layer0 max rel 2.28E-06; roles cs 11 def 15 use 105 import 5 qsite 0; at 2.3 min
+[docagent/symbol/s1/p4 ctx 2048 chunks 15 query 246] 31.2 s; chunk0 max 0, layer0 max rel 3.14E-06; roles cs 15 def 27 use 94 import 3 qsite 1; at 2.8 min
+[docagent/symbol/s1/p5 ctx 2048 chunks 18 query 254] 32.2 s; chunk0 max 0, layer0 max rel 2.79E-06; roles cs 18 def 41 use 58 import 2 qsite 0; at 3.4 min
+[docagent/symbol/s1/p6 ctx 2047 chunks 12 query 252] 32.3 s; chunk0 max 0, layer0 max rel 2.95E-06; roles cs 12 def 21 use 69 import 8 qsite 3; at 3.9 min
+[docagent/symbol/s1/p7 ctx 2046 chunks 15 query 241] 29.1 s; chunk0 max 0, layer0 max rel 2.87E-06; roles cs 15 def 28 use 74 import 1 qsite 5; at 4.4 min
+e3 docagent/symbol/s1: 8 contexts in 4.4 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw\docagent-symbol-s1.*
+wall time 4.4 min; exit 0; total 56.6 min

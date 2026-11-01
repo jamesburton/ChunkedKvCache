@@ -1,0 +1,25 @@
+# provenance
+utc: 2026-11-01 15:02:41
+command: ChunkKvLab e3 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 --name codesharp --chunker fixed --chunk 512 --seed 0 --count 100 --context 2048 --contexts 8 --query 1 --raw 1 --max-minutes 14 --expect-hash cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb --out-dir C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1)
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ 7178c59724d8b236f254b3eded7be05169cb3967 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 src of C:\Development\codesharp; source repo HEAD 0c97c38c6583a1d3522846d0f290a2c7e488eafa, dirty files now: 0; expected chunk-id sha256 (fixed-512) cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.5 s; engine 0.3.0-dev.3628.16+7178c59724d8b236f254b3eded7be05169cb3967
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), fixed-512: 3766 chunks, 1530303 tokens (chunk tokens median 512, max 512); Decode(Encode(file)) == file for 1390/1390; 3.6 s
+chunk-id sha256 cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb
+graph: 33134 edges in 15.0 s; mapping-mismatch chunks 0
+plans: 52 generated (seed 0, 4.3 s); contexts: 8 (8 in the first-8 sample, 0 with a kept task); query rows on
+[codesharp/fixed/s0/p0 ctx 2047 chunks 8 query 232] 42.4 s; chunk0 max 0, layer0 max rel 3.31E-06; roles cs 8 def 8 use 63 import 0 qsite 0; at 1.1 min
+[codesharp/fixed/s0/p1 ctx 2047 chunks 10 query 240] 34.9 s; chunk0 max 0, layer0 max rel 2.27E-06; roles cs 10 def 18 use 49 import 2 qsite 1; at 1.7 min
+[codesharp/fixed/s0/p2 ctx 2048 chunks 4 query 255] 35.2 s; chunk0 max 0, layer0 max rel 2.18E-06; roles cs 4 def 12 use 18 import 2 qsite 1; at 2.3 min
+[codesharp/fixed/s0/p3 ctx 2048 chunks 10 query 254] 34.9 s; chunk0 max 0, layer0 max rel 2.35E-06; roles cs 10 def 16 use 31 import 0 qsite 1; at 2.8 min
+[codesharp/fixed/s0/p4 ctx 2048 chunks 4 query 226] 34.3 s; chunk0 max 0, layer0 max rel 2.14E-06; roles cs 4 def 8 use 48 import 0 qsite 0; at 3.4 min
+[codesharp/fixed/s0/p5 ctx 2048 chunks 7 query 239] 34.5 s; chunk0 max 0, layer0 max rel 2.42E-06; roles cs 7 def 12 use 38 import 0 qsite 0; at 4.0 min
+[codesharp/fixed/s0/p6 ctx 2047 chunks 12 query 247] 34.5 s; chunk0 max 0, layer0 max rel 2.91E-06; roles cs 12 def 24 use 37 import 2 qsite 1; at 4.6 min
+[codesharp/fixed/s0/p7 ctx 2048 chunks 10 query 229] 34.9 s; chunk0 max 0, layer0 max rel 2.97E-06; roles cs 10 def 11 use 26 import 5 qsite 1; at 5.2 min
+e3 codesharp/fixed/s0: 8 contexts in 5.2 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw\codesharp-fixed-s0.*
+wall time 5.2 min; exit 0; total 48.5 min

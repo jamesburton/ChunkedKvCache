@@ -1,0 +1,25 @@
+# provenance
+utc: 2026-11-01 14:53:13
+command: ChunkKvLab e3 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141 --name afclaude --chunker fixed --chunk 512 --seed 0 --count 100 --context 2048 --contexts 8 --query 1 --raw 1 --max-minutes 14 --expect-hash b90ef5fa2bbaae8fafbc08c27d19d8259465898c412609e7c31e06076f69cbb6 --out-dir C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1)
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ 7178c59724d8b236f254b3eded7be05169cb3967 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-AFClaude-b3f29c30-20261101111141 = git archive b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c src of C:\Development\AFClaude; source repo HEAD b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c, dirty files now: 1; expected chunk-id sha256 (fixed-512) b90ef5fa2bbaae8fafbc08c27d19d8259465898c412609e7c31e06076f69cbb6
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.6 s; engine 0.3.0-dev.3628.16+7178c59724d8b236f254b3eded7be05169cb3967
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), fixed-512: 30 chunks, 12687 tokens (chunk tokens median 512, max 512); Decode(Encode(file)) == file for 9/9; 0.1 s
+chunk-id sha256 b90ef5fa2bbaae8fafbc08c27d19d8259465898c412609e7c31e06076f69cbb6
+graph: 514 edges in 2.3 s; mapping-mismatch chunks 0
+plans: 14 generated (seed 0, 1.1 s); contexts: 8 (8 in the first-8 sample, 0 with a kept task); query rows on
+[afclaude/fixed/s0/p0 ctx 1924 chunks 6 query 198] 37.8 s; chunk0 max 0, layer0 max rel 3.95E-06; roles cs 6 def 40 use 75 import 0 qsite 1; at 0.7 min
+[afclaude/fixed/s0/p1 ctx 1915 chunks 7 query 245] 36.4 s; chunk0 max 0, layer0 max rel 2.62E-06; roles cs 7 def 17 use 51 import 0 qsite 1; at 1.3 min
+[afclaude/fixed/s0/p2 ctx 2034 chunks 5 query 250] 43.5 s; chunk0 max 0, layer0 max rel 2.44E-06; roles cs 5 def 45 use 44 import 0 qsite 1; at 2.0 min
+[afclaude/fixed/s0/p3 ctx 2048 chunks 4 query 189] 45.6 s; chunk0 max 0, layer0 max rel 2.29E-06; roles cs 4 def 28 use 34 import 0 qsite 0; at 2.8 min
+[afclaude/fixed/s0/p4 ctx 2024 chunks 6 query 242] 49.7 s; chunk0 max 0, layer0 max rel 2.77E-06; roles cs 6 def 41 use 58 import 0 qsite 5; at 3.6 min
+[afclaude/fixed/s0/p5 ctx 2035 chunks 4 query 228] 33.2 s; chunk0 max 0, layer0 max rel 2.49E-06; roles cs 4 def 49 use 23 import 1 qsite 3; at 4.2 min
+[afclaude/fixed/s0/p6 ctx 1951 chunks 6 query 235] 21.6 s; chunk0 max 0, layer0 max rel 2.41E-06; roles cs 6 def 36 use 26 import 0 qsite 1; at 4.5 min
+[afclaude/fixed/s0/p7 ctx 2012 chunks 6 query 246] 28.3 s; chunk0 max 0, layer0 max rel 2.51E-06; roles cs 6 def 27 use 56 import 0 qsite 1; at 5.0 min
+e3 afclaude/fixed/s0: 8 contexts in 5.0 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e3-raw\afclaude-fixed-s0.*
+wall time 5.1 min; exit 0; total 38.9 min
