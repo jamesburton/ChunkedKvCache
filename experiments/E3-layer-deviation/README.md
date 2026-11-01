@@ -81,6 +81,10 @@ per-layer extremes are given where they differ materially (`finebins.md`, genera
   enriched, 1.2–1.5×). Chunk-start tokens remain the cheapest strong deviation signal; the HybridSelector's fill (and the
   Task 7 Combined selector) should keep them.
 
+**Follow-up (E4, `../E4-structure-aware/`):** E5 was not run, as recommended. E4 confirmed that the graph adds little
+beyond chunk starts and query relevance: Graph ≈ ChunkStarts on contexts without query targets, and a small Hybrid(QR) gain
+(+0.12 of the gap at 15 %) only where the query prefix references a definition in the context.
+
 ## Caveats
 
 - 2K contexts only (the validated size); 4K was not run (the 2K run already took 101 min against a ~90 min budget).

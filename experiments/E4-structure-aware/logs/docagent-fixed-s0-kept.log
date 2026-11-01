@@ -1,0 +1,23 @@
+# provenance
+utc: 2026-11-01 17:40:09
+command: ChunkKvLab e4 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 --name docagent --chunker fixed --chunk 512 --seed 0 --count 100 --context 2048 --mode kept --contexts 4 --max-minutes 30 --threads 16 --expect-hash 8d083a63d5c1db7514596aec9bdabf880695ded868a45459f6c8be21a354f2b4 --out C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4\raw\docagent-fixed-s0-kept.csv --kept C:\Development\ChunkedkvCache\experiments\corpus\docagent.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\docagent.plans.jsonl --arms drop_required,oracle_chunk,oracle_def,chunk_starts,query,graph,hybrid_query,oracle_def_fill --budgets 5,10,15,20 --light-arms oracle_def_fill --light-budgets 5,20 --shard 0/1
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1); 2 jobs in parallel x 16 threads
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ b03b364266328042807328eac41a5bc3037d2e0e (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 src of C:\Development\CSharpDocAgentFrameworkMCP; source repo HEAD 6683823880bc2a7d62708907c725d9eaedf3a016, dirty files now: 0; expected chunk-id sha256 (fixed-512) 8d083a63d5c1db7514596aec9bdabf880695ded868a45459f6c8be21a354f2b4
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.7 s; engine 0.3.0-dev.3628.20+b03b364266328042807328eac41a5bc3037d2e0e
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), fixed-512: 176 chunks, 75636 tokens (chunk tokens median 512, max 512); Decode(Encode(file)) == file for 55/55; 1.1 s
+chunk-id sha256 8d083a63d5c1db7514596aec9bdabf880695ded868a45459f6c8be21a354f2b4
+graph: 3772 edges in 4.9 s (offline cost); mapping-mismatch chunks 3
+kept task ids: 27; found 27; missing 
+contexts (first task id): src/DocAgent.McpServer/Ingestion/IncrementalSolutionIngestionService.cs:109:31 src/DocAgent.McpServer/Ingestion/SolutionIngestionService.cs:335:33 src/DocAgent.Ingestion/IncrementalIngestionEngine.cs:57:48 src/DocAgent.Ingestion/IncrementalIngestionEngine.cs:186:31
+plans: 4 contexts, 9 tasks (kept, seed 0, 1.5 s); mean context 2047 tokens, 6.0 chunks
+arms drop_required,oracle_chunk,oracle_def,chunk_starts,query,graph,hybrid_query,oracle_def_fill; budgets 5,10,15,20 % (light arms oracle_def_fill at 5,20 %); definition window 16; shard 0/1
+[docagent/fixed/s0/kept/p0 L 2044 chunks 5 tasks 3] 538 s (full 26.5 s, encode 18.8 s, dev 0.0 s, query 49.9 s, 30 distinct selections); query edges/targets 15/1 18/0 9/0; ref EM 3/3; at 9.1 min
+[docagent/fixed/s0/kept/p1 L 2047 chunks 8 tasks 1] 316 s (full 24.2 s, encode 14.9 s, dev 0.0 s, query 17.6 s, 21 distinct selections); query edges/targets 7/1; ref EM 1/1; at 14.4 min
+[docagent/fixed/s0/kept/p2 L 2048 chunks 7 tasks 3] 897 s (full 23.8 s, encode 13.7 s, dev 0.0 s, query 55.4 s, 44 distinct selections); query edges/targets 8/1 18/1 9/2; ref EM 3/3; at 29.3 min
+[docagent/fixed/s0/kept/p3 L 2048 chunks 4 tasks 2 required=chunk0] 414 s (full 24.6 s, encode 18.1 s, dev 0.0 s, query 33.6 s, 22 distinct selections); query edges/targets 14/0 12/0; ref EM 2/2; at 36.2 min
+e4 docagent/fixed/s0/kept shard 0/1: 4 contexts in 36.2 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4\raw\docagent-fixed-s0-kept.csv

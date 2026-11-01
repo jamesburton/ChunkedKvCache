@@ -1,0 +1,21 @@
+# provenance
+utc: 2026-11-01 19:35:32
+command: ChunkKvLab e4 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141 --name afclaude --chunker fixed --chunk 512 --seed 1 --count 100 --context 2048 --mode kept --contexts 2 --max-minutes 15 --threads 16 --expect-hash b90ef5fa2bbaae8fafbc08c27d19d8259465898c412609e7c31e06076f69cbb6 --out C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4\raw\afclaude-fixed-s1-kept.csv --kept C:\Development\ChunkedkvCache\experiments\corpus\afclaude.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\afclaude.plans.jsonl --arms drop_required,oracle_chunk,oracle_def,chunk_starts,query,graph,hybrid_query,oracle_def_fill --budgets 5,10,15,20 --light-arms oracle_def_fill --light-budgets 5,20 --shard 0/1
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1); 2 jobs in parallel x 16 threads
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ b03b364266328042807328eac41a5bc3037d2e0e (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-AFClaude-b3f29c30-20261101111141 = git archive b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c src of C:\Development\AFClaude; source repo HEAD b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c, dirty files now: 1; expected chunk-id sha256 (fixed-512) b90ef5fa2bbaae8fafbc08c27d19d8259465898c412609e7c31e06076f69cbb6
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.7 s; engine 0.3.0-dev.3628.20+b03b364266328042807328eac41a5bc3037d2e0e
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), fixed-512: 30 chunks, 12687 tokens (chunk tokens median 512, max 512); Decode(Encode(file)) == file for 9/9; 0.2 s
+chunk-id sha256 b90ef5fa2bbaae8fafbc08c27d19d8259465898c412609e7c31e06076f69cbb6
+graph: 514 edges in 2.5 s (offline cost); mapping-mismatch chunks 0
+kept task ids: 16; found 16; missing 
+contexts (first task id): src/AFClaude/FoundryTools.cs:23:48 src/AFClaude/FoundryTools.cs:31:34
+plans: 2 contexts, 5 tasks (kept, seed 1, 0.8 s); mean context 2042 tokens, 4.0 chunks
+arms drop_required,oracle_chunk,oracle_def,chunk_starts,query,graph,hybrid_query,oracle_def_fill; budgets 5,10,15,20 % (light arms oracle_def_fill at 5,20 %); definition window 16; shard 0/1
+[afclaude/fixed/s1/kept/p0 L 2048 chunks 4 tasks 1] 330 s (full 28.1 s, encode 20.0 s, dev 0.0 s, query 9.7 s, 21 distinct selections); query edges/targets 7/0; ref EM 1/1; at 5.6 min
+[afclaude/fixed/s1/kept/p1 L 2035 chunks 4 tasks 4 required=chunk0] 899 s (full 25.6 s, encode 9.6 s, dev 0.0 s, query 64.6 s, 44 distinct selections); query edges/targets 9/4 15/0 11/6 16/2; ref EM 3/4; at 20.6 min
+e4 afclaude/fixed/s1/kept shard 0/1: 2 contexts in 20.6 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4\raw\afclaude-fixed-s1-kept.csv

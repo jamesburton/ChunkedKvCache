@@ -20,6 +20,8 @@ built from (see "Query").
   where query does not, and the opposite happens in 1 cell. The data neither support nor rule out a generation advantage for
   deviation; see "Query relevance wins on KL; greedy EM is mixed".
 - The numeric noise floor is exactly 0: dotLLM's CPU kernels are batch-invariant, so every non-zero KL here is a real method effect.
+- **Follow-up (E4, `../E4-structure-aware/`, `../../REPORT.md`):** on the Task 8 cross-file tasks query relevance stays the best baseline
+  (with the task's 256-token query prefix), and a reference-graph selector only matches it (symbol chunks, 10–20 %).
 
 ## Setup
 

@@ -1,0 +1,26 @@
+# provenance
+utc: 2026-11-01 16:57:05
+command: ChunkKvLab e4 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 --name codesharp --chunker symbol --chunk 512 --seed 0 --count 100 --context 2048 --mode kept --contexts 6 --max-minutes 50 --threads 16 --expect-hash bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb --out C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4\raw\codesharp-symbol-s0-kept.csv --kept C:\Development\ChunkedkvCache\experiments\corpus\codesharp.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\codesharp.plans.jsonl --arms oracle_chunk,oracle_def,first_k,chunk_starts,deviation,random,query,graph,hybrid_query,hybrid_dev,oracle_def_fill --budgets 5,10,15,20 --light-arms first_k,deviation,random,hybrid_dev,oracle_def_fill --light-budgets 5,20 --shard 0/1
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1); 2 jobs in parallel x 16 threads
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ b03b364266328042807328eac41a5bc3037d2e0e (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 src of C:\Development\codesharp; source repo HEAD 0c97c38c6583a1d3522846d0f290a2c7e488eafa, dirty files now: 0; expected chunk-id sha256 (symbol-512) bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.8 s; engine 0.3.0-dev.3628.20+b03b364266328042807328eac41a5bc3037d2e0e
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), symbol-512: 7586 chunks, 1535738 tokens (chunk tokens median 157, max 512); Decode(Encode(file)) == file for 1390/1390; 13.9 s
+chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+graph: 33134 edges in 21.8 s (offline cost); mapping-mismatch chunks 0
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\codesharp.plans.jsonl: 60 plans, identical chunk ids
+kept task ids: 21; found 21; missing 
+contexts (first task id): src/CodeSharp.Core/Permissions/PermissionRuleSet.cs:237:45 src/CodeSharp.Tui/ImageInput/TuiImageInput.cs:129:35 src/CodeSharp.Tools/Orchestration/DispatchAgentTool.cs:517:87 src/CodeSharp.Tui/TuiApp.cs:9175:31 src/CodeSharp.Skills/Agents/Foreign/ForeignSkillLoader.cs:143:61 src/CodeSharp.Tui/TuiApp.cs:3018:62
+plans: 6 contexts, 6 tasks (kept, seed 0, 5.8 s); mean context 2048 tokens, 15.3 chunks
+arms oracle_chunk,oracle_def,first_k,chunk_starts,deviation,random,query,graph,hybrid_query,hybrid_dev,oracle_def_fill; budgets 5,10,15,20 % (light arms first_k,deviation,random,hybrid_dev,oracle_def_fill at 5,20 %); definition window 16; shard 0/1
+[codesharp/symbol/s0/kept/p0 L 2048 chunks 14 tasks 1] 295 s (full 36.0 s, encode 19.2 s, dev 1.5 s, query 17.2 s, 18 distinct selections); query edges/targets 13/0; ref EM 1/1; at 5.6 min
+[codesharp/symbol/s0/kept/p1 L 2048 chunks 19 tasks 1] 276 s (full 25.0 s, encode 19.4 s, dev 1.5 s, query 16.1 s, 18 distinct selections); query edges/targets 7/0; ref EM 1/1; at 10.2 min
+[codesharp/symbol/s0/kept/p2 L 2046 chunks 14 tasks 1] 275 s (full 24.2 s, encode 19.3 s, dev 1.5 s, query 16.2 s, 18 distinct selections); query edges/targets 3/0; ref EM 1/1; at 14.8 min
+[codesharp/symbol/s0/kept/p3 L 2048 chunks 11 tasks 1] 277 s (full 23.6 s, encode 19.2 s, dev 1.5 s, query 16.1 s, 18 distinct selections); query edges/targets 6/0; ref EM 1/1; at 19.4 min
+[codesharp/symbol/s0/kept/p4 L 2048 chunks 22 tasks 1] 272 s (full 24.6 s, encode 18.9 s, dev 1.4 s, query 16.5 s, 18 distinct selections); query edges/targets 6/0; ref EM 1/1; at 24.0 min
+[codesharp/symbol/s0/kept/p5 L 2047 chunks 12 tasks 1] 429 s (full 24.5 s, encode 18.5 s, dev 1.7 s, query 16.2 s, 28 distinct selections); query edges/targets 9/1; ref EM 1/1; at 31.1 min
+e4 codesharp/symbol/s0/kept shard 0/1: 6 contexts in 31.1 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4\raw\codesharp-symbol-s0-kept.csv
