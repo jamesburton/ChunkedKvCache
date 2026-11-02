@@ -79,6 +79,12 @@ inside a multi-byte UTF-8 character). The integration spec (`docs/superpowers/sp
 
 ## Text-first chunker
 
+> **Name note (Phase I Task 5):** `fixed-text-512` = `lines-512`. The chunker was renamed `LinesChunker` / `lines-N`
+> (`e4 --chunker lines`, `roundtrip --chunkers fixed,symbol,lines`); this experiment's artifacts keep the old label. The
+> chunk-id hash covers the name, so `run.ps1`'s `fixed-text-512` hashes no longer match a current build (resume E4c jobs only
+> at dotLLM `c4579f55`); after Task 5b codesharp's hash also changes (tokenisation). Re-pinned values:
+> `experiments/corpus.md`, "Re-pin after Phase I Task 5b".
+
 dotLLM `src/DotLLM.ChunkReuse/Corpus/TextFirstFixedChunker.cs`, name `fixed-text-512` (`e4 --chunker fixed-text`). Greedy,
 left to right over the file text:
 

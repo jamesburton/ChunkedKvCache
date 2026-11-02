@@ -60,6 +60,35 @@ Fixed-512 chunking of the same snapshots (`corpus-info --chunker fixed`, file to
 
 Symbol chunks cost 0.3–0.5 % more tokens than one tokenisation of the file (each chunk is tokenised on its own).
 
+### Re-pin after Phase I Task 5b (chunk tokenisation = chat path)
+
+From dotLLM `9fe6eb19` (`feature/chunk-wire`, Phase I Task 5b; contract ruling 21) every chunker tokenises chunk text as
+`ChunkTokenization.Encode` = `EncodeRaw(MarkUntrustedSpecials(text))`: special-token spellings such as `<think>` encode as
+plain text, as on the chat path, instead of as one control id. Same snapshots, same Qwen3-4B-Instruct-2507 Q4_K_M tokenizer
+(tokenizer only; `ChunkKvLab roundtrip --chunkers fixed,symbol,lines` and `index-roundtrip`; logs in the Task 5 report).
+**Before** = dotLLM `63d17b87` (Task 5: old tokenisation; reproduces every pin above); **after** = `9fe6eb19`.
+
+| corpus | chunker | chunk-id sha256 before | chunk-id sha256 after | chunks with a special spelling |
+|---|---|---|---|---:|
+| codesharp | symbol-512 | `bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb` | **`364db68b1b21f7969dbf7d55e92277164ca23826954e794cac4bb065a28d8d2f`** | 1 |
+| codesharp | fixed-512 | `cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb` | **`fb35a894dc2b43c31a14617c191c4512688c228e796a82c09caccf581710fc37`** | 1 |
+| codesharp | lines-512 | `e05aa066da79b218da3bf49ead6e5c7f7eb9bdc423b5767b8c3a061d5331df45` (E4c as fixed-text-512: `e2c32d7d…fee30a`) | **`1712a8142f2cbe3e724f1baf2cb628c3920c7c4cf153bb28b986efaa7c6210ba`** | 1 |
+| DocAgent | symbol-512 / fixed-512 | unchanged (`5d7e4560…` / `8d083a63…`) | unchanged | 0 |
+| DocAgent | lines-512 | `6b12c314f1c7c34cc9122b57287c39bb4469ec38ffaa9929381e5c22fa80819b` (E4c as fixed-text-512: `bb49fec6…164d91`) | unchanged | 0 |
+| AFClaude | symbol-512 / fixed-512 | unchanged (`2601bb05…` / `b90ef5fa…`) | unchanged | 0 |
+| AFClaude | lines-512 | `49bbc654bb06c0f996e27056d46a5ace89d779d93c79c7b8688aef7ef15cdc0f` (E4c as fixed-text-512: `7f78203a…b2e423`) | unchanged | 0 |
+
+- **Why codesharp moves:** one file, `src/CodeSharp.Core/Persistence/CompactionSummaryValidation.cs:57`, holds
+  `<think>...</think>` in a comment; it is in exactly one chunk per chunker. Chunk counts are unchanged; tokens +2
+  (symbol 1,535,738 → 1,535,740; fixed and lines 1,530,303 → 1,530,305). DocAgent and AFClaude contain no special-token
+  spelling, so their hashes do not move.
+- **`lines-512` vs `fixed-text-512`:** the same chunker, renamed in Phase I Task 5; the chunk-id hash covers the chunker
+  name, so the name alone changes it (the "before" column). E4c's `--expect-hash` values are the `fixed-text-512` ones.
+- **E1–E4c were produced under the old tokenisation.** Results differ only for chunks holding a special spelling: 1 chunk
+  per chunker in codesharp, 0 in DocAgent and AFClaude. Use the "after" hashes for any new run (`--expect-hash`).
+- Round trip after 5b (file-range text tokenised with `ChunkTokenization.Encode`): symbol 0 / 8,138, lines 0 / 3,996,
+  fixed (id slices) 3 / 3,972 file-range failures (all DocAgent, the known multi-byte cut); text-first invariants OK.
+
 ## Tasks
 
 **Generator** (`CrossFileTaskGenerator`, defaults used here): mask a call site's callee name and arguments; the **required chunk**

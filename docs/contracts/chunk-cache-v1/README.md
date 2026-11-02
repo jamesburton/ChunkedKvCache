@@ -85,3 +85,11 @@ warnings from the requests and compares them with `expected.json`, and checks th
 30. Annotating text inside an Anthropic `tool_result` content array is inline-only in v1 (the manifest `at` has no inner index); an optional `at.inner` may be added in a later contract version.
 31. Engine message indices in the parsed model are counted BEFORE a profile system prompt is prepended; Task 11 adds the offset when a profile is active.
 32. `chunk_namespace_ignored` (ruling from the Task 2 review): a body `namespace` differing from the caller's own is ignored with this warning (400 in strict mode); fixtures for it are to be added (controller TODO).
+
+## Amendments from the Task 10 review (controller, 2026-11-02)
+
+- **Ruling 24 (check order) is amended** to: structure, version, id, range/boundary, **overlap/conflict, then hash** (cheap structural checks first; hashing last bounds the cost of adversarial requests). `check.py`, the parser and `docs/CHUNK_CACHE.md` all follow this order.
+- **Ruling 17 (lone surrogates)** applies to in-process callers only: over HTTP, System.Text.Json (.NET 10) refuses a string containing a lone-surrogate escape, so chunk text cannot contain one; a lone-surrogate escape in an annotation field (`id`, `hash`, `policy`, ...) is a malformed annotation (`chunk_annotation_malformed`), never a 500.
+- **Ruling 4 (strict first defect)** is clarified: "document order" means inline annotations in (message, part) order and manifest entries in array order.
+- Rulings 23 (`chunk_annotation_malformed`) and 26 (`chunk_not_wire_eligible` is strict-mode 400) stand and MUST be implemented; §5.8 of the spec lists both codes.
+- Task 10 does not ship as a standalone PR: Tasks 10, 11 and 13 ship together (the flag must do something when merged).
