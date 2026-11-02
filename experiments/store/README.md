@@ -164,6 +164,26 @@ It deconstructs to `(Context, Stats)`.
     lookup. A test checks this.
   - Keys written by Task 2 (`chunk-key/v2`) no longer match. Those stores were deleted.
 
+## Namespace in the key (Phase I Task 2, L8): key scheme `chunk-key/v4`
+
+- **What changed.** `ChunkKey.Create(..., positioning, string @namespace = ChunkNamespace.Default)` hashes a store partition,
+  length-prefixed, right after the scheme string. The default namespace `""` is hashed too (a zero length), never skipped,
+  so no v4 key equals a v3 key.
+- **Namespaces.** `ChunkNamespace.Default` (`""`) is for a single-user local store. `ChunkNamespace.ForApiKey(key)` is
+  `"k-"` + the first 16 lowercase hex of SHA-256 over the key's UTF-8 bytes. It never holds the key and never equals the
+  default; an empty key is refused (a caller without a key uses the default).
+- **Assembler.** `StoredContextAssembler.KeyOf(config, ids, @namespace = Default)` and `Assemble(..., query, @namespace =
+  Default)`. One namespace's entries are never hits, rejects or evictions in another.
+- **Indexes.** An index's producer identity is `keyOf([])`, so it includes the namespace: an index saved under one namespace
+  loads empty, with a `LoadNote`, under another.
+- **v3 stores are rebuilt, not migrated.** Every v3 key misses under v4, including the default namespace. `.ckv` entries and
+  indexes written before Phase I Task 2 are stale: run `chunkcache build` again (it re-encodes under the v4 keys), then
+  `chunkcache evict` to collect the v3 files as orphans once no index references them. The `.ckv` format (version 2) did not
+  change; only the file names (keys) did.
+- Tests: `ChunkStoreTests.{Key_DefaultNamespace_GoldenV4, Key_DiffersByNamespace, ForApiKey_IsStable_AndNeverEqualsDefault,
+  Index_SavedUnderOtherNamespace_LoadsEmptyWithNote}`, `StoredAssemblyTests.Assemble_OtherNamespace_AllMisses`. The v4
+  goldens were derived by an independent Python re-implementation of the encoding that reproduces the v3 goldens.
+
 ## Measurement (Qwen3-4B-Instruct-2507 Q4_K_M, CPU, 8 threads)
 
 **Run setup.**
