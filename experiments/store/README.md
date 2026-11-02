@@ -137,15 +137,25 @@ It deconstructs to `(Context, Stats)`.
     whose configuration does not reproduce the fingerprint (shape, RoPE, NoPE layers, KV layout). It cannot see the weights, so
     the model id must itself be content-based.
 - **Content-based ids (`GgufIdentity`), now used by the lab instead of the file name:**
-  - `ModelId` is the SHA-256 of the GGUF header (all metadata and the tensor table) plus the first 4 KiB of every tensor's data.
-    A renamed file keeps its id. A file with other metadata, another tensor table, or other leading weight blocks gets a new id.
-  - It is not a full-weight hash: a change only after the first 4 KiB of a tensor is not detected (pinned by a test). Pass a
-    full weights SHA-256 or an HF revision when that matters.
-  - Split GGUFs are refused.
+  - `ModelId(gguf)` hashes every shard of the file or split set, in order. For each shard it hashes the index, the length, the
+    header (all metadata and the tensor table), and the first and last 4 KiB of every tensor's data. A renamed file or set keeps
+    its id. Split GGUFs are supported, with a synthetic 2-shard test.
+  - **What the sampled id misses.** It does not catch edits strictly inside a tensor, more than 4 KiB from both ends, when the
+    metadata (including `general.name`), the tensor table and the length are identical. Examples:
+    - a fine-tune that trains only interior rows of `token_embd` or `output`;
+    - surgical edits of a few rows;
+    - a tool that rewrites only interior blocks;
+    - adversarial files.
+  - **What it does catch.** Dense changes alter every tensor's head: full fine-tunes, merges, merged attention or MLP LoRAs,
+    re-quantization and imatrix changes. Edits to the last rows, such as trained reserved or special tokens at the end of the
+    vocabulary, fall in the sampled tail.
+  - **Full hash.** `ModelId(gguf, fullHash: true)` hashes every byte and gives a `gguf-full-sha256:` prefix. The planned
+    `chunkcache build --strict-model-id` will use it. A hub revision is the other option.
   - `TokenizerId` is the SHA-256 of the `tokenizer.ggml.*` metadata, in key order and length-prefixed. The chat template does
     not take part.
-  - On Qwen3-4B Q4_K_M: model id `gguf-sha256:49ae071f…`, tokenizer id `gguf-tokenizer-sha256:ac4d5cb5…`, quant label
-    `ftype-15` (from `general.file_type`). Hashing adds no measurable load time (0.6 s load).
+  - On Qwen3-4B Q4_K_M: model id `gguf-sha256:383e0dc9…` (head and tail samples, `e3cd917d`), tokenizer id
+    `gguf-tokenizer-sha256:ac4d5cb5…`, quant label `ftype-15` (from `general.file_type`). The sampled hash adds no measurable
+    load time with a warm page cache (0.6–1.0 s load). Cold-disk cost was not measured: the header plus 2 × 4 KiB per tensor.
 - **Isolated encodes only.**
   - Store entries must be `ChunkEncoder` encodes of the chunk alone at positions `0..n-1`. This is documented in `IChunkStore`,
     `ChunkKey` and the assembler.
@@ -213,8 +223,9 @@ Per context. Cold hits marked * include in-call repeats as well as chunks shared
 **Caveats:**
 
 - **The box was shared**, with other agents building in parallel, so the times are rough.
-- **Contention varied over time.** Fresh took 44–53 s for docagent contexts 0–3 and about 22–35 s afterwards. That is
-  time-varying contention early in the run, not an ordering effect of fresh running first.
+- **Contention varied over time.** Fresh took 44–53 s for docagent contexts 0–3 and about 22–35 s afterwards. This is most
+  likely time-varying contention early in the run rather than an ordering effect. Fresh always ran first in each context, so
+  the data cannot rule out ordering.
   - On the three contexts where cold had no hits, cold was faster than fresh only for doc0 (49.9 → 30.3 s) and doc2
     (53.2 → 31.7 s). For afc0 it was the same (27.3 → 27.4 s).
   - Those early contexts inflate the mean ratio, so the median (47.2×) is the better summary.
