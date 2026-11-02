@@ -3,8 +3,12 @@
 # contexts (same kept Task 8 call sites, same --contexts per cell, same seed- and chunker-independent context order), dotLLM
 # CPU, Qwen3-4B-Instruct-2507 Q4_K_M, 2K contexts. One job = one corpus x seed. Jobs run in parallel (-Parallel) with
 # -Threads each (8 threads in total on a shared box); every log starts with a provenance block written when the job starts.
-# Resumable: a job whose CSV exists is skipped; `ChunkKvLab e4` resumes its own <out>.partial by whole contexts (the time cap
-# counts the minutes of earlier runs), and a rerun appends a new provenance block to the log.
+# Resuming: a job whose CSV exists is skipped. An INTERRUPTED job (killed, reboot) left <out>.partial, and `ChunkKvLab e4`
+# resumes it by whole contexts (the time cap counts the minutes of earlier runs); a rerun appends a new provenance block to
+# the log. A job that reached its time cap ended normally: e4 finalised it (.partial -> .csv), so rerunning this script does
+# NOT extend it. To extend a capped job, rename its CSV back to .partial, recreate <out>.partial.done (line 1 `key <RunKey>`,
+# then one `<plan>,<minutes>` line per finished context), raise maxminutes in jobs.csv and rerun (README "Run").
+# The resume key does not include the model hash or the dotLLM commit: check the provenance blocks before resuming.
 # Usage:
 #   ./run.ps1 -Snapshots <dir holding the t8-corpus-* snapshots> -Jobs <jobs.csv> [-OutDir <dir>] [-Parallel 2] [-Threads 4]
 #   jobs.csv columns: name,chunker,seed,mode,contexts,maxminutes,arms,budgets,lightarms,lightbudgets
