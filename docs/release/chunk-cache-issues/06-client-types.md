@@ -76,6 +76,20 @@ What it adds:
 - CI builds the `net8.0` target (`dotnet build`) but runs only `tests/DotLLM.Tests.Unit/`; adding
   `dotnet test tests/DotLLM.ChunkCache.Client.Tests/` is the maintainer's call (we change no workflow).
 
+## Maintainer action: run the client tests in CI (separate small PR)
+
+`ci.yml` runs only `tests/DotLLM.Tests.Unit` and `tests/DotLLM.Tests.Integration`, so `tests/DotLLM.ChunkCache.Client.Tests`
+(the MIT client package's whole suite) never runs in CI; its pass counts are local only. We change no workflow. We ask
+the maintainer to add, in a separate small PR (or in this one if preferred), one step next to the unit tests:
+
+```yaml
+      - name: Chunk-cache client tests
+        run: dotnet test tests/DotLLM.ChunkCache.Client.Tests -c Release --filter "Category!=Benchmark" --blame-hang-timeout 5m
+```
+
+The filter follows the repository's convention: the client's timing test (`Overhead_Under5ms`) is
+`Category=Benchmark` and is skipped outside Release anyway.
+
 ## Requirements on the CLI (Task 17) that this client depends on
 
 The `select` / `status` mapping only works once the `chunkcache` CLI provides these (contract ruling 18):
@@ -110,6 +124,7 @@ The `select` / `status` mapping only works once the `chunkcache` CLI provides th
 - [ ] JSON guard covers both new contexts.
 - [ ] Every correctness test shown to fail against a mutant (below).
 - [ ] The licence questions above are answered.
+- [ ] The maintainer has decided on the CI step above (`dotnet test tests/DotLLM.ChunkCache.Client.Tests -c Release --filter "Category!=Benchmark"`).
 
 ## Mutant evidence
 
