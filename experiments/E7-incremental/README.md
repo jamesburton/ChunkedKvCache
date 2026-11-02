@@ -45,6 +45,9 @@ cross-chunk quality of the reused cache; that is E4's question. Measured on CPU,
   (`git archive` of `8e2adbd8`, `src`, 1,390 files). Both chunkings reproduced their pinned chunk-id hashes:
   - symbol-512 `bf397403…`: 7,586 chunks, 1,535,738 tokens
   - fixed-512 `cde11b22…`: 3,766 chunks, 1,530,303 tokens
+  - These are the **pre-Phase-I-Task-5b** hashes (this run, dotLLM `6aa4832d`; valid only before `9fe6eb19`). After 5b
+    codesharp's chunk holding `<think>` encodes differently: symbol-512 `364db68b…`, fixed-512 `fb35a894…`
+    (`run.ps1` now pins those; [`../corpus.md`](../corpus.md) "Re-pin after Phase I Task 5b").
 - **Tokenizer:** the BPE embedded in `bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF` Q4_K_M, snapshot `ae44f08e` (HF cache).
   No weights are run.
 - **Index:** one `ChunkIndex` per chunker. Each chunk is keyed with `ChunkKey.Create` over its token ids and a fixed producer

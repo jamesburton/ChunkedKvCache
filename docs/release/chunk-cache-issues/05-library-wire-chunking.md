@@ -56,7 +56,7 @@ by the missing field and refreshed). The API is unreleased.
 ## Mutant evidence
 
 From `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-5-report.md` (git-archive copies; full ChunkReuse filter per
-mutant; log `phase-i-task-5-mutants.log`): **26 / 28 killed**, 1 equivalent, 2 CLI survivors left to the CLI PR.
+mutant; log `phase-i-task-5-mutants.log`): **25 killed, 1 equivalent, 2 surviving (CLI, left to the CLI PR) = 28**.
 
 - Killed: slices left eligible; hash over UTF-16; round trip compares lengths only; `lines-*` kind Other; JSON without the
   field reads ineligible; `ChunkRef.From` drops the flag; index never writes the flag; legacy entries not re-chunked; legacy

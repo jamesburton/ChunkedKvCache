@@ -20,13 +20,16 @@ $env:GIT_OPTIONAL_LOCKS = '0'   # read-only git: never refresh another checkout'
 $corpusDir = Join-Path (Split-Path $here -Parent) 'corpus'
 
 # name -> snapshot dir, source repo, commit, symbol-512 hash, fixed-512 hash (../corpus.md)
+# Codesharp hashes are the post-Phase-I-Task-5b values (dotLLM 9fe6eb19+: chunk text tokenised as the chat path does;
+# ../corpus.md "Re-pin after Phase I Task 5b"). Runs recorded in this experiment used the pre-5b values (dotLLM <= 63d17b87):
+# symbol-512 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb, fixed-512 cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb.
 $corpora = @{
     'afclaude'  = @('t8-corpus-AFClaude-b3f29c30-20261101111141', 'C:\Development\AFClaude', 'b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c',
         '2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938', 'b90ef5fa2bbaae8fafbc08c27d19d8259465898c412609e7c31e06076f69cbb6')
     'docagent'  = @('t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016', 'C:\Development\CSharpDocAgentFrameworkMCP', '6683823880bc2a7d62708907c725d9eaedf3a016',
         '5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7', '8d083a63d5c1db7514596aec9bdabf880695ded868a45459f6c8be21a354f2b4')
     'codesharp' = @('t8-corpus-codesharp-8e2adbd8-20261101111016', 'C:\Development\codesharp', '8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2',
-        'bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb', 'cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb')
+        '364db68b1b21f7969dbf7d55e92277164ca23826954e794cac4bb065a28d8d2f', 'fb35a894dc2b43c31a14617c191c4512688c228e796a82c09caccf581710fc37')
 }
 
 $repo = 'bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF'

@@ -25,5 +25,7 @@ run afclaude t8-corpus-AFClaude-b3f29c30-20261101111141 symbol 2601bb059c4f2cf9a
 run afclaude t8-corpus-AFClaude-b3f29c30-20261101111141 fixed b90ef5fa2bbaae8fafbc08c27d19d8259465898c412609e7c31e06076f69cbb6
 run docagent t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 symbol 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
 run docagent t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 fixed 8d083a63d5c1db7514596aec9bdabf880695ded868a45459f6c8be21a354f2b4
-run codesharp t8-corpus-codesharp-8e2adbd8-20261101111016 symbol bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
-run codesharp t8-corpus-codesharp-8e2adbd8-20261101111016 fixed cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb
+# codesharp: post-Phase-I-Task-5b hashes (dotLLM 9fe6eb19+; ../corpus.md "Re-pin after Phase I Task 5b"). The recorded
+# graph-build runs used the pre-5b values (dotLLM <= 63d17b87): symbol bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb, fixed cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb.
+run codesharp t8-corpus-codesharp-8e2adbd8-20261101111016 symbol 364db68b1b21f7969dbf7d55e92277164ca23826954e794cac4bb065a28d8d2f
+run codesharp t8-corpus-codesharp-8e2adbd8-20261101111016 fixed fb35a894dc2b43c31a14617c191c4512688c228e796a82c09caccf581710fc37

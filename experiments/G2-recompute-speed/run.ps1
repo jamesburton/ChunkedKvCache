@@ -28,13 +28,15 @@ Add-Type -Namespace G2Power -Name Native -MemberDefinition '[System.Runtime.Inte
 $esContinuous = [uint32]2147483648   # ES_CONTINUOUS
 $esSystemRequired = [uint32]3        # ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED
 
+# Codesharp hash is the post-Phase-I-Task-5b value (dotLLM 9fe6eb19+; ../corpus.md "Re-pin after Phase I Task 5b").
+# Runs recorded in this experiment used the pre-5b value (dotLLM <= 63d17b87): bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb.
 $corpora = [ordered]@{
     'afclaude'  = @('t8-corpus-AFClaude-b3f29c30-20261101111141', 'C:\Development\AFClaude', 'b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c',
         '2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938')
     'docagent'  = @('t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016', 'C:\Development\CSharpDocAgentFrameworkMCP', '6683823880bc2a7d62708907c725d9eaedf3a016',
         '5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7')
     'codesharp' = @('t8-corpus-codesharp-8e2adbd8-20261101111016', 'C:\Development\codesharp', '8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2',
-        'bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb')
+        '364db68b1b21f7969dbf7d55e92277164ca23826954e794cac4bb065a28d8d2f')
 }
 # maxRows caps one single-pass forward (one GPU submit; TdrDelay is 10 s on this box). The 2K smoke showed ~15-17 ms per recomputed row at 2K
 # through the per-query-position attention (a 2045-row submit took 30 s and survived), so 8K/16K submits are capped (README).

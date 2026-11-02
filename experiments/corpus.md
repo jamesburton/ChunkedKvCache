@@ -21,7 +21,7 @@ Token counts are Qwen3-4B-Instruct-2507 tokens (the GGUF's own BPE tokenizer), s
 
 | role | repo (path) | commit (frozen) | dirty at freeze | archived | files kept | chunks | tokens | × 32K | chunk-id sha256 (symbol-512) |
 |---|---|---|---|---|---:|---:|---:|---:|---|
-| large | `C:\Development\codesharp` | `8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2` (main) | 0 files | `src` | 1390 | 7586 | 1,535,738 | 46.9 | `bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb` |
+| large | `C:\Development\codesharp` | `8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2` (main) | 0 files | `src` | 1390 | 7586 | 1,535,738 | 46.9 | `bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb` (pre-5b only, dotLLM ≤ `63d17b87`; post-5b `364db68b…`, see re-pin below) |
 | medium | `C:\Development\CSharpDocAgentFrameworkMCP` | `6683823880bc2a7d62708907c725d9eaedf3a016` (main) | 0 files | `src` | 55 | 478 | 76,017 | 2.3 | `5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7` |
 | small (fits one context) | `C:\Development\AFClaude` | `b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c` (main) | 1 untracked dir `.docs/` (no `.cs`) | `src` | 9 | 74 | 12,744 | 0.39 | `2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938` |
 
@@ -54,7 +54,7 @@ Fixed-512 chunking of the same snapshots (`corpus-info --chunker fixed`, file to
 
 | corpus | chunks | tokens | chunk-id sha256 (fixed-512) |
 |---|---:|---:|---|
-| codesharp | 3766 | 1,530,303 | `cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb` |
+| codesharp | 3766 | 1,530,303 | `cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb` (pre-5b only, dotLLM ≤ `63d17b87`; post-5b `fb35a894…`) |
 | DocAgent | 176 | 75,636 | `8d083a63d5c1db7514596aec9bdabf880695ded868a45459f6c8be21a354f2b4` |
 | AFClaude | 30 | 12,687 | `b90ef5fa2bbaae8fafbc08c27d19d8259465898c412609e7c31e06076f69cbb6` |
 
@@ -143,5 +143,6 @@ seed- and size-independent, so the kept set can be carried over (validity was es
   not a leak from a distractor, but E4 should know such tasks are copy-style.
 
 Reproduce one corpus: extract `git archive <commit> src` of the repo into a fresh directory `D`, then from `experiments/corpus`:
-`./run.ps1 -Name codesharp -Corpus D -SourceRepo C:\Development\codesharp -CorpusCommit 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 -ExpectHash bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb -MaxMinutes 38`
-(DocAgent and AFClaude: their commit and hash from the table above, no `-MaxMinutes`).
+`./run.ps1 -Name codesharp -Corpus D -SourceRepo C:\Development\codesharp -CorpusCommit 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 -ExpectHash 364db68b1b21f7969dbf7d55e92277164ca23826954e794cac4bb065a28d8d2f -MaxMinutes 38`
+(DocAgent and AFClaude: their commit and hash from the table above, no `-MaxMinutes`). The codesharp hash is the
+post-5b value for current dotLLM; the recorded Task 8 run used `bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb` (pre-5b, dotLLM ≤ `63d17b87`).

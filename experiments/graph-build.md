@@ -15,7 +15,7 @@ corpora (`corpus.md`), with both chunkers. Lab command `ChunkKvLab graph-info`; 
 
   | corpus | source commit | symbol-512 hash | fixed-512 hash |
   |---|---|---|---|
-  | codesharp `src` | `8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2` | `bf397403…df1fb` | `cde11b22…dceb` |
+  | codesharp `src` | `8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2` | `bf397403…df1fb` (pre-5b only, dotLLM ≤ `63d17b87`; now `364db68b…`) | `cde11b22…dceb` (pre-5b only; now `fb35a894…`) |
   | CSharpDocAgentFrameworkMCP `src` | `6683823880bc2a7d62708907c725d9eaedf3a016` | `5d7e4560…46c7` | `8d083a63…f2b4` |
   | AFClaude `src` | `b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c` | `2601bb05…a938` | `b90ef5fa…cbb6` |
 

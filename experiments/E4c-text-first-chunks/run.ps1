@@ -29,14 +29,19 @@ $corpusDir = Join-Path (Split-Path $here -Parent) 'corpus'
 $logDir = Join-Path $here 'logs'
 $queueLog = Join-Path $logDir 'queue.log'
 
-# name -> snapshot dir, source repo, commit, fixed-text-512 chunk-id hash (printed by `ChunkKvLab roundtrip`; roundtrip.md)
+# name -> snapshot dir, source repo, commit, lines-512 chunk-id hash for CURRENT dotLLM (Phase I Task 5 renamed fixed-text-512 to
+# lines-512, `--chunker lines`; Task 5b changed codesharp's tokenisation; ../corpus.md "Re-pin after Phase I Task 5b").
+# All E4c data in raw/ and logs/ was produced PRE-5b at dotLLM c4579f55 with `--chunker fixed-text` and the fixed-text-512
+# hashes afclaude 7f78203a68cfad98bccb02da3c5709b25bd3a93d0cfd88dbda4c0cb0efb2e423, docagent
+# bb49fec66b3a0743b110b6476ddb5e8352df5f5305856b71431e26da6b164d91, codesharp e2c32d7d13f23bce78168619a3360d7e02e5e18ae46efb57a13b927073fee30a;
+# a rerun on current dotLLM produces lines-512 data that must not be mixed with (or resumed into) those files.
 $corpora = @{
     'afclaude'  = @('t8-corpus-AFClaude-b3f29c30-20261101111141', 'C:\Development\AFClaude', 'b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c',
-        '7f78203a68cfad98bccb02da3c5709b25bd3a93d0cfd88dbda4c0cb0efb2e423')
+        '49bbc654bb06c0f996e27056d46a5ace89d779d93c79c7b8688aef7ef15cdc0f')
     'docagent'  = @('t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016', 'C:\Development\CSharpDocAgentFrameworkMCP', '6683823880bc2a7d62708907c725d9eaedf3a016',
-        'bb49fec66b3a0743b110b6476ddb5e8352df5f5305856b71431e26da6b164d91')
+        '6b12c314f1c7c34cc9122b57287c39bb4469ec38ffaa9929381e5c22fa80819b')
     'codesharp' = @('t8-corpus-codesharp-8e2adbd8-20261101111016', 'C:\Development\codesharp', '8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2',
-        'e2c32d7d13f23bce78168619a3360d7e02e5e18ae46efb57a13b927073fee30a')
+        '1712a8142f2cbe3e724f1baf2cb628c3920c7c4cf153bb28b986efaa7c6210ba')
 }
 
 $repo = 'bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF'
@@ -66,6 +71,8 @@ $all = [Diagnostics.Stopwatch]::StartNew()
 foreach ($j in $queue) {
     $snap, $src, $commit, $hash = $corpora[$j.name]
     $stem = "$($j.name)-$($j.chunker)-s$($j.seed)-$($j.mode)"
+    # jobs.csv keeps E4c's label 'fixed-text' (file names); the lab option is 'lines' since Phase I Task 5.
+    $labChunker = if ($j.chunker -eq 'fixed-text') { 'lines' } else { $j.chunker }
     $outCsv = Join-Path $OutDir "$stem.csv"
     if (Test-Path $outCsv) {
         $line = ("[{0:F1} min] {1:u} skip {2} (complete)" -f $all.Elapsed.TotalMinutes, [DateTime]::UtcNow, $stem)
@@ -73,7 +80,7 @@ foreach ($j in $queue) {
         Add-Content -Path $queueLog -Value $line
         continue
     }
-    $labArgs = @('e4', '--model', $model, '--corpus', (Join-Path $Snapshots $snap), '--name', $j.name, '--chunker', $j.chunker,
+    $labArgs = @('e4', '--model', $model, '--corpus', (Join-Path $Snapshots $snap), '--name', $j.name, '--chunker', $labChunker,
         '--chunk', 512, '--seed', $j.seed, '--count', 100, '--context', 2048, '--mode', $j.mode, '--contexts', $j.contexts,
         '--max-minutes', $j.maxminutes, '--threads', $Threads, '--expect-hash', $hash, '--out', $outCsv,
         '--kept', (Join-Path $corpusDir "$($j.name).validation.csv"), '--plans-jsonl', (Join-Path $corpusDir "$($j.name).plans.jsonl"))
@@ -94,7 +101,7 @@ foreach ($j in $queue) {
         "os: $($os.Caption) $($os.Version); last boot $($os.LastBootUpTime.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')) UTC"
         "dotnet sdk: $sdk"
         "dotLLM worktree: $Worktree @ $wtHead (branch $wtBranch); dirty files: $($wtDirty.Count)"
-        "corpus: $snap = git archive $commit src of $src; source repo HEAD $(git -C $src rev-parse HEAD), dirty files now: $($srcDirty.Count); expected chunk-id sha256 ($($j.chunker)-512) $hash"
+        "corpus: $snap = git archive $commit src of $src; source repo HEAD $(git -C $src rev-parse HEAD), dirty files now: $($srcDirty.Count); expected chunk-id sha256 ($labChunker-512) $hash"
         "model: $repo @ $($modelFile.Directory.Name) / $($modelFile.Name) ($($modelFile.Length) bytes)"
         "# end provenance"
     ) | Add-Content -Path $logPath -Encoding utf8
