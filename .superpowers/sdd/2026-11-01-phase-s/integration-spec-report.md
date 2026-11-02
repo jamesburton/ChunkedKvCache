@@ -7,9 +7,10 @@ the controller and are folded in.
 ## Verified (read in source/docs or fetched)
 
 **This repo**
-- Accuracy and speed numbers: E1, E4 and G2 (`REPORT.md`, `experiments/G2-recompute-speed/README.md`). ATTN_QPOS is
-  22× / 27× / 78× slower per row than ordinary prefill attention. Reuse with recompute ties at 2K / 5 % and loses
-  elsewhere.
+- Accuracy and speed numbers: E1, E4 and G2 (`REPORT.md`, `experiments/G2-recompute-speed/README.md`). ATTN_QPOS makes
+  the whole forward 18–28× slower (kernel alone 26–31×; flat 13–19 µs per row × key). The first draft's "78× at 16K" was
+  an anomalous run and is withdrawn (fix round 1). Reuse with recompute ties at 2K / 5 % and loses elsewhere; 16K / 5 %
+  is an estimate of ~0.7–0.85×.
 - Store costs: 288 KiB per token (F32); token ids are stored in each `.ckv`.
 - Contracts:
   - `ChunkKey` with `ChunkPositioning` (`chunk-key/v3`)
@@ -97,3 +98,67 @@ the controller and are folded in.
   2. Server surface naming and endpoint ownership (`/v1/chunk-cache`).
   3. Licence of the client package: it must be permissive for CodeSharp under ADR-011.
   4. Whether prewarm may use a second slot on a single-slot server.
+
+## Fix round 1 (review `integration-spec-review.md`)
+
+The spec was rewritten as revision 2.
+
+**Blocking items**
+- **B1: text-first chunkers.** §5.3 item 4 makes "text-first" a wire constraint. `FixedSizeChunker` is confirmed to slice
+  ids at `FixedSizeChunker.cs:41`. `lines-512` is proposed. Fixed-size chunks on the wire are blocked on E4c (§5.11),
+  which also gets an extra arm with the query before the context.
+- **B2: lineage and tokenisation.** Snapshot lineage is tagged `exact` / `approx`. `exact` and `shadow` tokenise as
+  plain requests; segmented tokenisation is used only when reuse is applied. A `prefix_reused_approx` counter is added.
+- **B3: chat templates.** Spans are located in the rendered prompt, and `chunk_template_altered` is added. Special
+  tokens in chunk text are tokenised exactly as in the plain content path, else `chunk_special_tokens`.
+- **B4: required changes.** A "Required library and engine changes" section (§14) lists L1–L9 with owners: server as
+  sole writer, a server ledger counted by `StoredWideOrphans`, short-scope and per-index locks, the backend tag in the
+  header, and engine assembly as I1/I5 work.
+
+**Should-fix**
+- **Numbers.** Corrected to 18–28× whole-forward and 26–31× kernel, a flat 13–19 µs, and 16K at ~0.7–0.85×.
+- **Policies.**
+  - The default is `exact`, with no change after #1540.
+  - `auto` is opt-in, gated on a validated quality table (empty today) and on cost.
+  - `balanced` is documented as below the bar with chunk starts or symbol chunks.
+- **Query and ordering.** The query is the last user message, scored out of place. The ordering rules are scoped to
+  harness-built context, and the history stays append-only.
+- **`hybrid` selector.** Removed from v1.
+- **Security.**
+  - Counts-only responses by default.
+  - `/v1/chunk-cache/*` behind API-key auth, with namespaces on by default for multi-client use.
+  - `explain` and `prewarm` take text only; hash lists are dropped.
+  - Encode admission (seen twice, idle only, required byte budget; ~28 GB per 100K-token session).
+  - Deny-list, `no_store`, `--chunk-store-index-only`.
+  - "Forget" eviction by path, namespace or all.
+- **CodeSharp facts.**
+  - ADR-009 is the wire choice.
+  - The `AnthropicPromptCacheHandler` claim is scoped correctly.
+  - There is no reload detection.
+  - B3 and B9 are design-only; B5 is described in full, and B1's exception is included.
+  - `RegistryPrefixCachePolicy` is in `CodeSharp.Models`.
+  - `read_file` has no line numbers; its issues are CRLF and windowed reads.
+  - Q3 has become a CRLF decision. Q8 records that CodeSharp has no default model. Q11 (B3 scheduling) is added.
+- **External claims.**
+  - LMCache in-process blending is deprecated; pin the version.
+  - MCP 2025-11-25 is cited.
+  - JsonPatch is marked unconfirmed for `ChatCompletionOptions`.
+  - Hosted APIs' rejection of unknown fields is now taken from the reviewer.
+- **Nits.**
+  - `store` and `server` added to the schemas.
+  - `compare` dropped from MCP v1; `lru_to_bytes` / `older_than` dropped.
+  - `numbered-relative` reserved.
+  - The response example's arithmetic is stated, and the example is labelled post-#1540.
+  - UTF-16 vs UTF-8 offsets are explicit.
+  - 400 instead of 422.
+  - The Anthropic `message_delta` is named.
+  - `status.missing` items are objects.
+  - `GitCliInfo` is attributed to dotLLM.
+
+**Unresolved**
+- dotLLM's chat-template handling of multi-part content and of special-token strings in content is not verified (marked
+  as pinned in I1).
+- The Claude Code PostToolUse `updatedToolOutput` for built-in tools is unverified.
+- The LMCache version to pin is not identified.
+- #1540 is still not referenced in this repo.
+- The ~28 GB figure (100K tokens × 288 KiB) assumes every token misses.

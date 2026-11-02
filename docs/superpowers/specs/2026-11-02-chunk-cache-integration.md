@@ -1,566 +1,676 @@
 # Chunk-level KV reuse: integration spec for agent harnesses
 
-Status: draft for review, 2026-11-02. Companion to `2026-10-31-chunk-kv-reuse-design.md` (the research and engine
-design) and the Phase S plan (`docs/superpowers/plans/2026-11-01-phase-s-store-cli-e4b.md`). The user has agreed to the
-overall shape: a runtime wire convention in the dotLLM server, a library + `chunkcache` CLI + thin MCP control plane, and
-harness integration with CodeSharp as the reference. The details below are the author's proposal unless marked
-**[user]**.
+Status: draft, **revision 2** (2026-11-02), after the review in
+`.superpowers/sdd/2026-11-01-phase-s/integration-spec-review.md` (blocking items B1–B4 addressed in §5.3, §5.5, §5.6,
+§5.11 and §14). Companion to `2026-10-31-chunk-kv-reuse-design.md` and the Phase S plan
+(`docs/superpowers/plans/2026-11-01-phase-s-store-cli-e4b.md`).
 
-Evidence labels used throughout:
-- **[verified]**: read in this repo, in dotLLM or CodeSharp source/docs, or on a cited web page on 2026-11-02.
-- **[reported]**: stated by another session (codesharp-d1 answers, `.superpowers/sdd/2026-11-01-phase-s/codesharp-answers.md`)
-  and not re-traced by me.
-- **[assumption]**: my inference or recollection; check it before building on it.
+The user agreed to the overall shape **[user]**:
+- a runtime wire convention in the dotLLM server;
+- a library, a `chunkcache` CLI and a thin MCP control plane;
+- harness integration with CodeSharp as the reference.
+
+Everything else is the author's proposal.
+
+Evidence labels:
+- **[verified]**: read in this repo, in dotLLM or CodeSharp source or docs, or on a cited page on 2026-11-02.
+- **[reported]**: from codesharp-d1's answers (`.superpowers/sdd/2026-11-01-phase-s/codesharp-answers.md`) or the
+  reviewer, not re-traced by me.
+- **[assumption]**: my inference; check it before building on it.
 
 ## 1. Goals, non-goals
 
 **Goals**
-1. Any harness that talks to a local dotLLM server over HTTP can mark parts of its prompt as **reusable chunks** and get
-   position-independent KV reuse: the server assembles those chunks from its persistent store, recomputes a selected
-   share of tokens, then generates. **[user]**
-2. **Graceful degradation.** A request that carries chunk annotations is still a valid request. A server that does not
-   understand them, or a model that cannot use them, gives the same answer as plain text with full prefill. **[user]**
-3. **One identity rule for everything:** a chunk is its exact text. Ids, paths and line ranges are labels for telemetry.
-   Lookup always goes text → server tokenisation → `ChunkKey` (model fingerprint, tokenizer, RoPE, schema version,
-   backend, dtype, positioning, token ids; `experiments/store/README.md`). A stale chunk therefore **misses**; it can
-   never hit wrongly.
-4. A control plane (library, CLI, MCP) to build, prewarm, select, inspect and evict, so harnesses and humans can manage the
-   store without touching the inference path. **[user]**
-5. Harness guidance that keeps reuse high across the events that destroy an exact prefix cache: compaction, sub-agents,
-   resumed sessions, reordered file reads, edits. **[user]**
-6. Honest telemetry: every response says what was reused, recomputed, missed, and why.
+1. A harness that talks to a local dotLLM server over HTTP can mark parts of its prompt as **reusable chunks**. The
+   server can then assemble them from its persistent store, recompute a selected share of tokens and generate **[user]**.
+2. **Graceful degradation, and no silent approximation.**
+   - An annotated request is a valid plain request.
+   - The default policy gives output identical to the same request without annotations.
+   - Approximate reuse happens only when the caller asks for it (§5.5).
+3. **Identity is exact text.** Ids, paths and line ranges are labels.
+   - Lookup always goes: text → the server's tokenisation → `ChunkKey`. The key covers the model fingerprint, tokenizer,
+     RoPE, schema version, backend, dtype, positioning and token ids (`experiments/store/README.md`) **[verified]**.
+   - A stale chunk therefore misses; it never hits wrongly.
+4. A control plane (library, CLI, MCP) to build, prewarm, select, inspect and evict.
+5. Harness guidance that keeps reuse high across the events that destroy an exact prefix: compaction, sub-agents,
+   resumed sessions, re-ranked selections, edits.
+6. Honest telemetry.
+   - Every response reports reuse as counts.
+   - Exact and approximate reuse are never mixed in one counter.
 
-**Non-goals (this spec)**
-- Remote/cloud providers. Anthropic, OpenAI and Gemini only offer exact-prefix caching
-  ([Anthropic](https://platform.claude.com/docs/en/build-with-claude/prompt-caching),
-  [OpenAI](https://platform.openai.com/docs/guides/prompt-caching), [Gemini](https://ai.google.dev/gemini-api/docs/caching)).
-  Annotations must be stripped before a request goes to them (§5.7).
-- Recurrent and hybrid models (Gated DeltaNet / Mamba layers, e.g. `qwen4exp`). That is Phase T. v1 is attention-only
-  (Qwen3-4B, Llama-3.1-8B class).
-- Contextual (non-isolated) chunk encodings, chunks by reference without text, and multi-tenant shared stores. Fields are
-  reserved but the semantics are deferred (§5.9).
-- Opening PRs against other harnesses (Semantic Kernel, LangChain, Claude Code). Deferred **[user]**.
+**Non-goals (v1)**
+- **Hosted providers.**
+  - Anthropic, OpenAI and Gemini offer exact-prefix caching only
+    ([Anthropic](https://platform.claude.com/docs/en/build-with-claude/prompt-caching); OpenAI and Gemini docs not fetched).
+  - They reject unknown request fields, so annotations must be stripped before reaching them (§5.7).
+- **Recurrent and hybrid models** (Gated DeltaNet, Mamba; e.g. `qwen4exp`): Phase T. v1 supports attention-only models
+  only (Qwen3-4B, Llama-3.1-8B class).
+- **Deferred** (fields are reserved, semantics deferred):
+  - `contextual` positioning;
+  - chunks by reference without their text;
+  - the `hybrid` (graph) selector;
+  - the `numbered-relative` render profile;
+  - multi-tenant stores.
+- **PRs and packages for other harnesses** (Semantic Kernel, LangChain, Claude Code) **[user]**.
 
-## 2. Honest limits (read before integrating)
+## 2. Honest limits
 
-1. **Needs a local runtime that owns the KV.** Reuse happens inside the inference engine. Only dotLLM implements it. An
-   MCP server, a proxy in front of a hosted API, or a client library cannot make a remote model reuse KV (§7.1).
-2. **Naive reuse loses accuracy; recompute is what fixes it, and recompute is currently slow.**
-   - Naive concatenation (no recompute): KL vs full prefill 0.13 / 0.17 / 0.55 / 0.67 nats at 2K / 4K / 8K / 16K (E1). On
-     the 2K masked-call tasks, exact match is 5 of 28 against 28 of 28 for full prefill (G2 quality table). **[verified]**
-   - With recompute: chunk starts recover 0.65–0.82 of the naive→full gap at 5–20 %, and query relevance 0.70–0.83 with
-     symbol chunks or 0.87–0.97 with fixed 512-token chunks (E4, `REPORT.md`). The 95 % / 20 % quality bar holds as a
-     point estimate for fixed chunks with query relevance only. One model, small clustered samples. **[verified]**
-   - **Speed (G2, Vulkan, Qwen3-4B):** naive assembly is 22× / 62× / 107× faster than full prefill at 2K / 8K / 16K. With
-     recompute, reuse **ties at best (2K, 5 %: 1.07×) and loses everywhere else** (8K 20 %: 0.20×; 16K 5 %: 0.24×).
-     **[verified]**
-   - **The bottleneck is one kernel:** the per-query-position attention (`ATTN_QPOS`, dotLLM #1534) is 22× / 27× / 78×
-     slower per row than ordinary prefill attention at 2K / 8K / 16K. With a kernel as fast as the ordinary one, 20 %
-     recompute at 2K would be about 2.8× faster than full prefill, and 5 % at 16K about 5.7× (G2 control arm).
-     **[verified]**
-   - The kernel work is pending as **dotLLM #1540** **[user]**. Until it lands, the server's `auto` policy (§5.5) must
-     choose full prefill for most requests. Integration work before then buys plumbing, hit-rate data and shadow
-     measurements, not TTFT.
-3. **Query relevance is the best selector, and it needs the query.** The query-attention probe is a lab implementation
-   costing seconds on CPU. A fused probe is a separate dotLLM item, and the Vulkan probe is Phase S Task 5 on the Vulkan
-   side. Until then: chunk starts (free, static) is the default; query relevance is opt-in.
-4. **Storage is large.** F32 rows cost 288 KiB per token for Qwen3-4B. A 1.5 M-token repository is about 442 GB, and the
-   2K-token context alone is 576 MiB. F16 / Q8_0 rows (≈ 0.5× / 0.27×) are deferred to the persistent-caching phase
-   (progress ledger, "phase D"). **[verified]**
-5. **Cold chunks cost as much as prefill.** A miss must be encoded (G2: 3.4× the full prefill at 2K, including the slow
-   readback). Reuse pays only on the second and later uses of a chunk, so prewarming (§6) matters.
-6. **Tokenisation seams.** A chunk is tokenised alone, so the prompt's token stream is the concatenation of separately
-   tokenised segments. That can differ from tokenising the whole prompt at the seams. Symbol chunks already work this way
-   (+0.4 % tokens corpus-wide, E7). Full-prefill A/B comparisons must use the same segmented tokenisation, or the
-   difference must be reported. **[verified for the token count; quality effect unmeasured]**
+1. **Needs a local runtime that owns the KV.** Only dotLLM implements reuse. MCP servers, proxies and client libraries
+   cannot make a hosted model reuse KV (§7.1).
+2. **Naive reuse loses accuracy.** Naive concatenation's KL against full prefill is 0.13 / 0.17 / 0.55 / 0.67 nats at
+   2K / 4K / 8K / 16K (E1). On the 2K masked-call tasks it gets exact match on 5 of 28, against 28 of 28 for full prefill
+   (G2) **[verified]**.
+3. **Recompute repairs much of the gap, but meets the quality bar in one configuration only** (E4, `REPORT.md`)
+   **[verified]**:
+   - **Recovered share of the naive→full gap at 5–20 %:** chunk starts 0.65–0.82, query relevance (QR) 0.70–0.83 with
+     symbol chunks; QR 0.87–0.97 with fixed 512-token chunks.
+   - **The 95 % / 20 % bar** (≥ 95 % of full-prefill exact match at ≤ 20 % recompute):
+     - holds as a point estimate **only** for fixed chunks with QR or Hybrid (EM 1.00; 0.96 in E4b);
+     - fixed chunk starts reach EM 0.91;
+     - symbol chunks reach 0.81 (E4) and at best 0.93 (E4b).
+   - One model; small, clustered samples.
+   - **E4's fixed chunks were token-id slices, which the wire cannot carry** (§5.3, item 4). The quality of wire-eligible
+     fixed chunks is unmeasured until E4c.
+4. **Recompute is currently slower than full prefill.** G2 measured Vulkan with Qwen3-4B **[verified, G2 README as revised]**.
 
-## 3. Where reuse helps an agent, and why chunks beat the prefix cache
+   | ctx | naive assembly vs full prefill | with recompute (reuse TTFT vs full prefill) |
+   |---|---|---|
+   | 2K | 22× faster | tie at 5 % (1.07×); 0.56× at 10 %; 0.28× at 20 % |
+   | 8K | 62× faster | tie at 5 % (0.96×); 0.20× at 20 % |
+   | 16K | 107× faster | ~0.7–0.85× at 5 % (estimate; the measured 16K arms were an anomalous slow run) |
 
-dotLLM already keeps prompt-prefix snapshots and reports `cached_tokens` / `cache_n` (`dotLLM/docs/SERVER.md`)
-**[verified]**. An append-only conversation on one slot is served well by that, and CodeSharp's prefix-cache alignment
-spec is built around keeping it alive **[verified]**. Chunk reuse adds value exactly where the exact prefix dies:
+   - **The cause is one kernel.** The per-query-position attention (`ATTN_QPOS`, dotLLM #1534) makes the whole forward
+     18–28× slower than ordinary prefill attention on the same rows. The kernel alone is 26–31× slower (GPU timestamps).
+   - The cost is a flat **13–19 µs per (recomputed row × visible key)** from 2K to 16K, and 97–99.6 % of the forward is
+     attention.
+   - The earlier "78× / 65 µs at 16K" was an anomaly and is withdrawn.
+   - **What a fast kernel would give:** with a kernel as fast as the ordinary one, 20 % at 2K would be about 2.8× faster
+     than full prefill, and 5 % at 16K about 5.7× (G2 control arm).
+   - The pending kernel work is **dotLLM #1540** **[user; not referenced in this repo]**.
+5. **Selectors are not production-ready on the GPU.** The QR probe is a CPU lab implementation (16.5 s per request), with
+   no Vulkan probe yet. Without it, the only runnable selector is chunk starts. Chunk starts are below the bar except on
+   fixed chunks at 20 % (EM 0.91), and that cell is also below it.
+6. **Storage is large.** F32 rows cost 288 KiB per token for Qwen3-4B, so:
+   - a 1.5 M-token repository needs about 442 GB;
+   - a 100K-token session's misses about 28 GB.
+
+   F16 / Q8_0 rows (≈ 0.5× / 0.27×) are deferred to the persistent-caching phase **[verified]**.
+7. **A miss costs more than prefill.** In G2 an isolated encode cost 3.4× the full prefill at 2K, including the slow
+   readback. Reuse pays only from the second use of a chunk.
+8. **The libraries are CPU-only today.**
+   - `StoredContextAssembler` hard-codes backend `"cpu"`, writes F32 rows only, and needs an exact host F32 destination.
+   - Vulkan assembly lives on another branch.
+   - Assembling into the server's real paged, possibly quantised, multi-slot KV is **engine work** (§14) **[reported by
+     review; consistent with the store README]**.
+
+## 3. Where reuse helps an agent
+
+dotLLM keeps prompt-prefix snapshots and reports `cached_tokens` / `cache_n` **[verified, `dotLLM/docs/SERVER.md`]**.
+- Snapshots live in memory. A disk spill exists (`--prefix-snapshot-disk-dir`), but its files are not reused after a
+  restart **[reported by review, `SERVER.md`]**.
+- An append-only conversation on one slot is served well by snapshots. CodeSharp's prefix-cache alignment spec is built
+  around keeping them alive.
+
+Chunk reuse adds value where the exact prefix dies:
 
 | event | prefix cache | chunk reuse |
 |---|---|---|
-| compaction rewrites the middle of history | miss from the first changed message onward | chunks re-emitted after the summary hit again |
-| a sub-agent starts with another system prompt and re-reads the same files | miss (different prefix) | hit |
-| a resumed session after a server restart or model reload | miss (snapshots are in memory) | hit (store is on disk) |
-| files read in a different order, or a selection re-ranked | miss after the first difference | hit (position-independent) |
-| one file edited | everything after it re-prefilled | only the edited chunk misses (E7: median 234 tokens re-encoded with symbol chunks) |
-| a single-slot server evicted by a side call | full re-read | chunks hit; only glue and query are prefilled |
+| compaction rewrites the middle of the history | miss from the first changed message | chunks re-emitted byte-identical after the summary hit again |
+| a sub-agent with another system prompt reads the same files | miss | hit |
+| resumed session after a server restart or model reload | miss | hit (the store is on disk) |
+| a selection re-ranked or re-ordered | miss after the first difference | hit (position-independent) |
+| one file edited | everything after it is re-prefilled | only the edited chunk misses (E7: median 234 tokens re-encoded, symbol chunks) |
+| a single-slot server evicted by a side call | full re-read | chunks hit; glue, conversation and query are prefilled |
 
-Combining both: on a request, the server first matches the exact prefix (bit-exact, free), then assembles annotated chunks
-after it, then prefills the rest. After generation the resulting state is snapshotted as usual, so the **next** turn hits
-the exact prefix again, including the recomputed chunks.
+How a request is served:
+1. The server first matches the exact prefix.
+2. When reuse is applied, it assembles annotated chunks after the prefix, recomputes, and prefills the rest.
+3. The snapshot taken afterwards is **tagged approximate** (§5.5), and only requests that accept approximation may
+   restore it.
 
 ## 4. Architecture
 
 ```
-harness (MAF / SK / LangChain / Claude Code / custom)
-  ├─ chunk source: file reads → ChunkSpans (same chunker + render profile as the store)
-  ├─ ChunkAnnotatingChatClient (records spans per request)
-  └─ HTTP body handler → POST /v1/chat/completions (+ chunk_cache)   ──►  dotLLM server
-                                                                          ├─ exact prefix match (existing)
-control plane: chunkcache CLI / MCP / library ──► store root ◄────────────├─ chunk assembly from store (Phase S)
-   build · prewarm · select · status · evict · compare · explain          ├─ selective recompute (G2; #1540)
-                                                                          └─ prefill rest, generate, snapshot
+harness ── ChunkAnnotatingChatClient ── HTTP body handler ──►  dotLLM server (sole store writer)
+   │          (records spans)          (adds chunk_cache)          ├─ exact prefix match (lineage-aware)
+   └─ chunk source (text-first chunker, plain render)              ├─ chunk assembly from the store
+                                                                   ├─ selective recompute (opt-in)
+control plane: chunkcache CLI / MCP ── HTTP ──► /v1/chunk-cache/*  └─ background encode (budgeted)
+   (index, select, status; encode and evict go through the server)        │
+                                                             store root (.ckv + indexes + server ledger)
 ```
 
-- **Transport is HTTP by default.** CodeSharp's ADR-011 integrates GPL components (dotLLM) only across a process
-  boundary **[verified, `CodeSharp/docs/architecture/decisions.md`]**, and CodeSharp talks to dotLLM only through OpenAI
-  Chat Completions **[reported; verified that `decisions.md` records the choice of that wire]**. In-process hosting is an
-  optional variant for harnesses that may link dotLLM (§8.4). It is not the reference path.
-- **The store is shared by the server and the control plane** through a store root on disk, coordinated by
-  `ChunkIndex.AcquireStoreLock(storeRoot, timeout)` (an exclusive `.chunkstore.lock`, held from update through put and save
-  to eviction) **[verified, task-4 report]**. The server owns `Put`; the CLI owns index updates and eviction.
+- **HTTP is the reference transport.** Two CodeSharp decisions drive this:
+  - ADR-011 integrates GPL components only across a process boundary.
+  - ADR-009 chose the OpenAI wire for dotLLM, with the Anthropic and Ollama wires "deliberately not used"
+    (`CodeSharp/docs/architecture/decisions.md:202-228`) **[verified]**.
+- In-process hosting is an option only for GPL-compatible hosts (§8.4).
+- **The server is the only writer of K/V entries** (§14, L1). The CLI builds indexes and selections from text and
+  tokenizer only, and asks the server to encode (`prewarm`) or evict.
 
 ## 5. Wire convention (v1)
 
 ### 5.1 Two equivalent placements
 
-The same annotation can travel in two ways; the server normalises both to one internal manifest.
-
-**(A) Inline, on a text content part** (closest to Anthropic's per-block `cache_control`):
+**(A) Inline**, a `chunk` field on a text content part:
 
 ```json
 {"role": "tool", "tool_call_id": "call_7", "content": [
   {"type": "text", "text": "// src/Store/ChunkIndex.cs (lines 365-412)\n"},
   {"type": "text", "text": "public IndexDiff Update(...)\n{ ... }\n",
-   "chunk": {"v": 1, "id": "src/Store/ChunkIndex.cs:365-412@14211",
-             "hash": "sha256:9f2c…", "render": "plain", "chunker": "symbol-512"}}
+   "chunk": {"v": 1, "id": "src/Store/ChunkIndex.cs:365-412@14211", "hash": "sha256:9f2c…", "chunker": "symbol-512"}}
 ]}
 ```
 
-**(B) Top-level manifest** (`chunk_cache` in the request body, which works through `extra_body`-style hooks that cannot
-reach content parts):
+**(B) Top-level manifest**, a `chunk_cache` object in the request body:
 
 ```json
 {"model": "qwen3-4b", "messages": [...],
- "chunk_cache": {"v": 1, "policy": "balanced",
-   "chunks": [{"id": "src/Store/ChunkIndex.cs:365-412@14211", "hash": "sha256:9f2c…",
-               "at": {"message": 3, "part": 1}},
+ "chunk_cache": {"v": 1, "policy": "shadow",
+   "chunks": [{"id": "src/Store/ChunkIndex.cs:365-412@14211", "hash": "sha256:9f2c…", "at": {"message": 3, "part": 1}},
               {"id": "src/Store/ChunkRef.cs:1-40@0", "hash": "sha256:41ab…",
                "at": {"message": 3, "part": 2, "start": 0, "end": 1830}}]}}
 ```
 
-- **Why both.** Most client SDKs cannot add a field to one content part. The MEAI OpenAI and Anthropic bridges drop
-  per-content `AdditionalProperties` on the wire (CodeSharp's wire capture in `AnthropicPromptCacheHandler.cs`
-  **[verified]**). A top-level field can be added by `extra_body` (Python OpenAI SDK, LangChain `ChatOpenAI`) or by a
-  body-rewriting HTTP handler **[assumption for the Python SDKs; standard documented behaviour]**. Inline is the canonical
-  form for hand-built bodies.
-- **Why not a new content-part type.** dotLLM's Anthropic surface **rejects unknown content block types with a 400**
-  (`dotLLM/docs/ANTHROPIC_API.md`) **[verified]**. A new type would break degradation. Unknown *fields* are ignored on both
-  dotLLM surfaces (`SERVER.md`: STJ source-gen skips unmapped members; `ANTHROPIC_API.md`: "Unknown fields are ignored,
-  not rejected") **[verified]**.
-- **Both placements in one request** are an error (`chunk_manifest_conflict`). It is a warning, and the request is
-  served as plain text, unless the request is strict.
+- **Why both.**
+  - Many client stacks cannot add a field to one content part.
+  - CodeSharp found that the MEAI **Anthropic** bridge exposes no per-block `cache_control`, and that
+    `ChatOptions.AdditionalProperties` (`reasoning_effort`) was silently dropped on the wire (`AnthropicPromptCacheHandler.cs`
+    remarks) **[verified]**.
+  - Whether the MEAI OpenAI bridge forwards per-content `AdditionalProperties` is **[assumption: no]**.
+  - A top-level field can be added through `extra_body` or a body-rewriting handler. B is the portable form; A is for
+    hand-built bodies.
+- **Why a field and not a new part type.** dotLLM's Anthropic surface rejects unknown content block types with a 400, and
+  both surfaces ignore unknown fields (`ANTHROPIC_API.md:79,101,250`; `SERVER.md:61`) **[verified]**.
+- **Both placements in one request:** warning `chunk_manifest_conflict`, and the request is served as if unannotated.
+  It is an error only when the request is strict.
 
 ### 5.2 Fields
 
-`chunk` (inline) or `chunk_cache.chunks[i]` (manifest):
+Per chunk: `chunk` (inline) or `chunk_cache.chunks[i]` (manifest).
 
 | field | type | req | meaning |
 |---|---|---|---|
-| `v` | int | yes (inline; inherited from `chunk_cache.v` in the manifest) | convention version, `1` |
-| `hash` | string | yes | `sha256:` + lowercase hex of the UTF-8 bytes of the chunk text exactly as sent (§5.3) |
-| `id` | string ≤ 256 | yes | the caller's stable label, e.g. `ChunkRef.Id` (`path:startLine-endLine@offset`). Telemetry only; never used for lookup |
-| `at` | object | manifest only | `{message, part[, start, end]}`: indices into `messages` and its `content` array. `start` / `end` are UTF-8 byte offsets into that part's text, end exclusive; omitted = the whole part |
-| `render` | string | no | name of the render profile that produced the text (§5.4), e.g. `plain`, `numbered`; default `plain` |
-| `chunker` | string | no | chunker name (`symbol-512`, `fixed-512`); lets `explain` and prewarm match the store's index |
-| `source` | object | no | `{path, start_line, end_line, rev}`: provenance for telemetry and `explain`. Never read by the server in v1 |
-| `positioning` | `"isolated"` | no | only `isolated` in v1 (encoded alone at positions 0..n-1, RoPE-shifted on assembly; `ChunkPositioning.Isolated`, key scheme `chunk-key/v3`) **[verified]**. `contextual` is reserved |
-| `stability` | `"stable"` \| `"volatile"` | no | a hint: `volatile` chunks (e.g. a file being edited this turn) are not prewarmed and are first to lose recompute budget |
+| `v` | int | inline yes; manifest inherits `chunk_cache.v` | convention version, `1` |
+| `hash` | string | yes | `sha256:` + lowercase hex of the UTF-8 bytes of the chunk text exactly as sent |
+| `id` | string ≤ 256 | yes | the caller's label (e.g. `ChunkRef.Id`, `path:startLine-endLine@offset`, whose offset is in **UTF-16 chars**). Telemetry only; never used for lookup |
+| `at` | object | manifest only | `{message, part[, start, end]}`: indices into the **serialised** `messages` and its `content` array. A string `content` is part 0. `start` / `end` are **UTF-8 byte** offsets into that part's text, end exclusive. Omitted means the whole part |
+| `chunker` | string | no | a wire-eligible chunker name (§5.3, item 4). Lets the server pick budget defaults and lets `explain` match the index |
+| `source` | object | no | `{path, start_line, end_line, rev}`: provenance for telemetry. Never read by the server |
+| `positioning` | `"isolated"` | no | v1 accepts only `isolated`: encoded alone at positions 0..n-1 and RoPE-shifted on assembly (`ChunkPositioning.Isolated`, key scheme `chunk-key/v3`) **[verified]** |
+| `stability` | `"stable"` \| `"volatile"` | no | hint: `volatile` chunks are not queued for background encode |
+| `no_store` | bool | no | never persist this chunk's K/V or sighting (secrets; §10) |
 
-`chunk_cache` (request level):
+Request level (`chunk_cache`):
 
 | field | default | meaning |
 |---|---|---|
 | `v` | 1 | version |
-| `policy` | `"auto"` | `exact` / `balanced` / `fast` / `auto` / `shadow` (§5.5) |
-| `recompute` | server default | `{selector: "auto"\|"chunk_starts"\|"query_relevance"\|"hybrid"\|"none", budget: 0.0–1.0, max_tokens}` |
-| `on_miss` | `"prefill"` | `prefill`: a missing chunk is prefilled in place like ordinary text (exact) and its isolated encode is queued in the background. `encode`: encode it now, store it, then assemble |
+| `policy` | **`exact`** | `exact` / `shadow` / `balanced` / `fast` / `auto` (§5.5) |
+| `recompute` | server default | `{selector: "chunk_starts" \| "query_relevance", budget: 0.0–1.0, max_tokens}`. `hybrid` is reserved |
+| `query` | last user message | `{message: i}` or `{text: "..."}`: what query-aware selection scores against (§5.6) |
+| `on_miss` | `prefill` | `prefill`: a missing chunk is prefilled in place as ordinary text; its isolated encode may be queued under the admission rules (§5.10). `encode`: encode now, store, then assemble |
 | `strict` | false | errors instead of degradation (§5.8) |
-| `min_chunk_tokens` | 32 | chunks shorter than this are treated as plain text |
-| `report` | `"summary"` | `none` / `summary` / `per_chunk` |
-| `namespace` | none | reserved for multi-tenant stores (§10) |
+| `min_chunk_tokens` | 32 | shorter chunks are treated as plain text |
+| `report` | `summary` | `none` / `summary` (counts). `per_chunk` only for an authenticated caller within its own namespace (§10) |
+| `namespace` | per API key | the store partition, salted into `ChunkKey` (§10) |
 
-### 5.3 Hashing and identity rules
+### 5.3 Identity, hashing, tokenisation
 
-1. The hash covers the **exact UTF-8 bytes** the model will see, with no normalisation: CRLF vs LF, BOM, trailing
-   whitespace and tabs all count. The CodeSharp / Roslyn scanner normalises CRLF to LF before chunking
-   (`experiments/solution-scan/README.md`) **[verified]**, so harnesses must send the same LF text or the chunk misses.
-2. The server **recomputes the hash** from the text it received. A mismatch means the annotation is ignored and the span
-   is served as plain text (warning `chunk_hash_mismatch`; an error if strict). A client therefore cannot make the server
-   store KV for text it did not send. The KV is always computed by the server from the received text (no store poisoning
-   through the wire).
-3. `id` is never trusted for lookup. Two different texts with the same id are two chunks; the same text under two ids is
-   one store entry (no path in the key) **[verified]**.
-4. The server's key is `ChunkKey` over the token ids of the text tokenised **alone**. A chunk hits across files,
-   sessions, harnesses and positions as long as the bytes and the model identity match.
-5. Spans in one part must not overlap, must be in order, and must fall on UTF-8 character boundaries. Text between and
-   around spans is glue (prefilled normally).
+1. **The hash covers the exact UTF-8 bytes sent**, with no normalisation. CRLF vs LF, BOM and trailing whitespace all
+   count. The Roslyn scanner normalises to LF before chunking (`experiments/solution-scan/README.md`) **[verified]**, so a
+   harness that sends CRLF text misses every prewarmed chunk (CodeSharp: §12.2).
+2. **The server recomputes the hash.** On a mismatch the annotation is ignored and the span is plain text (warning
+   `chunk_hash_mismatch`). The server always computes K/V itself from the received text, so a client cannot poison the
+   store.
+3. **`id` never takes part in lookup.** The same text under two ids is one entry; different texts under one id are two
+   entries.
+4. **Wire-eligible chunkers are text-first** (constraint; blocking item B1).
+   - **The rule.** A chunker may be used on the wire, and for store entries the wire must hit, only if it **cuts the text
+     first (at character or line boundaries) and then tokenises each piece alone**, with the same tokenisation the server
+     uses for chunk text (item 6).
+   - **The key.** The store key is over those per-piece ids, which equal what the server computes from the received text.
+   - **`SymbolChunker` qualifies** (each chunk's text goes through `EncodeRaw` alone) **[verified]**, **except** the pieces
+     of an over-long single line, which it cuts as token slices. `build` marks those pieces wire-ineligible.
+   - **`FixedSizeChunker` (`fixed-512`) does not qualify.** It tokenises the whole file and slices the ids
+     (`Corpus/FixedSizeChunker.cs:41`) **[verified]**. Its chunk text `Decode(slice)` need not re-encode to the slice:
+     - pre-tokenisation can split differently at the cut;
+     - a cut inside a multi-byte character decodes to U+FFFD.
+   - **The proposed replacement is `lines-512`:** accumulate whole lines up to 512 tokens (tokenising each candidate piece
+     alone), and split an over-long line at a character boundary.
+   - **`build` asserts the round trip.** For every chunk it checks `EncodeRaw(text) == ids` and flags or drops the rest.
+   - **Fixed-size chunks on the wire are blocked on E4c** (§5.11). E4's quality numbers for fixed chunks come from
+     id-sliced chunks and do not transfer until E4c measures text-first fixed chunks.
+5. **Spans are located in the rendered prompt** (blocking item B3).
+   - **How.** The server renders the chat template with each chunk span replaced by a unique placeholder, then checks that
+     the rendered output contains the placeholder intact and that the text around it is what the template produced for
+     the unannotated request. Implementation choice for dotLLM: sentinel rendering, or rendering twice and diffing.
+   - **If the template altered the span's bytes, the span is ignored** (warning `chunk_template_altered`). Examples:
+     - Llama-3.1's template applies `| trim` to every message, so a span at the start or end of a part loses its
+       whitespace **[reported by review]**;
+     - a template that merges parts with a separator.
+   - **Advice:** put chunk spans in the middle of a part, after a glue header, and end them with a newline the template
+     does not trim. How dotLLM's templates flatten multi-part `content` must be pinned per template in I1
+     **[assumption: unverified]**.
+6. **Special tokens.** Chunk text is tokenised exactly as the plain request path tokenises message content.
+   - If that path does **not** parse special-token strings in content (`EncodeRaw` semantics, as the chunkers do), then
+     neither does the chunk path.
+   - If a template path does parse them, any chunk whose text contains a special-token string is ignored (warning
+     `chunk_special_tokens`).
+   - Either way, a file cannot inject control tokens through the chunk path that it could not inject as plain content.
+   - dotLLM's current behaviour for content is pinned in I1 **[assumption: unverified]**.
+7. **Tokenisation by policy** (blocking item B2).
+   - **`exact` and `shadow`:** the prompt is tokenised exactly as a plain request (whole rendered prompt), so their
+     output equals the unannotated request.
+   - **Applied reuse (`balanced`, `fast`, `auto` when it reuses):** segmented tokenisation. Glue and chunks are tokenised
+     separately, and the token stream is their concatenation.
+   - **The seam cost.** Segmented tokenisation can differ from whole-prompt tokenisation at the seams (+0.4 % tokens
+     corpus-wide for symbol chunks, E7). An exact prefix match across a change of policy may stop at the first seam.
+   - A/B comparisons report both tokenisations.
+8. **Snapshot lineage** (blocking item B2).
+   - **Tagging.** Every prefix snapshot is tagged `exact` or `approx`. A snapshot is `approx` from the first row whose K/V
+     came from assembly or recompute; rows before that row are exact.
+   - **Who may restore what.** A request under `exact` or `shadow`, or without annotations, restores only up to the first
+     approximate row, then prefills. Requests that apply reuse may restore approximate rows.
+   - **Counting.** `cached_tokens` / `cache_n` count exact rows only. Approximate rows restored from a snapshot are
+     reported as `chunk_cache.tokens.prefix_reused_approx`.
 
-### 5.4 Render profiles: what the chunk text should look like
+### 5.4 Render profile
 
-The chunk text must be what the model sees, so the harness's file-read formatting decides whether the store can hit.
+- v1 defines one profile, `plain`: the raw file text of the chunk, with any header (path, line range, "showing lines
+  a–b") sent as **glue outside the span**.
+- **Line numbers.** Absolute line numbers inside chunk text (`cat -n` style, as in Claude Code's Read output) defeat
+  incremental reuse: an insertion near the top changes every later chunk of the file. A `numbered-relative` profile is
+  reserved.
+- **Windows and caps.** A harness that reads a window of a file (offset, limit, or a line cap) can annotate only the
+  chunks wholly inside the window. Prefer chunk-aligned windows.
 
-- **Use `plain`.** Raw file text of the chunk, with a header such as `// path (lines a-b)` sent as **glue outside the
-  span**. Then a line inserted above a method changes only the glue, not the chunk.
-- **Avoid absolute line numbers inside chunk text** (`cat -n` style, `   1→…`). An insertion near the top of a file shifts
-  every later line number, so every later chunk of the file misses, which wipes out the symbol-chunk advantage E7 measured
-  (median 234 tokens re-encoded per edit vs the whole tail of the file). If a harness must number lines, use the
-  `numbered-relative` profile (numbers restart at 1 in each chunk) and put the absolute start line in the glue header.
-- Prewarming (§6) must use the same profile and chunker as the harness, or prewarmed entries never match.
+### 5.5 Policies (default `exact`; nothing lossy without an explicit opt-in)
 
-### 5.5 Policies and the server's decision
-
-| policy | what the server does |
+| policy | behaviour |
 |---|---|
-| `exact` | no approximate reuse. Chunks are used only for reporting what would have hit and for background encode. Output is identical to plain text |
-| `shadow` | as `exact`, plus the server computes the reuse plan (hits, selection, predicted cost) without using it, and reports it. Used to measure hit rates before trusting quality |
-| `balanced` | reuse with recompute. Selector: `query_relevance` when a query segment exists and the probe is available on the backend, else `chunk_starts`. Budget 15 % (fixed chunks) or 20 % (symbol chunks) by default, following E4 |
-| `fast` | reuse with chunk starts at 5 %, or naive when `budget: 0`. Documented as lossy |
-| `auto` (default) | `balanced` when the cost model predicts reuse TTFT < full-prefill TTFT for this request, otherwise `exact`. The cost model uses the measured per (row × visible key) cost on the active backend (G2: about 15–18 µs at 2K–8K and 65 µs at 16K on the current ATTN_QPOS kernel) **[verified numbers; the cost model is new work]** |
+| **`exact`** (default) | output identical to the unannotated request (§5.3, items 7–8). Annotations are used for counts and, under the admission rules, for background encode |
+| `shadow` | as `exact`, plus the server computes the reuse plan without using it: hits, misses, predicted rows, predicted TTFT from the cost model. Use it to measure hit rates on real traffic |
+| `balanced` | reuse with recompute. Selector: `query_relevance` if the probe exists on the backend, else `chunk_starts`. Budget 20 %. **Below the 95 / 20 bar** with `chunk_starts`, and with symbol chunks under any selector (§2.3); the response says which applied. The only configuration that met the bar (QR on fixed chunks) is blocked on E4c and on a GPU probe |
+| `fast` | chunk starts at 5 %, or naive with `budget: 0`. Documented as lossy |
+| `auto` | **opt-in only.** Reuse is applied when both gates pass; otherwise `exact` is applied, with a reason |
 
-- **Until dotLLM #1540 lands, `auto` resolves to `exact` for nearly every request** (G2 needed speedups table). That is
-  intended: the convention can ship before it pays.
-- **Query segment.** The tokens after the last chunk, up to the generation prompt. The selector uses them as the query.
-  Hence the ordering rule in §5.6.
-- **Prefix interplay.** Chunks inside the exact-prefix match are reported as `prefix` (exact, no recompute). Assembly
-  starts after the matched prefix.
-- **Model support.** On a recurrent or hybrid model, or on a backend without assembly support, every policy degrades to
-  `exact` with reason `chunk_model_unsupported`.
+`auto`'s two gates:
+- **Quality floor.** The (chunker kind × selector × budget) combination is in the server's validated table. A combination
+  enters the table only after an E4-style measurement meets the bar on that model. Today the table is empty.
+- **Cost model.** Predicted reuse TTFT is below full prefill. The prediction is the per (row × visible key) cost on the
+  active backend (today 13–19 µs on Vulkan with ATTN_QPOS) plus assembly.
 
-### 5.6 Ordering rules
+Other rules:
+- **No default change after #1540.** The default stays `exact` even once #1540 lands; the harness opts in to
+  `auto` / `balanced` per request or per session. #1540 changes only what `auto` can choose.
+- **Prefix interplay.** Chunks inside an exact prefix match are reported as `prefix` (exact).
+- **Unsupported model or backend.** On a recurrent or hybrid model, or a backend without assembly, every policy degrades
+  to `exact` with the reason `chunk_model_unsupported`.
 
-Reuse is position-independent, but quality and prefix reuse are not indifferent to order:
+### 5.6 Query and ordering
 
-1. **System prompt and tool block first, byte-stable.** That part is served by the exact prefix cache.
-2. **Stable chunks next, in a deterministic order** (e.g. `SelectionResult.InDocumentOrder()`, which is path then offset
-   **[verified]**), so the exact prefix also survives across turns when the selection does not change.
-3. **Volatile chunks after stable ones.**
-4. **The question or task last.** Query relevance needs the query after the context, and the recompute's benefit falls on
-   tokens that attend to the chunks.
-5. Within one tool result, one part per chunk (or manifest spans) plus glue headers.
+- **The query is the last user message** (or `chunk_cache.query`), **wherever it sits.**
+  - In an agent loop the task comes **before** the file reads: user → assistant tool call → tool results. "The text after
+    the last chunk" is tool-call JSON or nothing.
+  - So the server scores relevance **out of place**: it forwards the query tokens after the assembled context in a scratch
+    pass that is rolled back. This is how the lab QR probe works **[verified, E2/E4 harness]**. It then selects the rows
+    to recompute.
+  - **Caveat:** E4 measured QR with the query after the context, in the prompt as well. Whether QR keeps its lead when the
+    prompt's own query precedes the chunks is **unmeasured**. It is an extra arm of E4c (§5.11).
+- **Ordering rules apply to harness-built context, not to the conversation.**
+  - Conversation history stays chronological and append-only. Tool results land where they happened, and reordering past
+    turns would break the exact prefix.
+  - The rules apply when the harness itself composes a block of context: an initial selection, a compaction re-emit
+    (§12.3), or a sub-agent hand-off:
+    1. the system prompt and tool block stay byte-stable;
+    2. chunks go in a deterministic order (`SelectionResult.InDocumentOrder()`: path, then offset **[verified]**), stable
+       before volatile;
+    3. one part per chunk, or manifest spans, with glue headers.
 
-A violation is not an error. Out-of-order chunks are still assembled; the response notes `ordering` warnings (e.g.
-`query_before_chunks`) so harness authors can see the cost.
-
-### 5.7 Fallback behaviour
+### 5.7 Fallback
 
 | situation | behaviour |
 |---|---|
-| server without the convention (llama.cpp, vLLM, Ollama, old dotLLM) | dotLLM and llama.cpp ignore unknown fields **[verified for dotLLM; assumption for llama.cpp]**. The request is plain text |
-| hosted APIs (OpenAI, Anthropic) | **they reject unknown parameters** **[assumption from SDK behaviour; verify per provider]**. The client wrapper must strip `chunk` / `chunk_cache` unless the capability probe (§5.10) succeeded. CodeSharp's provider switch knows the provider, so this is cheap |
-| hash mismatch, bad span, overlap | that annotation is ignored; warning |
-| store unavailable or busy (`ChunkStoreBusyException`) | misses; the request is served (Task 3: store failures are misses) **[verified]** |
+| a server without the convention (older dotLLM, llama.cpp, Ollama) | unknown fields are ignored (dotLLM **[verified]**; llama.cpp observed behaviour **[reported]**). Plain text |
+| hosted APIs | OpenAI 400s "Unrecognized request argument"; Anthropic 400s "Extra inputs are not permitted" **[reported by review; consistent with my recollection]**. The client must strip annotations unless the capability probe (§5.9) succeeded |
+| hash mismatch, bad span, template-altered span, special tokens | that annotation is ignored; warning |
+| store unavailable, busy or full | misses (store failures are misses, Task 3 **[verified]**); `chunk_store_unavailable` warning |
 | unsupported model or backend | `exact`, with a reason |
-| `strict: true` | any of the above becomes an error (§5.8) |
+| `strict: true` | the above become errors |
 
 ### 5.8 Errors and warnings
 
-Error envelope as on the existing surfaces (`{"error": {"message", "type", "param", "code"}}` for OpenAI-style,
-`{"type": "error", "error": {...}}` for Anthropic) **[verified]**. Codes are the same in strict errors and non-strict
-`warnings[]`:
+Envelopes as on the existing surfaces **[verified]**. All strict errors are **400 `invalid_request_error`** with a
+`code`, except `chunk_store_unavailable` (503 `api_error`). dotLLM and Anthropic do not use 422.
 
-| code | HTTP (strict) | when |
-|---|---|---|
-| `chunk_version_unsupported` | 400 | `v` not in the server's `versions` |
-| `chunk_hash_mismatch` | 400 | recomputed hash differs |
-| `chunk_span_invalid` | 400 | `at` out of range, overlapping, not on a UTF-8 boundary, or the part is not text |
-| `chunk_manifest_conflict` | 400 | inline and manifest both present |
-| `chunk_model_unsupported` | 422 | model or backend cannot assemble |
-| `chunk_policy_unavailable` | 422 | e.g. `query_relevance` with no probe on this backend |
-| `chunk_store_unavailable` | 503 | store root missing, locked past timeout, out of space |
-| `chunk_too_many` | 400 | above the server's `max_chunks_per_request` |
+- **Errors when strict, warnings otherwise:**
+  - `chunk_version_unsupported`
+  - `chunk_hash_mismatch`
+  - `chunk_span_invalid` (`at` out of range, overlap, not on a UTF-8 boundary, a non-text part)
+  - `chunk_manifest_conflict`
+  - `chunk_template_altered`
+  - `chunk_special_tokens`
+  - `chunk_model_unsupported`
+  - `chunk_policy_unavailable` (e.g. `query_relevance` with no probe on this backend)
+  - `chunk_too_many`
+  - `chunk_store_unavailable` (root missing, write budget exhausted, lock timeout)
+- **Warnings only:**
+  - `chunk_ignored_too_short`
+  - `chunk_not_wire_eligible` (the `chunker` named is not text-first)
+  - `chunk_encode_skipped` (admission refused, §5.10)
+  - `chunk_encode_queued`
 
-Warnings only: `chunk_ignored_too_short`, `query_before_chunks`, `chunk_render_unknown`, `chunk_encode_queued`.
+The `explain` endpoint (§7.2) uses the same codes and status mapping.
 
-### 5.9 Response metadata
+### 5.9 Response metadata, capabilities, versioning
 
-A top-level `chunk_cache` object in the blocking response, in the final streaming chunk (next to `usage` and `timings`), and
-on the Anthropic surface as a top-level field of the message:
+The response carries a top-level `chunk_cache` object:
+- in a blocking response;
+- in the final streaming chunk next to `usage` and `timings`;
+- on the Anthropic stream, in the `message_delta` event beside `usage`.
+
+**Illustration**, after #1540 (with today's kernel the recompute below would take minutes, not 1.5 s):
 
 ```json
 "chunk_cache": {
-  "v": 1, "policy_requested": "auto", "policy_applied": "balanced", "reason": "cost_model_win",
-  "chunks": {"annotated": 14, "prefix": 3, "hit": 9, "miss": 1, "repeat": 0, "ignored": 1},
-  "tokens": {"prompt": 18340, "prefix_reused": 2210, "chunk_reused": 13420, "chunk_recomputed": 2013,
-             "encoded": 412, "prefilled": 2298},
+  "v": 1, "policy_requested": "auto", "policy_applied": "balanced", "reason": "gates_passed",
+  "chunks": {"annotated": 14, "prefix": 3, "hit": 9, "miss": 1, "ignored": 1},
+  "tokens": {"prompt": 18340, "prefix_reused": 2210, "prefix_reused_approx": 0,
+             "chunk_reused": 13420, "chunk_recomputed": 2013, "prefilled": 2710, "encode_queued": 412},
   "recompute": {"selector": "query_relevance", "budget": 0.15, "rows": 2013, "forwards": 1, "attn_kernel": "qpos"},
-  "timings_ms": {"assembly": 76, "recompute": 1540, "encode": 0, "probe": 12, "prefill": 410,
-                 "full_prefill_estimate": 6100},
-  "warnings": [{"code": "chunk_ignored_too_short", "id": "src/A.cs:1-3@0"}],
-  "per_chunk": [{"id": "...", "hash": "sha256:…", "status": "hit", "tokens": 486, "recomputed": 73}]
+  "timings_ms": {"assembly": 76, "probe": 12, "recompute": 1540, "prefill": 410, "full_prefill_estimate": 6100},
+  "warnings": [{"code": "chunk_ignored_too_short", "count": 1}]
 }
 ```
 
-- `per_chunk` appears only with `report: "per_chunk"`.
-- **`usage.prompt_tokens_details.cached_tokens` and `timings.cache_n` keep meaning exact prefix reuse only.** Approximate
-  chunk reuse is not mixed into them. CodeSharp's cache-miss monitor (B9) compares `cached_tokens` with the previous
-  prompt length **[verified, CodeSharp prefix-cache spec]**, and Anthropic and OpenAI define these counts as exact cache
-  reads **[verified for Anthropic]**. New `timings` fields beside the llama.cpp names: `chunk_n` (reused) and
-  `chunk_recomputed_n`.
-- `/metrics` gains counters: hits, misses, recomputed rows, store bytes, and policy decisions by reason.
+**How the token counts relate:**
+- **The prompt partition:** `prompt = prefix_reused + prefix_reused_approx + chunk_reused + prefilled`. Here
+  2,210 + 0 + 13,420 + 2,710 = 18,340.
+- **Recompute is a subset of reuse:** `chunk_recomputed` ⊂ `chunk_reused`.
+- **Missed chunks** (412 tokens, prefilled in place under `on_miss: prefill`) are counted in `prefilled`.
+- **Background encodes:** `encode_queued` counts tokens queued for background encode, which take no request time.
+- **Under `shadow`:** the same object with `"policy_applied": "exact"` and a `"plan"` holding the predicted values.
 
-### 5.10 Versioning and capabilities
+**Exact vs approximate counters:**
+- `usage.prompt_tokens_details.cached_tokens` and `timings.cache_n` keep meaning **exact** prefix reuse.
+- CodeSharp has a planned cache-miss rule (B9) that compares `cached_tokens` with the previous prompt **[verified as a
+  design rule; no code found per review]**.
+- Anthropic defines its cache counts as exact reads **[verified]**.
+- New `timings` fields are `chunk_n` (approximately reused) and `chunk_recomputed_n`. `/metrics` gains counters.
 
-- `GET /v1/chunk-cache` returns:
+**Capabilities.** `GET /v1/chunk-cache` (behind the inference API key) returns:
 
-  ```json
-  {"versions": [1], "policies": ["exact", "shadow", "balanced", "fast", "auto"],
-   "selectors": ["chunk_starts", "query_relevance"], "renders": ["plain", "numbered-relative"],
-   "model": {"id": "...", "supported": true, "reason": null, "fingerprint": "gguf-sha256:…"},
-   "store": {"root_id": "…", "entries": 0, "bytes": 0, "dtype": "f32"}, "max_chunks_per_request": 4096}
-  ```
+```json
+{"versions": [1], "policies": ["exact", "shadow", "balanced", "fast", "auto"],
+ "selectors": ["chunk_starts"], "wire_chunkers": ["symbol-512"], "auto_validated": [],
+ "model": {"id": "...", "supported": true, "reason": null},
+ "store": {"entries": 0, "bytes": 0, "budget_bytes": 0, "dtype": "f32"}, "max_chunks_per_request": 4096}
+```
 
-  The store path is not exposed, only an opaque `root_id`. A 404 means "no convention: strip annotations".
-- Additive fields keep `v: 1`. A change in meaning (hash rule, positioning, span units) bumps `v`. Servers list every
-  version they accept.
-- Store-format changes are invisible on the wire: they change `ChunkKey` (schema version, key scheme), so old entries
-  simply miss **[verified]**.
+- `selectors` lists only what runs on the active backend (`query_relevance` appears once a probe exists).
+- `wire_chunkers` lists text-first chunkers (`lines-512` after E4c).
+- A 404 means "no convention: strip annotations".
+- **Versioning.** Additive fields keep `v: 1`; a change of meaning (hash rule, span units, positioning) bumps `v`. Store
+  format changes are invisible on the wire, because they change `ChunkKey`.
 
-## 6. Transparent mode (server recognises stable blocks itself)
+### 5.10 Encode admission and disk budget
 
-**Feasible, opt-in on the server only, never the default.**
+On a miss, the background encode is queued only when **all** of these hold:
+- the chunk is not `volatile` and not `no_store`;
+- its path is not on the deny-list (§10);
+- it has been seen in at least 2 requests (a sighting table keyed by text hash and namespace);
+- the store is under its byte budget (`--chunk-store-budget`, **required**, no unlimited default).
 
-- **Mechanism (block-hash mode).** With `--chunk-transparent`, the server treats every text part, or every tool-result
-  content, of at least `min_chunk_tokens` as a candidate chunk. Its identity is the part's own text hash, exactly as if it
-  had been annotated with `at: {message, part}`.
-  - A candidate becomes reusable after it has been seen `N` times (default 2), so one-off text is not encoded.
-  - Harnesses that already send one file read per tool result get reuse with no client change. This is the only route for
-    Claude Code via `ANTHROPIC_BASE_URL` (§9).
-- **Delimiter mode: not recommended.** For example, LMCache marks chunk boundaries in-band with a separator string
-  (`blend_special_str`, default `" # # "`, with `enable_blending` and `blend_recompute_ratios`;
-  [LMCache configuration](https://docs.lmcache.ai/api_reference/configurations.html) **[verified]**). Its risks:
-  - A server without the convention passes the delimiters to the model as text.
-  - File content can contain the delimiter. Prompt injection could forge chunk boundaries. A per-server nonce in the
-    delimiter (read from `/v1/chunk-cache`) mitigates this, but requires the client to know the nonce, at which point it
-    could annotate properly.
-  - Stripping the delimiters changes the text the model sees compared with the same request on a plain server.
-- **Risks of transparent mode in general:**
-  - It silently changes outputs for clients that did not ask for approximate reuse. Unless the operator sets a default
-    policy, it therefore applies only `exact` or `shadow` behaviour, and a client opts in per request with
-    `chunk_cache.policy`.
-  - Granularity is the whole block. A file read as one block is one chunk, so an edit anywhere in it misses the whole file
-    (the fixed-chunk problem from E7, but worse).
-  - It cannot see render profiles or ids, so telemetry is hash-only.
-  - It is a timing side channel across clients of the same server (§10).
+Encodes run only while the server is idle, so they never evict a single-slot session snapshot. When the budget is
+reached:
+- eviction of server-ledger entries (§14, L2) runs in least-recently-used order;
+- if eviction cannot free space, encodes stop and responses carry `chunk_store_unavailable` as a warning.
 
-## 7. Control plane: library, `chunkcache` CLI, MCP
+For scale: at F32, a 100K-token session's worth of misses is about 28 GB.
+
+### 5.11 Required experiment E4c (blocks fixed-size chunks on the wire)
+
+- **Scheduled by the controller; not run here.**
+- **Run:** re-run one E4 fixed-chunk cell (one corpus, 3 seeds, QR and chunk starts, 10 % and 20 %) with **text-first**
+  fixed chunks (`lines-512`, §5.3 item 4).
+- **Compare** it with E4's id-sliced fixed chunks on the same call sites: gap recovered, EM, and the 95 / 20 bar.
+- **Extra arm:** QR with the query placed **before** the context (the agent-loop layout, §5.6).
+- **Outcomes:**
+  - if text-first fixed chunks match id-sliced ones within the CIs, `lines-512` becomes wire-eligible and enters
+    `auto_validated` for QR at 20 %;
+  - if not, the bar is unmet for every wire-eligible chunker, and `balanced` stays documented as below the bar.
+
+## 6. Transparent mode
+
+- **Mechanism.** A server flag (`--chunk-transparent`, off by default) treats every text part, or every tool-result
+  content, of at least `min_chunk_tokens` tokens as a candidate chunk identified by its own text hash.
+  - It applies the request's policy, which defaults to `exact`. Transparent mode therefore only collects sightings and
+    feeds background encode unless the client opts in.
+  - **It requires `namespace` isolation** whenever the server has more than one client or any API key configured (§10).
+  - It is the only route to reuse for clients that cannot annotate (Claude Code through `ANTHROPIC_BASE_URL`, §9).
+- **Delimiters in text: not recommended.**
+  - LMCache's CacheBlend marks boundaries in-band (`blend_special_str`, default `" # # "`; `enable_blending`,
+    `blend_recompute_ratios` 0.15) **[verified on the docs page of 2026-11-02]**.
+  - That page documents the **deprecated in-process mode**. The current multi-process mode docs say blending is
+    unsupported there **[reported by review]**. Any alignment with LMCache must pin the LMCache version whose docs were
+    read.
+  - **Delimiter risks:**
+    - a plain server shows the delimiters to the model;
+    - file content or injected text can forge them;
+    - stripping them changes the text relative to a plain server.
+- **Risks of transparent mode:**
+  - It reuses whole blocks, so an edit anywhere in a file read as one block misses the whole block.
+  - It sees no chunker or ids.
+  - Its sighting table is sensitive data (§10).
+
+## 7. Control plane
 
 ### 7.1 What MCP can and cannot do
 
-- **Can:** expose store management as tools (build, prewarm, select, status, evict, compare, explain) with typed inputs
-  and outputs (`inputSchema`, optional `outputSchema`, `structuredContent` plus a serialised text copy for compatibility;
-  [MCP 2025-06-18 tools](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) **[verified]**). `select`
-  can return chunk text as its result. When the host model is served by dotLLM in transparent mode, those returned blocks
-  are then reusable.
-- **Cannot:** change how the host builds its prompt, add fields to the host's API request, or touch the KV of a model it
-  does not run. A tool result is just content the host places where it likes. With a hosted model behind the host (Claude
-  Code with Anthropic's API), MCP only manages a local store and selects context. It gives **no** TTFT benefit.
-- Hence: "thin" control plane. The inference path is the HTTP convention, and MCP is for agents and humans to manage the
-  store.
+- **Can:** expose store management as tools with `inputSchema`, `outputSchema` and `structuredContent` (plus a serialised
+  text copy) ([MCP 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25/server/tools); the rules match
+  [2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) **[verified]**, plus `icons` and
+  `execution.taskSupport` in 2025-11-25 **[reported by review]**).
+  - `select` can return chunk text that a dotLLM-served host may reuse in transparent mode.
+- **Cannot:** change the host's prompt, add request fields, or affect a model it does not run. With a hosted model behind
+  the host, the control plane manages a local store only. It gives no TTFT benefit.
 
-### 7.2 Tools
+### 7.2 Tools (v1)
 
-The CLI verbs (`chunkcache build|select|status|evict|compare`, plan Task 7) map one to one. `prewarm` and `explain` are
-added here. Every tool takes `store` (a store root; default from config) and returns `structuredContent` matching its
-`outputSchema`. The schemas are abbreviated to their properties; all objects have `additionalProperties: false` except
-where noted.
+**Common parameters.**
+- Every tool takes `store` (the store root; default from config).
+- Tools that need the model take `server` (the dotLLM base URL). The server, not the CLI, owns the model identity and all
+  K/V writes (§14, L1).
+- Schemas are abbreviated to `properties`, with `additionalProperties: false` unless noted.
 
-**`chunkcache_build`**: scan a solution or folder, chunk it, update the index, and (with `encode`) encode missing chunks.
+**Scope.** `compare` is lab tooling that runs GPU forwards, so it stays a CLI verb (`chunkcache compare`) and is not an
+MCP tool in v1.
+
+**`chunkcache_build`**: scan a solution or folder, chunk it with a wire-eligible chunker, and update the index
+(tokenizer only). Optionally ask the server to encode.
 ```json
-{"input": {"type": "object", "required": ["path"], "properties": {
+{"input": {"required": ["path"], "properties": {
+   "store": {"type": "string"}, "server": {"type": "string"},
    "path": {"type": "string", "description": ".sln/.slnx/.csproj or folder"},
-   "model": {"type": "string", "description": "model id/path; required when encode=true"},
-   "chunker": {"enum": ["symbol-512", "fixed-512"], "default": "symbol-512"},
-   "render": {"enum": ["plain", "numbered-relative"], "default": "plain"},
+   "chunker": {"enum": ["symbol-512"], "default": "symbol-512", "description": "lines-512 after E4c"},
    "configuration": {"type": "string", "default": "Release"},
-   "encode": {"type": "boolean", "default": false},
-   "max_encode_tokens": {"type": "integer"}, "strict_model_id": {"type": "boolean", "default": false}}},
- "output": {"type": "object", "properties": {
+   "encode": {"type": "boolean", "default": false, "description": "queue all missing chunks via the server's prewarm"},
+   "max_encode_tokens": {"type": "integer"}}},
+ "output": {"properties": {
    "files": {"type": "integer"}, "chunks": {"type": "integer"}, "tokens": {"type": "integer"},
+   "wire_ineligible_chunks": {"type": "integer"}, "denied_files": {"type": "integer"},
    "added": {"type": "integer"}, "removed": {"type": "integer"}, "unchanged": {"type": "integer"},
-   "encoded_tokens": {"type": "integer"}, "store_bytes": {"type": "integer"},
+   "encode_queued_tokens": {"type": "integer"},
    "skipped_projects": {"type": "array", "items": {"type": "object", "properties": {
        "project": {"type": "string"}, "reason": {"type": "string"}}}},
    "elapsed_ms": {"type": "integer"}}}}
 ```
+The tokenizer comes from the server's loaded model (`GET /v1/chunk-cache` plus a tokenizer fetch, or a local GGUF with
+the same `TokenizerId`), so chunk token ids match the server's.
 
-**`chunkcache_select`**: `ContextSelector.Select` over the index and graph **[verified API, selection-tools README]**.
+**`chunkcache_select`**: `ContextSelector.Select` over an index and its reference graph **[verified API, selection-tools
+README]**.
 ```json
-{"input": {"type": "object", "properties": {
+{"input": {"properties": {
+   "store": {"type": "string"}, "server": {"type": "string"},
+   "path": {"type": "string", "description": "solution/folder whose index to use"},
+   "chunker": {"enum": ["symbol-512"], "default": "symbol-512"},
    "paths": {"type": "array", "items": {"type": "string"}}, "exclude": {"type": "array", "items": {"type": "string"}},
    "symbol": {"type": "string"}, "hops": {"type": "integer", "default": 1, "maximum": 100},
    "changed_since": {"type": "string"}, "token_budget": {"type": "integer"},
    "include_text": {"type": "boolean", "default": false},
    "order": {"enum": ["rank", "document"], "default": "document"}}},
- "output": {"type": "object", "properties": {
+ "output": {"properties": {
    "chunks": {"type": "array", "items": {"type": "object", "properties": {
       "id": {"type": "string"}, "path": {"type": "string"}, "start_line": {"type": "integer"},
       "end_line": {"type": "integer"}, "tokens": {"type": "integer"}, "hash": {"type": "string"},
       "reason": {"type": "string"}, "detail": {"type": "string"}, "hop": {"type": "integer"},
       "stored": {"type": "boolean"}, "text": {"type": "string"}}}},
-   "selected_tokens": {"type": "integer"}, "candidate_tokens": {"type": "integer"},
-   "trimmed": {"type": "integer"}, "unmatched_patterns": {"type": "array", "items": {"type": "string"}},
+   "selected_tokens": {"type": "integer"}, "candidate_tokens": {"type": "integer"}, "trimmed": {"type": "integer"},
+   "unmatched_patterns": {"type": "array", "items": {"type": "string"}},
    "notes": {"type": "array", "items": {"type": "string"}}}}}
 ```
-`hash` here is the wire hash of the chunk's rendered text under the index's render profile, so a harness can annotate
-without re-hashing.
+- `hash` is the wire hash of the chunk's `plain` text, which is LF-normalised as scanned (§5.3, item 1).
+- `stored` is answered by the server for the selected keys.
 
 **`chunkcache_status`**: `ChunkIndex.Status(store, currentFiles)` **[verified API]**.
 ```json
-{"input": {"type": "object", "properties": {"path": {"type": "string"}, "model": {"type": "string"},
-   "list_missing": {"type": "boolean", "default": false}}},
- "output": {"type": "object", "properties": {
+{"input": {"properties": {"store": {"type": "string"}, "server": {"type": "string"}, "path": {"type": "string"},
+   "chunker": {"enum": ["symbol-512"], "default": "symbol-512"}, "list_missing": {"type": "boolean", "default": false}}},
+ "output": {"properties": {
    "total_chunks": {"type": "integer"}, "missing_chunks": {"type": "integer"}, "missing_tokens": {"type": "integer"},
-   "up_to_date": {"type": "boolean"}, "stale_files": {"type": "array", "items": {"type": "string"}},
-   "new_files": {"type": "array", "items": {"type": "string"}}, "deleted_files": {"type": "array", "items": {"type": "string"}},
-   "missing": {"type": "array", "items": {"type": "string", "description": "path:a-b missing (n tokens)"}},
-   "store_bytes": {"type": "integer"}, "entries": {"type": "integer"}, "temp_files": {"type": "integer"}}}}
+   "up_to_date": {"type": "boolean"},
+   "stale_files": {"type": "array", "items": {"type": "string"}}, "new_files": {"type": "array", "items": {"type": "string"}},
+   "deleted_files": {"type": "array", "items": {"type": "string"}},
+   "missing": {"type": "array", "items": {"type": "object", "properties": {
+       "path": {"type": "string"}, "start_line": {"type": "integer"}, "end_line": {"type": "integer"},
+       "tokens": {"type": "integer"}}}},
+   "store_bytes": {"type": "integer"}, "budget_bytes": {"type": "integer"}, "entries": {"type": "integer"}}}}
 ```
 
-**`chunkcache_evict`**: only keys no index under the store references (`EvictableOrphans` / `StoreWideOrphans`, under the
-store lock) **[verified]**, or a size or age budget over those.
+**`chunkcache_evict`**: through the server (`POST /v1/chunk-cache/evict`), which holds the write lock (§14, L3).
 ```json
-{"input": {"type": "object", "properties": {
-   "mode": {"enum": ["orphans", "lru_to_bytes", "older_than"], "default": "orphans"},
-   "target_bytes": {"type": "integer"}, "older_than_days": {"type": "integer"},
-   "dry_run": {"type": "boolean", "default": true}}},
- "output": {"type": "object", "properties": {
-   "evicted": {"type": "integer"}, "freed_bytes": {"type": "integer"}, "kept_referenced": {"type": "integer"},
-   "dry_run": {"type": "boolean"}}}}
+{"input": {"properties": {"store": {"type": "string"}, "server": {"type": "string"},
+   "mode": {"enum": ["orphans", "path", "namespace", "all"], "default": "orphans"},
+   "path": {"type": "string", "description": "glob; mode=path: forget every entry first seen under it"},
+   "namespace": {"type": "string"}, "dry_run": {"type": "boolean", "default": true}}},
+ "output": {"properties": {"evicted": {"type": "integer"}, "freed_bytes": {"type": "integer"},
+   "kept_referenced": {"type": "integer"}, "dry_run": {"type": "boolean"}}}}
 ```
-`lru_to_bytes` and `older_than` need access-time bookkeeping the store does not have yet **[assumption: new work]**.
+**Modes:**
+- `orphans`: keys referenced by neither an index nor the server ledger (§14, L2).
+- `path`: a "forget this repo" request. It removes entries whose ledger provenance lies under the glob, and their index
+  references.
+- `all`: wipes the namespace or the store.
 
-**`chunkcache_prewarm`**: encode the chunks a likely next request needs (`select` output, or explicit hashes) through the
-server, so the encode happens off the critical path. It is an HTTP call to `POST /v1/chunk-cache/prewarm`, which uses the
-server's loaded model, so the keys match what requests will look up.
+LRU and age eviction are internal to the budget (§5.10); they are not tool modes in v1.
+
+**`chunkcache_prewarm`**: queue isolated encodes on the server (`POST /v1/chunk-cache/prewarm`). It takes **text only**:
+there is no hash → key map, and a hash-only API would be a membership oracle.
 ```json
-{"input": {"type": "object", "properties": {
-   "select": {"type": "object", "description": "same shape as chunkcache_select input"},
-   "texts": {"type": "array", "items": {"type": "object", "properties": {
-       "id": {"type": "string"}, "text": {"type": "string"}}}},
-   "server": {"type": "string", "default": "http://127.0.0.1:8080"},
-   "max_tokens": {"type": "integer"}, "priority": {"enum": ["idle", "now"], "default": "idle"}}},
- "output": {"type": "object", "properties": {
-   "requested": {"type": "integer"}, "already_stored": {"type": "integer"}, "encoded": {"type": "integer"},
-   "encoded_tokens": {"type": "integer"}, "queued": {"type": "integer"}, "elapsed_ms": {"type": "integer"}}}}
+{"input": {"properties": {"store": {"type": "string"}, "server": {"type": "string"},
+   "select": {"type": "object", "additionalProperties": true, "description": "a chunkcache_select input; text is read locally"},
+   "texts": {"type": "array", "items": {"type": "object", "properties": {"id": {"type": "string"}, "text": {"type": "string"}}}},
+   "max_tokens": {"type": "integer"}}},
+ "output": {"properties": {"requested": {"type": "integer"}, "already_stored": {"type": "integer"},
+   "queued": {"type": "integer"}, "queued_tokens": {"type": "integer"}, "refused": {"type": "integer"},
+   "refused_reasons": {"type": "array", "items": {"type": "string"}}}}}
 ```
-`priority: "idle"` must respect a single-slot server: prewarm is a side call that would evict the session snapshot (the
-`SideCallEvictsSession` rule in CodeSharp **[verified]**). The server should run prewarm only while idle, or into a
-separate slot.
+Encodes run under the idle and budget rules of §5.10. Prewarm bypasses only the "seen twice" rule.
 
-**`chunkcache_compare`**: the plan's `compare` (quality vs prefill table) over a task file.
+**`chunkcache_explain`**: a dry run of §5.5 for a request body (`POST /v1/chunk-cache/explain`). It takes text only (the
+full request); hash lists are not accepted.
 ```json
-{"input": {"type": "object", "required": ["task_file", "model"], "properties": {
-   "task_file": {"type": "string"}, "model": {"type": "string"},
-   "selectors": {"type": "array", "items": {"type": "string"}, "default": ["chunk_starts", "query_relevance"]},
-   "budgets": {"type": "array", "items": {"type": "number"}, "default": [0.05, 0.1, 0.2]},
-   "chunkers": {"type": "array", "items": {"type": "string"}, "default": ["fixed-512", "symbol-512"]},
-   "backend": {"enum": ["cpu", "vulkan"], "default": "vulkan"}}},
- "output": {"type": "object", "properties": {"rows": {"type": "array", "items": {"type": "object", "properties": {
-   "chunker": {"type": "string"}, "selector": {"type": "string"}, "budget": {"type": "number"},
-   "kl": {"type": "number"}, "top1": {"type": "number"}, "em": {"type": "number"},
-   "recomputed_tokens": {"type": "integer"}, "forwards": {"type": "integer"},
-   "reuse_ms": {"type": "number"}, "full_prefill_ms": {"type": "number"}, "path": {"type": "string"}}}}}}}
-```
-It runs model forwards. On a shared GPU that needs the user's go-ahead (machine policy), so the tool must say so in its
-description and refuse unless invoked with an explicit `confirm_gpu: true` (not shown).
-
-**`chunkcache_explain`**: why a request did or did not reuse. Given a request body (or a hash list) and the server, it
-returns the per-chunk analysis without generating.
-```json
-{"input": {"type": "object", "properties": {
-   "request": {"type": "object", "additionalProperties": true},
-   "hashes": {"type": "array", "items": {"type": "string"}}, "server": {"type": "string"}}},
- "output": {"type": "object", "properties": {
+{"input": {"required": ["request"], "properties": {"server": {"type": "string"},
+   "request": {"type": "object", "additionalProperties": true}}},
+ "output": {"properties": {
    "policy_would_apply": {"type": "string"}, "reason": {"type": "string"},
    "chunks": {"type": "array", "items": {"type": "object", "properties": {
       "id": {"type": "string"}, "status": {"enum": ["prefix", "hit", "miss", "ignored"]},
-      "why": {"type": "string", "description": "e.g. hash mismatch, render differs from index, too short, other model"},
-      "nearest_index_entry": {"type": "string"}}}},
+      "why": {"type": "string", "description": "hash mismatch, template altered, not wire-eligible, too short, other model, CRLF vs index"}}}},
    "predicted_ms": {"type": "object", "properties": {"reuse": {"type": "number"}, "full_prefill": {"type": "number"}}},
    "warnings": {"type": "array", "items": {"type": "string"}}}}}
 ```
-It is served by `POST /v1/chunk-cache/explain` (a dry run of §5.5). `nearest_index_entry` looks up the same `id` / path in
-the index to diagnose "the file changed" vs "the render differs".
+- Per-chunk status is returned only to an authenticated caller for its own namespace (§10).
+- The `why` value "CRLF vs index" comes from comparing the chunk text with the indexed file's LF text when the chunk's
+  `source.path` is in the caller's index.
 
 ## 8. .NET wrapper abstractions
 
-### 8.1 Design constraints (from CodeSharp's experience)
+### 8.1 Constraints
 
-- **Do not rely on `AIContent.AdditionalProperties` reaching the wire.** CodeSharp observed `ChatOptions.AdditionalProperties`
-  silently dropped (`reasoning_effort` "for months") and no per-block `cache_control` in the MEAI Anthropic bridge (wire
-  capture) **[verified, `AnthropicPromptCacheHandler.cs` remarks]**.
-- `ChatOptions.RawRepresentationFactory` lets a caller pre-build the provider's options object
+**Do not rely on `AIContent.AdditionalProperties` or `ChatOptions.AdditionalProperties` reaching the wire.**
+- `ChatOptions.AdditionalProperties` is dropped silently (`AnthropicPromptCacheHandler.cs` remarks, about
+  `reasoning_effort`) **[verified]**.
+- Per-content properties on the OpenAI bridge are unverified **[assumption: dropped]**.
+
+**Other routes are unconfirmed or fragile:**
+- `ChatOptions.RawRepresentationFactory` pre-builds the provider options
   ([docs](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai.chatoptions.rawrepresentationfactory))
-  **[verified]**. Extra JSON on OpenAI .NET models goes through the experimental `JsonPatch Patch` property
-  (openai-dotnet [PR #834](https://github.com/openai/openai-dotnet/pull/834.diff); used by Semantic Kernel
-  [PR #13934](https://github.com/microsoft/semantic-kernel/pull/13934)) **[reported by search results; not verified for
-  `ChatCompletionOptions` at our pinned version]**. That reaches top-level fields only, and is fragile.
-- **Therefore the reference transport is an HTTP body handler**, the seam CodeSharp already uses for Anthropic
-  `cache_control`, Claude Code identity and thinking summaries: an MEAI decorator records the annotations, and a
-  `DelegatingHandler` on the provider's `HttpClient` writes the `chunk_cache` manifest (placement B) into the JSON body.
+  **[verified]**.
+- **openai-dotnet `JsonPatch Patch`:** an experimental `[Experimental("SCME0001")] ref JsonPatch Patch` exists across
+  models ([PR #834](https://github.com/openai/openai-dotnet/pull/834.diff)), and Semantic Kernel uses it for extra body
+  fields ([PR #13934](https://github.com/microsoft/semantic-kernel/pull/13934)) **[reported]**.
+  - Whether `ChatCompletionOptions` has it, and from which version, is **unconfirmed**.
+  - It reaches top-level fields only.
 
-### 8.2 Interfaces (sketch; package `DotLLM.ChunkCache.Client`, MIT-compatible, no dotLLM engine reference)
+**The reference transport is therefore an HTTP body handler**, the seam CodeSharp uses for Anthropic `cache_control`:
+- an MEAI decorator records the spans;
+- a `DelegatingHandler` writes `chunk_cache` (placement B) into the JSON body.
+
+### 8.2 Interfaces
+
+Package `DotLLM.ChunkCache.Client`: a permissive licence, no engine reference.
 
 ```csharp
 namespace DotLLM.ChunkCache.Client;
 
-/// One chunk inside one message part, identified by its exact text.
+/// One chunk inside one message part, identified by its exact text. Offsets are UTF-16 chars here (.NET strings);
+/// the body handler converts them to the wire's UTF-8 byte offsets.
 public sealed record ChunkSpan(
-    string Id, string Hash,                 // "sha256:<hex>" of UTF-8 bytes of the span text
-    int Start = 0, int? End = null,         // UTF-8 byte offsets inside the part's text; null End = to the end
-    string Render = "plain", string? Chunker = null,
-    ChunkSourceInfo? Source = null, bool Volatile = false);
+    string Id, string Hash,                    // Hash: "sha256:<hex>" of the UTF-8 bytes of the span text
+    int Start = 0, int? End = null,            // UTF-16 offsets within the part text; null End = to the end
+    string? Chunker = null, ChunkSourceInfo? Source = null,
+    bool Volatile = false, bool NoStore = false);
 
 public sealed record ChunkSourceInfo(string Path, int StartLine, int EndLine, string? Revision);
 
-/// Produces chunked, rendered text for a file the harness is about to show the model.
+/// Reads a file the harness is about to show the model and returns the text plus its chunk spans, chunked with a
+/// wire-eligible (text-first) chunker over the same normalised text the store indexes.
 public interface IChunkSource
 {
-    /// Reads and chunks the file (same chunker and render profile as the store's index).
-    ValueTask<ChunkedText> ReadAsync(string path, LineRange? range, CancellationToken ct);
+    ValueTask<ChunkedText> ReadAsync(string path, LineRange? window, CancellationToken ct);
 }
-public sealed record ChunkedText(string Text, IReadOnlyList<ChunkSpan> Spans, string ContentSha256);
+public sealed record ChunkedText(string Text, IReadOnlyList<ChunkSpan> Spans, string ContentSha256,
+                                 IReadOnlyList<string> Notes);   // e.g. "2 chunks cut by the window: not annotated"
 public readonly record struct LineRange(int Start, int End);
 
-/// Tells the harness (and the store) that sources changed. Chunk identity is content, so this is an optimisation:
+/// Source-change notifications. Identity is content, so this is an optimisation (re-read and prewarm early);
 /// without it, stale chunks simply miss.
 public interface IInvalidationSignal
 {
     IAsyncEnumerable<ChunkInvalidation> ReadAllAsync(CancellationToken ct);
 }
 public sealed record ChunkInvalidation(string Path, InvalidationKind Kind, string? NewContentSha256, string Origin);
-public enum InvalidationKind { Modified, Deleted, Renamed, Unknown }   // Origin: "edit-tool", "fs-watch", "git", ...
+public enum InvalidationKind { Modified, Deleted, Renamed, Unknown }        // Origin: "edit-tool", "fs-watch", "git"
 
-/// Decides the request-level policy from what the harness knows.
+/// Chooses the request policy. The default implementation returns Policy = "exact".
 public interface IRecomputePolicy
 {
     ChunkRequestOptions Decide(ChunkRequestContext context);
 }
-public sealed record ChunkRequestContext(
-    string ModelId, int PromptTokensEstimate, int ChunkTokens, bool HasQuerySegment,
-    ChunkCacheCapabilities? ServerCapabilities, bool IsSubAgent, bool AfterCompaction);
-public sealed record ChunkRequestOptions(
-    string Policy = "auto", string Selector = "auto", double? Budget = null,
+public sealed record ChunkRequestContext(string ModelId, int PromptTokensEstimate, int ChunkTokens,
+    ChunkCacheCapabilities? Server, bool IsSubAgent, bool AfterCompaction, bool UserOptedIntoApproximation);
+public sealed record ChunkRequestOptions(string Policy = "exact", string? Selector = null, double? Budget = null,
     string OnMiss = "prefill", bool Strict = false, string Report = "summary");
 
-/// Annotations collected for one outgoing request; read by the body handler.
-public sealed class ChunkManifest
-{
-    public List<(int Message, int Part, ChunkSpan Span)> Entries { get; } = new();
-    public ChunkRequestOptions Options { get; set; } = new();
-}
-
-/// Control plane (HTTP to the server's /v1/chunk-cache endpoints, or the CLI's library).
+/// Control plane over the server's /v1/chunk-cache endpoints (plus local index operations).
 public interface IChunkCacheClient
 {
-    ValueTask<ChunkCacheCapabilities?> GetCapabilitiesAsync(CancellationToken ct);   // null = convention absent
+    ValueTask<ChunkCacheCapabilities?> GetCapabilitiesAsync(CancellationToken ct);    // null = convention absent
     ValueTask<SelectResult> SelectAsync(SelectRequest request, CancellationToken ct);
-    ValueTask<PrewarmResult> PrewarmAsync(PrewarmRequest request, CancellationToken ct);
+    ValueTask<PrewarmResult> PrewarmAsync(PrewarmRequest request, CancellationToken ct); // text only
     ValueTask<StatusResult> StatusAsync(StatusRequest request, CancellationToken ct);
     ValueTask<EvictResult> EvictAsync(EvictRequest request, CancellationToken ct);
     ValueTask<ExplainResult> ExplainAsync(JsonObject requestBody, CancellationToken ct);
@@ -570,353 +680,368 @@ public interface IChunkCacheClient
 ### 8.3 Pipeline pieces
 
 ```csharp
-/// MEAI decorator. Finds chunk-bearing text in outgoing messages, builds the ChunkManifest, publishes it to the
-/// handler through an AsyncLocal scope, and lifts the response's chunk_cache into ChatResponse.AdditionalProperties.
-public sealed class ChunkAnnotatingChatClient : DelegatingChatClient
+/// MEAI decorator: maps chunk-bearing parts to spans (via the registry), publishes the manifest to the handler
+/// through an AsyncLocal scope, and lifts the response's chunk_cache into ChatResponse.AdditionalProperties.
+public sealed class ChunkAnnotatingChatClient(IChatClient inner, IChunkSpanRegistry registry,
+                                              IRecomputePolicy policy) : DelegatingChatClient(inner)
 {
-    public ChunkAnnotatingChatClient(IChatClient inner, IChunkSpanRegistry registry, IRecomputePolicy policy,
-                                     IChunkCacheClient control) : base(inner) { }
-
     public override async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages,
         ChatOptions? options = null, CancellationToken ct = default)
     {
         var list = messages as IList<ChatMessage> ?? messages.ToList();
-        using var scope = ChunkManifestScope.Begin(BuildManifest(list));   // AsyncLocal<ChunkManifest?>
+        using var scope = ChunkManifestScope.Begin(BuildManifest(list));
         var response = await base.GetResponseAsync(list, options, ct);
-        ChunkCacheReport.Attach(response, scope.ResponseReport);           // AdditionalProperties["chunk_cache"]
+        ChunkCacheReport.Attach(response, scope.ResponseReport);
         return response;
     }
-    // GetStreamingResponseAsync: same; the report arrives with the final update.
+    // GetStreamingResponseAsync: the same; the report arrives with the final update.
 }
 
-/// Text → spans for content the decorator cannot see the origin of (tool results). Keyed by content SHA-256 of the
-/// whole part: the file-read tool registers what it returned; the decorator looks the part up by hash.
+/// Part text -> spans, registered by the file-read tool when it produces a result.
 public interface IChunkSpanRegistry
 {
     void Register(string partText, IReadOnlyList<ChunkSpan> spans);
     bool TryGet(string partText, out IReadOnlyList<ChunkSpan> spans);
 }
 
-/// HTTP body handler on the provider's HttpClient (OpenAI Chat Completions JSON). Writes "chunk_cache" with
-/// placement B (message/part indices), after verifying each span's text hash against the serialised body, so a
-/// later mutator that changed the text produces no annotation rather than a wrong one. Strips nothing on
-/// providers without the capability: it is only installed on chunk-capable providers.
-public sealed class ChunkCacheBodyHandler : DelegatingHandler
-{
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
-    {
-        // 1. read JSON body; 2. map ChunkManifest entries to (message, part) of the *serialised* messages by
-        //    re-hashing the part texts (indices in MEAI and on the wire can differ); 3. add "chunk_cache";
-        // 4. send; 5. parse "chunk_cache" from the response (or the final SSE chunk) into the scope.
-        return await base.SendAsync(request, ct);
-    }
-}
+/// On the provider HttpClient (OpenAI Chat Completions JSON). Locates each registered part in the *serialised* body
+/// by re-hashing part texts (MEAI and wire indices differ), verifies every span hash against the final bytes (a
+/// mutated part yields no annotation, never a wrong one), converts offsets to UTF-8 bytes, adds "chunk_cache", and
+/// parses the response's chunk_cache (or the final SSE chunk) back into the scope.
+public sealed class ChunkCacheBodyHandler : DelegatingHandler { /* SendAsync as described */ }
 ```
 
-- **Mapping by hash, not by index.** MEAI's message list and the serialised `messages` array differ: system extraction,
-  tool-call messages, and string vs parts content. The handler therefore locates each registered part by re-hashing the
-  serialised part texts. A string `content` is addressed as part 0.
-- **Mutators run before the handler.** In CodeSharp's stack the tool-output guard, memory dedupe and hook rewrites run in
-  the engine and session layers, above the provider's `HttpClient` **[reported]**. Because spans are verified against the
-  final body, a mutated result degrades to plain text instead of a wrong annotation.
-- **Capability probe.** At provider construction, `GetCapabilitiesAsync` is called once (and again after a model reload,
-  which CodeSharp already detects from `/v1/status`). Without the capability the handler is not installed.
+- **Installation.** The handler is installed only on providers whose capability probe succeeded.
+- **Probe timing.** The probe runs when the provider is built. In CodeSharp it also runs again whenever the model id
+  read from `/props` changes. CodeSharp has no reload detection today (its B7 is unbuilt) **[reported by review]**.
 
 ### 8.4 Transports
 
 | transport | when | notes |
 |---|---|---|
-| **HTTP, OpenAI Chat Completions + `chunk_cache`** (reference) | any harness, any licence | the convention above; CodeSharp's wire |
-| HTTP, Anthropic Messages + `chunk_cache` | harnesses on the Anthropic wire to dotLLM (Claude Code via `ANTHROPIC_BASE_URL`) | the same fields. CodeSharp chose not to use this wire for dotLLM **[verified, `decisions.md`]** |
-| in-process (`DotLLM.Engine` + `DotLLM.ChunkReuse` linked) | GPL-compatible hosts only | **not for CodeSharp: ADR-011 forbids linking GPL code into the core** **[verified]**. Offered as an `IChatClient` over the engine with `StoredContextAssembler.ForModel(config, modelId, quant, tokenizerId)` and `GgufIdentity` ids **[verified API]**. Gated on an ADR decision in any host that has one |
+| **HTTP, OpenAI Chat Completions + `chunk_cache`** (reference) | any harness | CodeSharp's wire (ADR-009) |
+| HTTP, Anthropic Messages + `chunk_cache` | clients on that wire to dotLLM | same fields; the stream report is in `message_delta` |
+| in-process (dotLLM engine linked) | GPL-compatible hosts only | not for CodeSharp (ADR-011). It would use `StoredContextAssembler.ForModel(config, modelId, quant, tokenizerId)` and `GgufIdentity` **[verified API]**, but needs the same engine work as the server (§14, L5) |
 
 ## 9. Adapter matrix
 
-| framework | where annotations go in | what it can do | what it cannot | effort |
+| framework | where annotations go in | can | cannot | effort |
 |---|---|---|---|---|
-| **Microsoft Agent Framework (.NET)** | `ChunkAnnotatingChatClient` in the chat-client pipeline (`ChatClientBuilder.Use`) + `ChunkCacheBodyHandler` on the provider `HttpClient`. `AIContextProvider` to inject selected chunks as messages; MEAI `IChatReducer` for chunk-aware compaction **[assumption on MAF type names; CodeSharp uses context providers and reducers, verified by file names]** | full convention, sub-agent reuse, telemetry | rely on `AdditionalProperties` reaching the wire | M (reference; CodeSharp) |
-| **Semantic Kernel (.NET)** | SK chat services bridge to `IChatClient`, so the same decorator + handler apply. `IPromptRenderFilter` or `IFunctionInvocationFilter` to register file-read outputs **[assumption on names]** | full convention through the bridge | `PromptExecutionSettings.ExtensionData` reaching the wire is unconfirmed | S–M (reuses the .NET package) |
-| **LangChain / LangGraph (Python)** | `ChatOpenAI(extra_body={"chunk_cache": {...}})` for placement B; a v1 agent middleware (`wrap_model_call`) builds the manifest per call **[assumption on names]** | full convention via B; `SummarizationMiddleware` can be replaced by a chunk-preserving one | per-part inline fields depend on the provider adapter | M (new Python package; deferred) |
-| **Claude Code** | MCP server for the control plane; `ANTHROPIC_BASE_URL` → dotLLM `/v1/messages` with server transparent mode **[assumption on env var; documented for LLM gateways]** | store management, `select` returning chunk text; block-hash reuse of repeated tool results when a local model serves it | annotate its own requests; reuse with Anthropic-hosted models; hooks cannot edit the API request **[assumption]**; its Read tool numbers lines absolutely (§5.4), so prewarm cannot match | S (MCP) / L (to make reuse useful) |
-| **Generic OpenAI-compatible client** | `chunk_cache` top-level via `extra_body` or a raw body | full convention | inline fields where the SDK has no raw content parts | S |
-| **llama.cpp / vLLM / LMCache servers (as targets)** | none | requests degrade to plain text. For alignment: llama.cpp `cache_prompt` and `--cache-reuse` (KV shifting of matching chunks; [README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) **[verified]**); vLLM APC hashes blocks with a parent hash, tokens and extra keys, and partitions by `cache_salt` ([design doc](https://docs.vllm.ai/en/latest/design/prefix_caching.html) **[verified]**); LMCache CacheBlend uses an in-band separator (§6) | a shared convention: none of them offers per-block, position-independent annotations | n/a |
+| **Microsoft Agent Framework (.NET)** | `ChunkAnnotatingChatClient` in the chat-client pipeline plus `ChunkCacheBodyHandler` on the provider `HttpClient`. An `AIContextProvider` for harness-built selections; an `IChatReducer` / compactor for chunk-preserving compaction (both used in CodeSharp **[verified]**) | the full convention, sub-agent hand-off, telemetry | rely on `AdditionalProperties` reaching the wire | M (reference) |
+| **Semantic Kernel (.NET)** | SK chat services bridge to `IChatClient`, so the same decorator and handler apply. `IFunctionInvocationFilter` registers file-read outputs **[names reported correct by review]** | the full convention via the bridge | `PromptExecutionSettings.ExtensionData` to the wire is unconfirmed | S–M |
+| **LangChain / LangGraph (Python)** | `ChatOpenAI(extra_body={"chunk_cache": ...})` (placement B); v1 agent middleware `wrap_model_call` builds the manifest **[names reported correct]** | the full convention via B; a chunk-preserving replacement for `SummarizationMiddleware` | inline fields, depending on the adapter | M (deferred) |
+| **Claude Code** | MCP for the control plane; `ANTHROPIC_BASE_URL` → dotLLM `/v1/messages` with transparent mode | store management, `select`; block-hash reuse of repeated tool results on a local model | annotate its own requests (hooks cannot edit the API request **[reported]**); any benefit with Anthropic-hosted models. Its Read output numbers lines absolutely. A PostToolUse hook might re-render it (`updatedToolOutput` **[reported; unverified for built-in tools]**) | S (MCP) / L |
+| **Generic OpenAI-compatible client** | `chunk_cache` via `extra_body` or a raw body | the full convention | — | S |
+| **llama.cpp / vLLM / LMCache as targets** | none | degrade to plain text | a common convention | n/a |
 
-**Naming alignment.**
-- The per-block marker follows Anthropic's `cache_control`-on-a-block placement, but uses its own key (`chunk`), because
-  `cache_control` means exact prefix breakpoints and dotLLM may honour that meaning one day.
-- `namespace` mirrors vLLM's `cache_salt`.
-- Counters follow `cache_read_input_tokens` / `cache_n` style but with distinct names (`chunk_reused`, `chunk_n`), so they
-  are never confused with exact reuse.
-- `budget` is the fraction LMCache calls `blend_recompute_ratios` (default 0.15 there, which matches our `balanced`
-  default for fixed chunks).
+What those servers offer, for alignment:
+- **llama.cpp:** `cache_prompt` and `--cache-reuse` (KV shifting of matching chunks)
+  ([README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) **[verified]**).
+- **vLLM:** APC block hash over the parent hash, tokens and extra keys, with `cache_salt` partitioning
+  ([design](https://docs.vllm.ai/en/latest/design/prefix_caching.html) **[verified]**).
+- **LMCache:** in-band separators (§6).
+
+**Naming alignment:**
+- The marker uses Anthropic's per-block placement but its own key (`chunk`), because `cache_control` means exact
+  breakpoints.
+- `namespace` corresponds to vLLM's `cache_salt`.
+- Counters are separate from the exact ones (`chunk_n`, not `cache_n`).
+- `budget` is LMCache's `blend_recompute_ratios`.
 
 ## 10. Security and privacy
 
-- **The store is the source code.** Each `.ckv` file stores the chunk's **token ids** beside the K/V
-  (`experiments/store/README.md`) **[verified]**, so detokenising recovers the text. The index JSON holds paths, line
-  ranges and hashes. Treat the store root like the repository:
-  - same ACLs;
-  - outside synced or shared folders;
-  - in `.gitignore`;
-  - excluded from crash dumps and telemetry uploads.
-  - Even without the token ids, KV is derived data from which text can plausibly be reconstructed **[assumption]**.
-- **Cross-client side channel.** A shared server reveals through TTFT and `chunk_cache` counts whether some text was seen
-  before. Prompt-caching timing attacks are a known class, which is why vLLM salts its cache ([design
-  doc](https://docs.vllm.ai/en/latest/design/prefix_caching.html) **[verified]**). Rules:
-  - single-user local servers only in v1;
-  - `namespace` (salted into `ChunkKey`) before any multi-user use;
-  - `per_chunk` reports limited to the requesting client's own spans.
-- **Poisoning.** The KV for a chunk is always computed by the server from text it received and re-hashed (§5.3). Model
-  identity is content-based (`GgufIdentity`; `--strict-model-id` for the full-file hash) **[verified]**. A wrong model
-  cannot write under another model's keys through the assembler (`ForModel`).
-  - **Residual risk:** the sampled model id misses interior-only tensor edits (documented). A shared store therefore
-    wants the full hash.
-- **No server-side file reads in v1.** `source.path` is telemetry. If a later version reads files by reference, it must
-  use the `ChunkIndex.NormalizePath` rules (reject rooted paths and `..`, case rules) and an allow-listed root
-  **[verified rules]**.
-- **Hash leakage.** Hashes of short, low-entropy chunks can be confirmed by guessing. That is why there is a 32-token
-  minimum, and why hashes are not logged at Information level by the server.
-- **MCP tools** follow the MCP security guidance ([spec](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)):
-  - `evict` defaults to `dry_run`;
-  - `compare` and `prewarm` with `priority: "now"` state their GPU cost;
-  - `build` only reads under the given path;
-  - git refs go through the existing `GitCliInfo` validation (no shell; leading `-` rejected) **[verified]**.
+- **The store contains the source code.**
+  - What it holds:
+    - each `.ckv` holds the chunk's **token ids** beside the K/V **[verified]**;
+    - the index and server ledger hold paths and hashes;
+    - the sighting table holds text hashes.
+  - Treat the store root like the repository:
+    - same ACLs;
+    - outside synced folders;
+    - git-ignored;
+    - excluded from crash dumps and telemetry.
+- **Membership oracle.** A per-chunk hit/miss is itself a probe: send candidate text and observe "hit".
+  - Responses report **counts only** by default.
+  - `per_chunk` reports and `explain` per-chunk status go only to an authenticated caller, for its own namespace.
+  - Hash-only APIs do not exist; prewarm and explain take text.
+- **Authentication and isolation.**
+  - `/v1/chunk-cache/*` sits behind the same API-key auth as inference. Prewarm is a GPU and disk DoS vector, so it gets
+    the inference rate limits.
+  - **Namespace isolation is on by default** as soon as any API key or more than one client is configured. The namespace
+    defaults to one per key and is salted into `ChunkKey`.
+  - Transparent mode requires it.
+  - A namespace-free store is for single-user local servers only.
+- **Secrets.**
+  - **Path deny-list** (default; extendable):
+    - `.env*`
+    - `*.pem`, `*.key`, `*.pfx`, `id_*`
+    - `secrets.json`, `appsettings.*.Development.json`
+    - `.git/**`
+  - Denied paths are never chunked by `build` or encoded by prewarm.
+  - Harnesses set `no_store` on reads of denied paths. The server cannot see paths, so it trusts `no_store`.
+  - **Server switch:** `--chunk-store-index-only` stores only chunks that an index references (built from a scanned,
+    deny-listed tree), so text from ad-hoc reads is never persisted.
+- **Deletion.** `evict --mode path` ("forget this repo") and `--mode namespace` / `all` remove the K/V, the index
+  references, the ledger rows and the sighting rows.
+- **Poisoning.**
+  - The K/V is always computed by the server from received, re-hashed text.
+  - Model identity is content-based (`GgufIdentity`; a full hash with `--strict-model-id`) **[verified]**.
+  - Only the server writes (§14, L1), so no other process writes K/V under a model's key.
+  - **Residual risk:** the sampled model id misses interior-only tensor edits. A shared store therefore wants the full
+    hash.
+- **No server-side file reads in v1.** `source.path` is telemetry only.
+- **CLI git refs.** They go through dotLLM's `GitCliInfo` validation (no shell; a leading `-` is rejected) **[verified,
+  `Tooling/GitInfo.cs`]**.
 
 ## 11. Harness integration checklist
 
-For harness authors. Each item names the failure it prevents.
-
-1. **Probe capabilities** (`GET /v1/chunk-cache`) and install the annotating path only on a chunk-capable dotLLM.
-   Otherwise strip everything. *Prevents 400s from hosted APIs.*
-2. **Mark file reads.** Read files through an `IChunkSource` that uses the store's chunker and the `plain` render profile.
-   Return one tool result with glue headers plus chunk spans, and register the spans by part text (`IChunkSpanRegistry`).
-   *Without spans there is no reuse; with absolute line numbers in the chunk text there is little.*
-3. **Stable order.** Keep the system prompt and tools byte-stable, put chunks in document order, volatile chunks after
-   stable ones, and the query last (§5.6). *Prevents prefix misses and weak query-relevance selection.*
-4. **Do not mutate chunk text after registration.** Truncation, dedupe and hook rewriting of a chunk-bearing result must
-   either keep chunk spans whole or drop the annotation. The body handler's re-hash catches violations, but they cost
-   reuse.
-5. **Invalidation.** Content identity makes this an optimisation, not a correctness need: an edited chunk misses.
-   - Emit `IInvalidationSignal` events from edit tools so the harness can re-read (and prewarm) changed chunks before the
-     next turn.
-   - External edits (user, git) need no watcher for correctness. The next read hashes the new text, and the server
-     misses on it.
-   - Optionally run `chunkcache status` on session resume to prewarm stale chunks.
-6. **Compaction that keeps chunks.** Never flatten chunk-bearing parts into a summary. Keep them as parts (or drop them
-   whole), summarise only the conversation around them, and re-emit kept chunks after the summary in stable order.
-   *Prefix caches die on compaction; chunks survive only if the text survives byte for byte.*
-7. **Sub-agents.** Pass the parent's selected chunk ids/hashes (not the conversation) to the sub-agent, and have it read
-   files through the same `IChunkSource`. On a single-slot server, the sub-agent still evicts the parent's prefix
-   snapshot, but the parent's chunks hit on resume.
-8. **Session persistence.** Persist, per session, the ordered list of `(id, hash, path, range, render, chunker)` the
-   conversation contains, so a resumed session can prewarm and `explain` misses. MEAI/MAF serialisation of
-   `AdditionalProperties` is unverified, so keep this list in the harness's own state.
-9. **Policy.** Start with `shadow` on real sessions to measure hit rates, and use `auto` thereafter. Expose `exact` as
-   the user's "no approximation" switch.
-10. **Telemetry.** Log `chunk_cache` per call:
-    - policy applied and reason;
-    - hit / miss / prefix counts;
-    - reused and recomputed tokens;
-    - TTFT and `full_prefill_estimate`.
-
-    Keep exact-prefix monitoring (`cached_tokens`) separate.
-11. **Prewarm when idle**, never as a side call that evicts a single-slot session snapshot.
+1. **Probe** `GET /v1/chunk-cache`. Install the annotating path only when it succeeds; otherwise strip annotations.
+2. **Mark file reads.** Read files through an `IChunkSource` that uses a wire-eligible chunker over the **same normalised
+   text** the store indexes (LF). Register the spans, and put headers and window notes in glue.
+3. **Default policy `exact`.** Offer `shadow` for measurement. Approximate policies need an explicit user or session
+   opt-in, shown in the UI.
+4. **Leave the history alone.** Keep it chronological and append-only. Apply the ordering rules only to context the
+   harness composes (§5.6). Pass the user's task as the query (the last user message, by default).
+5. **Don't mutate chunk text after registration.** Truncation, dedupe and hook output must keep spans whole (append hook
+   output as a separate part) or drop the annotation. The handler's re-hash catches violations, but they cost reuse.
+6. **Invalidation is optional.** Content identity makes edits miss correctly.
+   - Use edit-tool events (`IInvalidationSignal`) to re-read and prewarm early.
+   - External edits need no watcher.
+7. **Compaction keeps chunk parts byte-identical**, or drops them whole, and re-emits them in a stable order after the
+   summary (§12.3).
+8. **Sub-agents** receive chunk references and text through the same `IChunkSource`. They do not receive the parent's
+   conversation.
+9. **Persist the chunk list per session**, in the harness's own state: `(id, hash, path, range, chunker)`, in order. Use
+   it for resume, compaction and `explain`.
+10. **Log `chunk_cache` per call** (policy applied, reason, counts, TTFT, estimate). Keep exact-prefix monitoring
+    separate.
+11. **Never prewarm as a side call** on a single-slot server's active slot. The server runs encodes when idle.
+12. **Mark secrets.** Set `no_store` on reads of deny-listed paths.
 
 ## 12. Reference integration: CodeSharp
 
-CodeSharp (`C:\Development\CodeSharp`, .NET 10, Microsoft Agent Framework, session codesharp-d1) is the reference. Facts
-below are from codesharp-d1's answers **[reported]** unless I re-read the file **[verified]**.
+Facts are from codesharp-d1 **[reported]** and the review, except where re-read **[verified]**.
 
-### 12.1 Fit with CodeSharp's design
+### 12.1 Fit
 
-- **Provider seam.** `ChatClientFactory` (`IChatClientFactory`) builds the provider stack. dotLLM goes through
-  `BuildOpenAiCompatibleClient` with `DotLlmMaxTokensHandler` and a `GET /v1/status` probe (`ChatClientFactory.cs`
-  ~420–461) **[reported]**. The chunk path is:
-  - a new provider-stack option on the dotLLM case, which installs `ChunkCacheBodyHandler` next to `DotLlmMaxTokensHandler`;
-  - `ChunkAnnotatingChatClient` placed above `UniqueToolCallId` and below `RetryingChatClient` (retries resend the same
-    manifest). This placement is **[assumption]**.
-- **Prefix-cache policy.** CodeSharp has
-  `PrefixCacheLevel { None, PrefixCached, SingleSlot }` and `IPrefixCachePolicy.LevelFor(modelId)` /
-  `SideCallEvictsSession(...)` in `src/CodeSharp.Core/PrefixCache/` **[verified]**. The answers placed it under
-  `CodeSharp.Models`; the files are in `CodeSharp.Core`.
-- **Proposal: add a capability, not a fourth level.** The existing levels describe the *prefix* slot model, and a
-  chunk-capable server is still single-slot or multi-slot. So add `bool ChunkReuse` (or a `[Flags]` capability set) next
-  to the level. `RegistryPrefixCachePolicy` sets it from the `/v1/chunk-cache` probe. If CodeSharp prefers one enum, the
-  value would be `ChunkReuse` meaning "prefix-cached plus chunks", with single-slot kept as a separate flag. Their call
-  (open question 1).
-- **Rule relaxations when `ChunkReuse` is set.** CodeSharp's prefix-alignment spec rules **[verified, its §A/§B]**:
+- **Provider seam.**
+  - `ChatClientFactory` (`IChatClientFactory`) builds the dotLLM provider through `BuildOpenAiCompatibleClient`, with
+    `DotLlmMaxTokensHandler` and a `/v1/status` liveness probe. The model id and context ceiling come from `/props`.
+  - The stack order is verified by the review (`ChatClientFactory.cs:513-538`). All mutators act on `ChatMessage` above
+    HTTP, so the re-hash design holds.
+  - The chunk path is:
+    - `ChunkCacheBodyHandler` next to `DotLlmMaxTokensHandler`;
+    - `ChunkAnnotatingChatClient` below `RetryingChatClient` (retries resend the same manifest) **[assumption, open
+      question 2]**.
+- **Prefix-cache policy.**
+  - `PrefixCacheLevel { None, PrefixCached, SingleSlot }` and `IPrefixCachePolicy` live in `src/CodeSharp.Core/PrefixCache/`
+    **[verified]**. `RegistryPrefixCachePolicy` lives in `src/CodeSharp.Models/RegistryPrefixCachePolicy.cs` **[reported
+    by review]**.
+  - **Proposal:** a `ChunkReuse` capability flag next to the level, set by `RegistryPrefixCachePolicy` from the probe.
+    The levels describe slot behaviour, which chunk support does not change. A fourth enum value would also work (open
+    question 1).
+- **Rule relaxations when `ChunkReuse` is set.** CodeSharp's prefix-cache alignment spec; status per the review:
 
-  | rule | today | with chunk reuse |
-  |---|---|---|
-  | A4 no piecemeal spill on dotLLM | skip "spill older results one at a time"; one compaction instead | spilling a **non-chunk** result is still a prefix break; spilling a chunk-bearing result whole and re-reading it later is cheap (its chunks hit). Keep A4 for non-chunk results, relax it for chunk-bearing ones |
-  | B1 sub-agents foreground on single slot | the main conversation re-reads everything on resume | the re-read hits chunks. Only glue, conversation and query are prefilled. Keep the notice, but its cost estimate drops |
-  | B3 append-only history (`MemoryIndexDedupe` never removes) | strict | unchanged for non-chunk content; a memory index could itself be a chunk (stable text) |
-  | B4 prefix-stability notices | prints the cost | report the chunk-adjusted cost (`explain`) |
-  | B5 compact once, sized to the window | a full prefix miss by design | the miss is limited to non-chunk text if the planner keeps chunks (§12.3) |
-  | B9 cache-miss monitoring | compares `cached_tokens` | unchanged (exact only); add a separate chunk hit-rate line from `chunk_cache` |
+  | rule | as specified | status | with chunk reuse |
+  |---|---|---|---|
+  | A4 no piecemeal spill on dotLLM | one compaction instead of spilling older results one by one | verified | keep for non-chunk results. A chunk-bearing result may be spilled whole: re-reading it later hits |
+  | B1 sub-agents in the foreground on a single slot | a one-time notice; except a sub-agent whose `model:` is on another provider | specified | keep. The resume re-read becomes chunk hits plus glue, so the notice's cost estimate drops |
+  | B3 append-only history (`MemoryIndexDedupe` never removes copies) | a design rule | **not implemented** (`MemoryIndexDedupeChatClient.cs:44` still removes) | still needed for the prefix. A memory index can itself be a chunk |
+  | B4 prefix-stability notices | notice only | specified | report the chunk-adjusted cost (`explain`) |
+  | B5 auto-compact | trigger at 85 % of the window (prompt + reply reserve), target 45 %, system prompt and tools byte-identical, every provider | specified | the miss is limited to non-chunk text if the planner keeps chunks (§12.3). Does the 45 % target count kept chunks? (open question 7) |
+  | B9 cache-miss monitoring | compare `cached_tokens` with the previous prompt; > 64 tokens is a partial miss | **design only; no code found** | unchanged (exact only); add a chunk hit-rate line from `chunk_cache` |
 
-- **Prefix-breakers listed by codesharp-d1** **[reported]** and their chunk-mode treatment:
-  - `MemoryIndexDedupe` mid-history edits: B3 already fixes this for dotLLM.
-  - `ToolOutputGuard` in-place replacement of oversized results: a chunk-aware guard truncates at chunk-span boundaries
-    and drops annotations of cut spans.
-  - Hook output appended to tool results: append as a separate part, so chunk spans stay intact.
-  - `UniqueToolCallId` rewriting colliding ids: harmless to chunks (ids are not hashed).
-  - SessionStart context injected once then cleared: a prefix break; chunks unaffected.
-  - Compaction rewriting the middle: §12.3.
-- **Invalidation.** CodeSharp's `src/CodeSharp.Core/Hooks/` (`PostToolUseHookFunction` wraps every tool; `HookContext`
-  has the tool name and result) **[reported]** is the edit-tool signal: an `IInvalidationSignal` fed by PostToolUse on
-  edit/write tools. External edits have no signal today, and none is required: content hashing makes the next read miss
-  correctly. Optional: `chunkcache status` on session resume, prewarming the stale chunks.
+- **Prefix-breakers and their chunk-mode treatment:**
+  - `MemoryIndexDedupe` mid-history removal: B3 (once built).
+  - `ToolOutputGuard` in-place replacement: cut at span boundaries, or drop the annotations of cut spans.
+  - Hook output: append as a separate part.
+  - `UniqueToolCallId`: harmless to chunks.
+  - SessionStart injection: a prefix break; chunks are unaffected.
+  - Compaction: §12.3.
+- **Invalidation.** PostToolUse on edit and write tools (`src/CodeSharp.Core/Hooks/`, `PostToolUseHookFunction`,
+  `HookContext`; verified by review) feeds `IInvalidationSignal`. External edits need no watcher, because the content hash
+  misses. Optionally run `chunkcache status` on resume.
 
-### 12.2 File reads
+### 12.2 File reads (`read_file`)
 
-The spike needs CodeSharp's read-file tool to return `plain`-rendered text with glue headers, chunked by the store's
-chunker (symbol-512 for C#, fixed-512 for other files), and to register spans. Whether its current output numbers lines is
-open question 3. If it does, the spike uses `numbered-relative` for chunk text, or a separate chunk-aware read tool.
+`ReadFileTool` returns one string with **no line numbers and no header**. A windowed read appends
+`\n…(showing lines a-b of N)` **after** the content, which is glue (`CodeSharp.Tools/ReadFileTool.cs:46-62`) **[reported
+by review]**. Two real issues:
+
+1. **CRLF.**
+   - **The problem:**
+     - `read_file` splits and joins on `\n`, so it preserves `\r`;
+     - the scanner and store normalise to LF;
+     - so **every chunk of a CRLF file misses** against prewarmed entries.
+   - **Simply normalising the output risks breaking the exact-string edit tool**, which uses read output as anchors on
+     CRLF files.
+   - **Options:**
+     - (a) annotate only LF files in the spike;
+     - (b) index CRLF files as-is (a scanner option that keeps `\r`; the Roslyn offsets then need care);
+     - (c) normalise in `read_file` and make the edit tool line-ending-agnostic.
+   - Decision for codesharp-d1 (open question 3). The spike starts with (a).
+2. **Windows and caps.**
+   - Offset and limit reads, and the `EffectiveReadFileMaxLines` cap, cut chunks. Only whole chunks inside the window are
+     annotated.
+   - A chunk-aware variant could round the window out to chunk boundaries within the cap.
 
 ### 12.3 Chunk-aware compaction planner
 
-`SessionCompactor.Plan(state, keepFirstTurns, keepLastTurns)` keeps the head and tail verbatim and flattens the middle
-(`CompactionFlattener`), so per-block metadata survives only in the head and tail **[reported]**. Chunk-aware variant:
-1. **Collect** every chunk-bearing part in the middle, with its spans (from the session's persisted chunk list, §11.8).
-2. **Choose** which chunks to keep: those referenced by the tail turns or still in the current selection, the newest read
-   of each path (an older read of an edited file is superseded), within a token budget (B5 target 45 % of the window),
-   ranked by `ContextSelector` priorities if a graph exists.
-3. **Summarise** the middle conversation text **without** the kept chunks (the summary may name them).
-4. **Emit:** head turns, then a summary message, then one synthetic user or tool message holding the kept chunks in
-   document order with glue headers (byte-identical chunk text), then the tail turns.
-5. **Persist** the new chunk list. The next request: prefix hit through the head, chunk hits for the kept chunks, prefill
-   for the summary and tail.
+Today, `SessionCompactor.Plan(state, keepFirstTurns, keepLastTurns)` keeps the head and tail verbatim and flattens the
+middle with `CompactionFlattener` **[verified by review]**. The chunk-aware planner:
+1. **Collects** every chunk-bearing part in the middle, from the session's chunk list.
+2. **Keeps** a subset within the token budget:
+   - chunks referenced by the tail turns or in the current selection;
+   - only the newest read of each path.
+3. **Summarises** the middle conversation without the kept chunks.
+4. **Emits** the head, the summary, one message holding the kept chunks (document order, glue headers, byte-identical
+   text), then the tail.
+5. **Persists** the new chunk list.
 
-`WorkerCompactionReducer` (per-call worker compaction) gets the same rule: never flatten a chunk-bearing part.
+On the next request the head is an exact prefix hit, the kept chunks are chunk hits (under an approximate policy) or
+cheap to encode, and the summary and tail are prefilled. `WorkerCompactionReducer` (internal) follows the same rule.
 
 ### 12.4 Spike scope
 
 - **In:**
   - capability probe;
-  - `ChunkCacheBodyHandler` + `ChunkAnnotatingChatClient` on the dotLLM provider;
-  - chunk-aware read-file output;
-  - PostToolUse invalidation feed;
-  - `chunk_cache` telemetry to logs and a TUI status line;
-  - `shadow` and `auto` policies;
+  - body handler and decorator on the dotLLM provider;
+  - a chunk-aware `read_file` (LF files);
+  - PostToolUse invalidation;
+  - `chunk_cache` telemetry;
+  - policies `exact` and `shadow` (approximate policies only behind a dev setting);
   - the compaction planner behind a setting;
-  - sub-agent chunk hand-off.
+  - sub-agent hand-off.
 - **Out:**
-  - in-process hosting (ADR-011);
+  - in-process hosting;
   - transparent mode;
-  - Python adapters;
+  - Python;
   - recurrent models.
-- **Server side** (dotLLM, coordinated with the dotLLM session; nothing pushed without the user):
-  - the `chunk_cache` parser;
-  - assembly after the prefix match;
-  - `shadow` / `exact` / `auto`;
-  - `/v1/chunk-cache` with prewarm and explain;
-  - background encode.
-
-  The `balanced` path uses the existing `SelectiveRecomputer`.
+- **Model:** CodeSharp has no default dotLLM model (an endpoint-only preset), so the spike pins Qwen3-4B-Instruct-2507
+  Q4_K_M.
 
 ### 12.5 Success metrics
 
-Measured on a replayed corpus of real CodeSharp sessions (recorded requests, so runs are comparable). Each metric with
-3 seeds or session sets and bootstrap intervals, per the repo's rules.
+Measured on replayed recorded sessions, with 3 seeds or session sets and bootstrap intervals:
 
-| metric | definition | target (initial) |
+| metric | definition | target |
 |---|---|---|
-| chunk hit rate | `chunk_reused` / annotated chunk tokens, after compaction, sub-agent and resume events | ≥ 0.8 on resumed sessions and after compaction (assumption: these events dominate the loss of prefix reuse) |
-| TTFT ratio | full-prefill TTFT / chunk TTFT on the same request, Vulkan, Qwen3-4B | `shadow` predicted vs measured within 20 %; real wins expected only after #1540 |
-| accuracy delta | task success (scripted CodeSharp tasks with an executable or exact-match check) under `balanced` vs `exact` | ≥ 95 % of `exact` at ≤ 20 % recompute (the project's quality bar) |
-| logit-level delta | KL / top-1 of the first 32 generated positions, `balanced` vs `exact`, on recorded requests | report; no target |
-| plumbing loss | annotations dropped by the re-hash check / registered spans | < 5 %; every drop attributed to a mutator |
-| overhead | handler + decorator time per request; store bytes per session | < 5 ms; report bytes |
+| chunk hit rate (`shadow`) | planned reusable tokens / annotated tokens, after compaction, sub-agent and resume events | report. ≥ 0.8 after those events is a hypothesis to test |
+| plumbing loss | annotations dropped by the re-hash, template or CRLF checks / registered spans | < 5 %, every drop attributed |
+| `exact` neutrality | output and `cached_tokens` with the chunk path installed vs without | identical |
+| TTFT (after #1540, opt-in) | full prefill / applied reuse, same request, Vulkan | report, with the cost model's prediction error |
+| accuracy delta (after E4c, opt-in) | scripted tasks with executable or exact-match checks, `balanced` vs `exact` | ≥ 95 % at ≤ 20 % recompute (the project bar) |
+| overhead | handler and decorator time per request; store bytes per session | < 5 ms; report bytes |
 
 ### 12.6 Test plan
 
-- **Unit (CodeSharp):**
-  - the handler writes a manifest matching registered spans;
-  - a mutated part is dropped;
+- **CodeSharp unit tests:**
+  - the manifest matches registered spans;
+  - a mutated part gives no annotation;
   - string vs parts content;
+  - UTF-16 → UTF-8 offset conversion with non-ASCII text;
   - streaming report parsing;
-  - capability absent → body byte-identical to today;
-  - the compaction planner keeps chunk bytes identical;
-  - mutation evidence, as in this repo.
-- **Contract (dotLLM):**
-  - unknown fields still ignored;
-  - `strict` errors with the §5.8 codes;
-  - hash mismatch → plain text;
-  - `exact` and `shadow` outputs bit-identical to a request without `chunk_cache`;
-  - `cached_tokens` unchanged in meaning.
-- **Integration (local Vulkan iGPU, under the GPU lock; any T5500 use needs the user's approval):**
-  - replay N recorded sessions under `exact`, `shadow` and `balanced`;
-  - compare hit rates, TTFT and task success;
-  - include a compaction, a sub-agent, a server restart and an external edit in each replay.
-- **Regression:** CodeSharp's provider-conformance suite passes with the chunk path installed and the capability absent.
+  - with no capability, the body is byte-identical to today;
+  - the planner keeps chunk bytes;
+  - mutation evidence.
+- **dotLLM contract tests:**
+  - unknown fields are still ignored;
+  - strict codes;
+  - hash mismatch and template-altered spans become plain text;
+  - `exact` and `shadow` are bit-identical to an unannotated request, including after an approximate request on the same
+    slot (snapshot lineage);
+  - `cached_tokens` stays exact-only;
+  - a CPU-encoded entry never hits on a Vulkan server;
+  - `orphans` eviction keeps server-ledger entries.
+- **Integration** (local Vulkan iGPU under the GPU lock; any T5500 use needs the user's approval): replay sessions under
+  `exact` and `shadow`, each including a compaction, a sub-agent, a server restart and an external edit.
+- **Regression:** CodeSharp's provider-conformance suite, with the capability absent and present.
 
 ### 12.7 Open questions for codesharp-d1
 
-1. Capability flag next to `PrefixCacheLevel`, or a new enum value `ChunkReuse` (§12.1)? Who owns
-   `RegistryPrefixCachePolicy`'s probe?
-2. Is the HTTP-body handler acceptable on the dotLLM OpenAI-compatible provider, next to `DotLlmMaxTokensHandler`? And at
-   which stack position should `ChunkAnnotatingChatClient` sit relative to `RetryingChatClient` and `UniqueToolCallId`?
-3. What does the read-file tool output look like (line numbers? headers? truncation)? Can it return multiple text parts
-   per result, or is the result one string?
-4. Does `ToolOutputGuardChatClient`'s in-place replacement have access to the original part, so it can cut at span
-   boundaries?
-5. Does MAF's session JSON round-trip `AdditionalProperties` on `TextContent` / `FunctionResultContent`? If not, where
-   should the per-session chunk list live (the session blob vs a sidecar)?
-6. How do sub-agents receive history today (`ISubAgentSessionStore`, `SubAgentBootstrap`)? Is passing a chunk list into
-   the sub-agent's first message acceptable?
-7. Can the compaction planner (§12.3) replace `CompactionFlattener` behind a setting, and does B5's 45 % target count kept
-   chunks?
-8. Which models does CodeSharp run on dotLLM in practice? v1 supports attention-only models, so a hybrid or recurrent
-   default (Qwen3.8 / Flash-Next) means the spike has to pin Qwen3-4B or Llama-3.1-8B.
-9. Is there a recorded-session corpus to replay (privacy: it contains source), and a scripted task set with checkable
-   outcomes?
-10. Should `chunk_cache` telemetry flow into the existing OpenTelemetry spans (`UsageSpanTagging`), and under which
-    attribute names?
+1. A `ChunkReuse` capability flag or a fourth `PrefixCacheLevel` value? Who adds the probe to
+   `RegistryPrefixCachePolicy`?
+2. Is the body handler acceptable next to `DotLlmMaxTokensHandler`? Where does the decorator go relative to
+   `RetryingChatClient` and `UniqueToolCallId`?
+3. CRLF: option (a), (b) or (c) of §12.2? Does the edit tool depend on `\r` in the read output?
+4. Can `ToolOutputGuardChatClient` see the original part, so it can cut at span boundaries?
+5. Does MAF's session JSON round-trip content `AdditionalProperties`? If not, where should the per-session chunk list
+   live (the session blob or a sidecar)?
+6. How do sub-agents receive history (`ISubAgentSessionStore`, `SubAgentBootstrap`)? Is a chunk hand-off message
+   acceptable?
+7. Can the planner replace `CompactionFlattener` behind a setting, and does B5's 45 % target count kept chunks?
+8. Which model will sessions pin for the spike? Is a hybrid model (Qwen3.8 / Flash-Next) planned? v1 cannot reuse with
+   those.
+9. Is there a recorded-session corpus (it contains source code) and a scripted task set with checkable outcomes?
+10. Should `chunk_cache` telemetry go into the OpenTelemetry spans (`UsageSpanTagging`), and under which attribute names?
+11. Is B3 (append-only memory index) scheduled? Without it every turn breaks the prefix, and chunk reuse cannot
+    compensate for non-chunk text.
 
 ## 13. Phased delivery
 
-| phase | content | depends on | outward-facing? |
+| phase | content | depends on | outward-facing |
 |---|---|---|---|
-| I0 | this spec; answers to §12.7 | codesharp-d1 | no |
-| I1 | dotLLM server: `chunk_cache` parsing (both placements), hash check, `exact` / `shadow`, `/v1/chunk-cache` (capabilities, prewarm, explain), background encode, response metadata, contract tests | Phase S Tasks 2–4 (done), the dotLLM session's agreement on the server surface | dotLLM PR only with the user's approval (issue first, target `dev`) |
-| I2 | `DotLLM.ChunkCache.Client` (.NET): records, `ChunkAnnotatingChatClient`, `ChunkCacheBodyHandler`, `IChunkSource` over `SymbolChunker` / fixed, registry, policy | I1 contract | NuGet with the dotLLM release path (Phase S Task 9); licence of the client package to be decided (permissive, so CodeSharp can reference it under ADR-011) |
-| I3 | `chunkcache` CLI (Phase S Task 7) + MCP server wrapping it (§7.2) | Phase S Task 7 | tool package |
-| I4 | CodeSharp spike in `shadow`: hit rates on replayed sessions, the compaction planner, sub-agent hand-off | I1–I2, codesharp-d1 | CodeSharp branch, their review |
-| I5 | `balanced` / `auto` with a real cost model; accuracy A/B; TTFT measurements | **dotLLM #1540** (ATTN_QPOS speed), Vulkan query probe | report to the user |
-| I6 | compact rows F16 / Q8_0, direct-to-device loading, cold-disk TTFT (the "phase D" user direction) | dotLLM Vulkan owner | — |
-| I7 | transparent block-hash mode (server flag), the Claude Code recipe (MCP + `ANTHROPIC_BASE_URL`) | I1 | docs |
+| I0 | this spec; codesharp-d1 answers; **E4c** scheduled | — | no |
+| I1a | server, wire only: parsing (both placements), hash and template checks, special-token rule, lineage-tagged snapshots, `exact` / `shadow`, counts, `/v1/chunk-cache` (capabilities, explain), auth, contract tests | L4, L7 (§14); dotLLM session agreement | a dotLLM PR only with the user's approval |
+| I1b | server, store: sole-writer encodes, ledger, budget and admission, prewarm, evict, deny / no_store, namespaces | L1–L4, L8 | same |
+| I2 | `DotLLM.ChunkCache.Client` (.NET) | I1a contract | NuGet via the dotLLM release path; permissive licence |
+| I3 | `chunkcache` CLI (Phase S Task 7, revised by L1 and L6) + MCP server (§7.2) | I1b | tool package |
+| I4 | CodeSharp spike, `exact` / `shadow` | I1–I3, codesharp-d1 | CodeSharp branch |
+| I5 | applied reuse (`balanced`, `fast`, `auto` gates) | **engine work L5**, **dotLLM #1540**, a Vulkan QR probe, **E4c** for fixed chunks | report to the user |
+| I6 | compact F16 / Q8_0 rows, direct-to-device loading, cold-disk TTFT | the dotLLM Vulkan owner | — |
+| I7 | transparent mode; Claude Code recipe | I1b, namespaces | docs |
 
 **Deferred:**
-- PRs or packages for Semantic Kernel, LangChain and Claude Code **[user]**;
+- adapters and PRs for Semantic Kernel, LangChain and Claude Code;
 - `contextual` positioning;
-- chunks by reference without text;
-- multi-tenant namespaces;
-- recurrent and hybrid models (Phase T);
-- LRU eviction bookkeeping;
-- the edit-local repair quality half of E7.
+- by-reference chunks;
+- the `hybrid` selector (server-side graph);
+- `numbered-relative`;
+- multi-tenant hosting beyond namespaces;
+- recurrent models;
+- the E7 quality half.
 
-## 14. Sources
+## 14. Required library and engine changes (blocking item B4 and related)
 
-Local (verified):
+| # | change | why | owner |
+|---|---|---|---|
+| **L1** | **The server is the only K/V writer.** `chunkcache build --encode` and `prewarm` become HTTP calls to the server; the CLI never calls `IChunkStore.Put`. An offline mode (no server running) may let the CLI write while holding the store lock | CPU-encoded entries can never hit a Vulkan server (the backend is in the key); one writer removes the lock conflict below | this project (CLI), dotLLM session (server) |
+| **L2** | **A server ledger, `ledger-server.json`, next to the indexes** (or an access-time sidecar). It lists each server-written key with its namespace, first-seen provenance (`source.path` if given), last use and bytes. `ChunkIndex.ReferencedKeysUnder` / `StoreWideOrphans` must count ledger keys as referenced | today `StoreWideOrphans` = store keys minus index-referenced keys (`ChunkIndex.cs:263-279`), so `orphans` eviction would delete every server-written entry; LRU and budget eviction need last-use times | this project (`DotLLM.ChunkReuse`) |
+| **L3** | **Lock model:** the exclusive `.chunkstore.lock` (`AcquireStoreLock`) is held only for short scopes: per Put batch, per ledger or index save, per eviction pass. Index-only updates (CLI build without encode) take a per-index lock (`index-<chunker>.lock`), not the store lock. Eviction runs in the server, or in the CLI only in offline mode | the current contract (every putting process holds the exclusive lock from update through eviction, `ChunkIndex.cs:284-289`) would block the server for an entire `build` | this project |
+| **L4** | **Persist the backend tag in the `.ckv` header** and check it on read (the skipped test `TODO_StoreHeader_PersistsBackendTag`). A CPU-encoded entry is a miss on a Vulkan server, by key and by header | today the backend is in the key only; `ChunkKvEntry.Backend` exists only on the Vulkan branch | this project + the Vulkan branch merge |
+| **L5** | **Engine assembly into the server's KV:** non-CPU backends, paged and quantised destinations, multi-slot, store rows in the cache's dtype. `StoredContextAssembler` hard-codes `"cpu"` and F32 today | wire plumbing alone cannot apply reuse | dotLLM session (engine, Vulkan owner) |
+| **L6** | **Text-first chunkers:** `lines-512`; `SymbolChunker` marks over-long-line token slices wire-ineligible; `build` asserts `EncodeRaw(text) == ids` per chunk | B1 (§5.3, item 4) | this project |
+| **L7** | **Snapshot lineage** (`exact` / `approx` per row range) in the prefix-snapshot store, with restore limited by policy | B2 (§5.3, item 8) | dotLLM session |
+| **L8** | **`namespace` in `ChunkKey`** (a new field; key scheme v4) and in the ledger | isolation (§10) | this project |
+| **L9** | **Index path keyed by chunker** (and later by render profile): `index-<chunker>[-<render>].json` | avoids collisions when `numbered-relative` arrives | this project (later) |
+
+## 15. Sources
+
+**Local (verified):**
 - `REPORT.md`
 - `experiments/{E4-structure-aware,G2-recompute-speed,store,E7-incremental,selection-tools,solution-scan}/README.md`
-- `.superpowers/sdd/2026-11-01-phase-s/task-3-report.md`, `task-4-report.md`, `codesharp-answers.md`
-- `dotLLM/docs/SERVER.md`, `dotLLM/docs/ANTHROPIC_API.md`
-- CodeSharp `docs/architecture/decisions.md` (ADR-011), `docs/superpowers/specs/2026-10-22-dotllm-prefix-cache-alignment-design.md`,
-  `src/CodeSharp.Core/PrefixCache/*.cs`, `src/CodeSharp.Models/AnthropicPromptCacheHandler.cs`
+  (G2 as revised in the working tree)
+- `.superpowers/sdd/2026-11-01-phase-s/{task-3,task-4}-report.md`, `codesharp-answers.md`, `integration-spec-review.md`
+- dotLLM `docs/SERVER.md`, `docs/ANTHROPIC_API.md`, `src/DotLLM.ChunkReuse/Corpus/FixedSizeChunker.cs` (worktree
+  `chunk-cache`)
+- CodeSharp:
+  - `docs/architecture/decisions.md` (ADR-009, ADR-011)
+  - `docs/superpowers/specs/2026-10-22-dotllm-prefix-cache-alignment-design.md`
+  - `src/CodeSharp.Core/PrefixCache/*.cs`
+  - `src/CodeSharp.Models/AnthropicPromptCacheHandler.cs`
 
-Web (fetched 2026-11-02):
+**Web (fetched 2026-11-02):**
 - Anthropic prompt caching: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
-- MCP 2025-06-18 tools: https://modelcontextprotocol.io/specification/2025-06-18/server/tools
-- MEAI `ChatOptions.RawRepresentationFactory`: https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai.chatoptions.rawrepresentationfactory
-- LMCache configuration (blending keys): https://docs.lmcache.ai/api_reference/configurations.html
-- llama.cpp server README: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
-- vLLM prefix caching design: https://docs.vllm.ai/en/latest/design/prefix_caching.html
-- openai-dotnet JsonPatch (search result only): https://github.com/openai/openai-dotnet/pull/834.diff; Semantic Kernel use:
-  https://github.com/microsoft/semantic-kernel/pull/13934
+- MCP tools: https://modelcontextprotocol.io/specification/2025-06-18/server/tools (2025-11-25 differences per the review:
+  https://modelcontextprotocol.io/specification/2025-11-25/server/tools)
+- MEAI `RawRepresentationFactory`: https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai.chatoptions.rawrepresentationfactory
+- LMCache configuration (deprecated in-process mode): https://docs.lmcache.ai/api_reference/configurations.html
+- llama.cpp server: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+- vLLM prefix caching: https://docs.vllm.ai/en/latest/design/prefix_caching.html
 
-Not fetched (recollection, marked **[assumption]** where used): OpenAI prompt caching
-(https://platform.openai.com/docs/guides/prompt-caching), Gemini context caching (https://ai.google.dev/gemini-api/docs/caching),
-Microsoft Agent Framework docs (https://learn.microsoft.com/agent-framework/), Semantic Kernel filters, LangChain v1
-middleware (https://docs.langchain.com/oss/python/langchain/middleware), Claude Code hooks / LLM gateway docs.
+**Search results only (unconfirmed):**
+- openai-dotnet https://github.com/openai/openai-dotnet/pull/834.diff
+- Semantic Kernel https://github.com/microsoft/semantic-kernel/pull/13934
+
+**Not fetched:** OpenAI and Gemini caching docs, MAF / SK / LangChain docs, and the Claude Code hooks docs. Where these
+are used they are marked **[reported]** (confirmed from memory by the reviewer) or **[assumption]**.
