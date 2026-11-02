@@ -152,6 +152,12 @@ control plane: chunkcache CLI / MCP ── HTTP ──► /v1/chunk-cache/*  └
 
 ### 5.1 Two equivalent placements
 
+**v1 surfaces (Task 9 pin, ruling 19).** On the OpenAI surface v1 annotates **string** `content` only, through the
+manifest (B) with `part: 0` and byte ranges; array-of-parts content stays a 400 as today, so inline (A) is
+**Anthropic-only in v1** (text blocks; part indices map through the Anthropic converter's `'
+'` joins and `tool_result`
+splitting). The example below shows the shape on an Anthropic `tool_result` / text block list.
+
 **(A) Inline**, a `chunk` field on a text content part:
 
 ```json
@@ -192,9 +198,9 @@ Per chunk: `chunk` (inline) or `chunk_cache.chunks[i]` (manifest).
 | field | type | req | meaning |
 |---|---|---|---|
 | `v` | int | inline yes; manifest inherits `chunk_cache.v` | convention version, `1` |
-| `hash` | string | yes | `sha256:` + lowercase hex of the UTF-8 bytes of the chunk text exactly as sent |
+| `hash` | string | yes | `sha256:` + lowercase hex of the UTF-8 bytes of the decoded chunk text (§5.3 item 1) |
 | `id` | string ≤ 256 | yes | the caller's label (e.g. `ChunkRef.Id`, `path:startLine-endLine@offset`, whose offset is in **UTF-16 chars**). Telemetry only; never used for lookup |
-| `at` | object | manifest only | `{message, part[, start, end]}`: indices into the **serialised** `messages` and its `content` array. A string `content` is part 0. `start` / `end` are **UTF-8 byte** offsets into that part's text, end exclusive. Omitted means the whole part |
+| `at` | object | manifest only | `{message, part[, start, end]}`: indices into the **serialised** `messages` and its `content` array. A string `content` is part 0 (the only form on the OpenAI surface in v1). `start` / `end` are **UTF-8 byte** offsets into that part's text, end exclusive. Omitted means the whole part |
 | `chunker` | string | no | a wire-eligible chunker name (§5.3, item 4). Lets the server pick budget defaults and lets `explain` match the index |
 | `source` | object | no | `{path, start_line, end_line, rev}`: provenance for telemetry. Never read by the server |
 | `positioning` | `"isolated"` | no | v1 accepts only `isolated`: encoded alone at positions 0..n-1 and RoPE-shifted on assembly (`ChunkPositioning.Isolated`, key scheme `chunk-key/v3`) **[verified]** |
@@ -240,25 +246,28 @@ Request level (`chunk_cache`):
    - **The wire chunker is `lines-512`:** accumulate whole lines up to 512 tokens (tokenising each candidate piece
      alone), and split an over-long line at a character boundary. It exists as `TextFirstFixedChunker` (`fixed-text-512`,
      used by E4c) and is renamed `lines-512` in Phase I (user decision, 2026-11-02).
-   - **`build` asserts the round trip.** For every chunk it checks `EncodeRaw(text) == ids` and flags or drops the rest.
+   - **`build` asserts the round trip.** For every chunk it checks `EncodeRaw(MarkUntrustedSpecials(text)) == ids` (item 6)
+     and flags or drops the rest.
    - **Fixed-size chunks on the wire are blocked on E4c** (§5.11). E4's quality numbers for fixed chunks come from
      id-sliced chunks and do not transfer until E4c measures text-first fixed chunks.
 5. **Spans are located in the rendered prompt** (blocking item B3).
    - **How.** The server renders the chat template with each chunk span replaced by a unique placeholder, then checks that
      the rendered output contains the placeholder intact and that the text around it is what the template produced for
      the unannotated request. Implementation choice for dotLLM: sentinel rendering, or rendering twice and diffing.
-   - **If the template altered the span's bytes, the span is ignored** (warning `chunk_template_altered`). Examples:
-     - Llama-3.1's template applies `| trim` to every message, so a span at the start or end of a part loses its
-       whitespace **[reported by review]**;
-     - a template that merges parts with a separator.
+   - **If the template altered the span's text, the span is ignored** (warning `chunk_template_altered`). The comparison
+     uses the span text as the chat path marks it (U+FDD0 inserted into special-token spellings, #1339), or strips U+FDD0
+     from both sides. Pinned in Task 9 **[verified]**:
+     - Llama-3.1's template trims user / assistant / system content and JSON-encodes tool content, so on Llama-3.1
+       tool-result spans are never reusable in v1, and spans at a part edge lose whitespace;
+     - Qwen3 keeps content verbatim.
    - **Advice:** put chunk spans in the middle of a part, after a glue header, and end them with a newline the template
-     does not trim. How dotLLM's templates flatten multi-part `content` must be pinned per template in I1
-     **[assumption: unverified]**.
-6. **Special tokens.** Chunk text is tokenised exactly as the plain request path tokenises message content.
-   - If that path does **not** parse special-token strings in content (`EncodeRaw` semantics, as the chunkers do), then
-     neither does the chunk path.
-   - If a template path does parse them, any chunk whose text contains a special-token string is ignored (warning
-     `chunk_special_tokens`).
+     does not trim.
+6. **Special tokens.** Chunk text is tokenised exactly as the plain request path tokenises message content (Task 9
+   pin, ruling 21) **[verified]**.
+   - The chat path does not parse special-token strings in caller content: the template marks them with U+FDD0 and encode
+     strips the mark. Bare `EncodeRaw` **does** parse them, so the chunkers were not equivalent.
+   - So chunk text is tokenised as `EncodeRaw(MarkUntrustedSpecials(text))` by the store, the wire path, `build` and
+     prewarm alike; a chunk containing `<think>` is plain text on both sides. `chunk_special_tokens` stays reserved.
    - Either way, a file cannot inject control tokens through the chunk path that it could not inject as plain content.
    - dotLLM's current behaviour for content is pinned in I1 **[assumption: unverified]**.
 7. **Tokenisation by policy** (blocking item B2).

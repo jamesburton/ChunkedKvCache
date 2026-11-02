@@ -101,9 +101,9 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 | lane | tasks (serial within a lane unless noted) | worktree | runs |
 |---|---|---|---|
 | contract | 0 | this repo | first; feeds every lane |
-| L library | 1 → 2 → 3 → 4; 5 may run beside 2–4 in a temporary worktree `chunk-wire` off `feature/chunk-cache` (merge conflict expected only in the index JSON context) | `chunk-cache` | CPU (Task 1 has one GPU-lock step) |
-| C client | 6 → (7 ∥ 8); no dependency on any store task (L or I1b), so it may ship first (user-approved) | `chunk-client` | CPU; fully parallel with L and S |
-| S server (we implement, dotllm-97 / user file and merge) | 9 → 10 → 11 → 13 → 14; 12 parallel with 10–11 in worktree `chunk-server-lineage` (separate files: `DotLLM.Engine/PromptCache/*`); 15 → 16 after Lane L Task 4 is merged into the server branch | `chunk-server` | CPU (Task 15 has one GPU-lock step) |
+| L library | 1 → 2 → 3 → 4; 5 → 5b may run beside 2–4 in a temporary worktree `chunk-wire` off `feature/chunk-cache` (merge conflict expected only in the index JSON context); 5b precedes Tasks 13, 15 and 17 | `chunk-cache` | CPU (Task 1 has one GPU-lock step) |
+| C client | 6 (its review fixes run in parallel with everything else) → (7 ∥ 8); no dependency on any store task (L or I1b), so it may ship first (user-approved) | `chunk-client` | CPU; fully parallel with L and S |
+| S server (we implement, dotllm-97 / user file and merge) | 9 (done, `38c0314b`) → 10 → 11 → 13 → 14; 12 parallel with 10–11 in worktree `chunk-server-lineage` (separate files: `DotLLM.Engine/PromptCache/*`); 15 → 16 after Lane L Task 4 is merged into the server branch | `chunk-server` | CPU (Task 15 has one GPU-lock step) |
 | T tooling | 17 → 18, after Tasks 4, 5, 6 and the Task 16 endpoint contract | `chunk-cache` | CPU |
 | gated | 19 (E4c), 20 (tiled kernel, GPU), 21 (release doc), 23 (E10, GPU, after the tiled kernel supports the dtypes) | various | see each |
 | PR split | 22 (Vulkan wiring PRs), any time after Task 20; docs plus local branches only | `chunk-vulkan` + new worktrees off `dev` | CPU (re-verification GPU steps under the lock) |
@@ -278,7 +278,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   }
   public sealed record RoundTripReport(int Checked, int Failed, IReadOnlyList<string> FailedIds);
   ```
-  `VerifyRoundTrip` checks `EncodeRaw(text) == ids` per chunk; failures are marked not wire-eligible by `build` (Task 17).
+  `VerifyRoundTrip` checks `ChunkTokenization.Encode(text) == ids` per chunk (Task 5b); failures are marked not wire-eligible by `build` (Task 17).
 
 - [ ] **Step 1: Write failing tests:** `SymbolChunker_OverlongLineSlices_NotWireEligible`; `SymbolChunker_NormalChunks_WireEligible`;
   `VerifyRoundTrip_IdSlicedFixedChunk_FailsAtMultibyteCut` (`FixedSizeChunker` on a fixture whose cut falls inside `é`);
@@ -290,6 +290,38 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: slices left eligible; hash over UTF-16; round trip compares lengths only.
 - [ ] **Step 5:** Merge into `feature/chunk-cache` if run in `chunk-wire`; rerun the ChunkReuse suite; commit.
+
+### Task 5b: Chunk encoding matches the chat path (ruling 21) [CPU]
+
+Task 9 found that `EncodeRaw` **parses** special-token spellings (F9) while the chat path does not (F7: the template marks
+them with U+FDD0, #1339, and encode strips the mark). So a chunk containing `<think>` or `<|im_start|>` gets different ids
+from the chunkers than from a chat request. Ruling 21: chunk text is tokenised as `EncodeRaw(MarkUntrustedSpecials(text))`
+everywhere: chunkers, `ChunkEncoder`, `VerifyRoundTrip`, the server wire and encode paths (Tasks 13, 15), and CLI / prewarm
+(Task 17).
+
+**Files:**
+- Create (dotLLM): `src/DotLLM.ChunkReuse/Corpus/ChunkTokenization.cs`
+- Modify (dotLLM): `Corpus/SymbolChunker.cs` (the `EncodeRaw` calls at `:180,209,239`), `Corpus/LinesChunker.cs`,
+  `Corpus/WireChunking.cs` (`VerifyRoundTrip`), `ChunkEncoder.cs` if it tokenises text; if `MarkUntrustedSpecials` is not
+  public (`JinjaChatTemplate.cs:99,190`), reach it through the existing `InternalsVisibleTo` (C1) rather than copying it
+- Test: `tests/DotLLM.Tests.Unit/ChunkReuse/ChunkTokenizationTests.cs`
+
+**Interfaces:**
+- Produces: `public static class ChunkTokenization { public static int[] Encode(ITokenizer tokenizer, string chunkText); }`
+  = `EncodeRaw(MarkUntrustedSpecials(chunkText))`; the only way library code turns chunk text into ids.
+
+- [ ] **Step 1: Write failing tests:** `ChunkWithThinkTag_StoreAndChatPathIdsEqual` (golden, Qwen3 tokenizer fixture: ids from
+  `ChunkTokenization.Encode` equal the ids the chat path produces for the same text inside a rendered user message);
+  `PlainChunk_IdsUnchanged` (no special spellings: identical to the old `EncodeRaw`, so existing entries stay valid);
+  `SymbolChunker_UsesChunkTokenization`; `LinesChunker_UsesChunkTokenization`; `VerifyRoundTrip_SpecialSpellingChunk_Passes`.
+- [ ] **Step 2:** Run; expected FAIL.
+- [ ] **Step 3:** Implement; route every library tokenisation of chunk text through `ChunkTokenization.Encode`.
+- [ ] **Step 4:** Rerun; PASS; mutants: unmarked `EncodeRaw`; marking applied twice; one chunker left on `EncodeRaw`.
+- [ ] **Step 5:** **Versioning note.** Token ids are in `ChunkKey`, so a chunk whose ids change gets a new key by itself (a
+  miss, never a wrong hit), and `KvOutputVersion` is unchanged (K/V for given ids is unchanged). Stored indexes, however,
+  hold the old `KeyHex` for such chunks: if this task lands after Task 2's `chunk-key/v4` has been used for a persisted store,
+  bump the index format version so old indexes re-chunk; if before, v4 covers it and no extra bump is needed. Record which
+  in the report; commit; write the issue draft.
 
 ### Task 6: Client core: types, hashing, control-plane client [CPU; separate package, blocks nothing in Lane S]
 
@@ -380,7 +412,11 @@ to any GPL dotLLM project.
 - [ ] **Step 4:** Rerun; PASS; mutants: hash over wire bytes; UTF-16 offsets sent; mismatch keeps span; SSE fully buffered.
 - [ ] **Step 5:** Commit.
 
-### Task 9: Server pins: templates, special tokens, unknown fields (S1) [CPU]
+### Task 9: Server pins: templates, special tokens, unknown fields (S1) [CPU] — DONE
+
+**Status:** done on dotLLM `feature/chunk-cache-server` `38c0314b` (`ServerPinTests`, `docs/CHUNK_CACHE.md` pinned-behaviour
+section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`; findings became rulings 19–22 in
+`docs/contracts/chunk-cache-v1/README.md`, folded into Tasks 5b, 10, 11, 13, 15 and 17 below. The steps are kept as the record.
 
 **Files:**
 - Test (dotLLM, `chunk-server`): `tests/DotLLM.Tests.Unit/Server/ChunkCache/ServerPinTests.cs`
@@ -426,6 +462,14 @@ to any GPL dotLLM project.
       public static ParsedChunkRequest? Parse(MessagesRequest request, ChunkCacheOptions options, string ns);
   }   // null = no annotations or flag off
   ```
+  **Surfaces (ruling 19).** OpenAI `/v1/chat/completions`: spans address **string** `content` only, through the manifest
+  (`chunk_cache.chunks[]`, `at = {message, part: 0, start, end}`); array-of-parts content stays the existing 400 even with
+  the flag on (general array support is a separate later issue). Anthropic `/v1/messages`: inline `chunk` on text blocks and
+  the manifest. `ChunkSpanRef.Part` is the wire part index; the parser also produces
+  `EngineSpan(int EngineMessage, int StartChar, int EndChar)` by mapping through `AnthropicConverter`: text blocks of one
+  message are joined with `'
+'` (offsets shift by the preceding blocks plus separators), and `tool_result` blocks are split
+  into their own engine `tool` messages; a span in a block the converter does not carry as text is `chunk_span_invalid`.
   `ChunkCacheCodes` holds the §5.8 code strings. Validation: version, hash recomputed over the decoded text, spans on UTF-8
   boundaries / in range / non-overlapping / text parts only, manifest conflict, too many, `chunk_not_wire_eligible`
   (`WireChunking.IsWireChunker` semantics, copied as a server constant list until the server references `DotLLM.ChunkReuse` in
@@ -434,10 +478,14 @@ to any GPL dotLLM project.
 
 - [ ] **Step 1: Write failing tests:** one data-driven test over Task 0's `expected.json` (every fixture → warnings or strict
   code and status); `FlagOff_ReturnsNull_EvenWithAnnotations`; `HashOverDecodedString` (escaped `\u00e9` fixture);
-  `IdLongerThan256_Rejected`; `TooMany_Warns_StrictIs400`; `UnknownChunker_NotWireEligibleWarning`; `QueryDefaultsToLastUserMessage`.
+  `IdLongerThan256_Rejected`; `TooMany_Warns_StrictIs400`; `UnknownChunker_NotWireEligibleWarning`; `QueryDefaultsToLastUserMessage`;
+  `OpenAi_StringContentManifest_Parsed`; `OpenAi_ArrayContent_StillThe400_FlagOnAndOff`; `OpenAi_InlineChunkField_Ignored`;
+  `Anthropic_TwoTextBlocks_SecondBlockSpanShiftedByFirstPlusNewline`; `Anthropic_ToolResultBlock_MapsToOwnEngineMessage`;
+  `Anthropic_MappedSpan_SubstringOfEngineMessageEqualsSpanText` (property test over random block layouts).
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Rerun; PASS; mutants: offsets as chars; overlap allowed; conflict served annotated; 422 status.
+- [ ] **Step 4:** Rerun; PASS; mutants: offsets as chars; overlap allowed; conflict served annotated; 422 status; join
+  separator dropped; tool_result offset not reset.
 - [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
 
 ### Task 11: Span location in the rendered prompt (S2/S3) [CPU]
@@ -453,15 +501,21 @@ to any GPL dotLLM project.
   `LocatedSpan(ChunkSpanRef Span, int RenderedStartChar, int RenderedEndChar)`. Sentinel rendering: render once unannotated
   (R) and once with each span replaced by a sentinel that cannot occur in the input (a fresh GUID per request in a private-use
   code point frame); a span is located only if its sentinel is intact and substituting the span texts back into the sentinel
-  render yields R exactly; otherwise `chunk_template_altered`. A span containing a special-token string is ignored with
-  `chunk_special_tokens` if Task 9 found the content path parses them.
+  render yields R exactly; otherwise `chunk_template_altered` and the span is ignored (ruling 20). The comparison is against
+  the **marked** span text (`MarkUntrustedSpecials`, which inserts U+FDD0 into special-token spellings, #1339), or U+FDD0 is
+  stripped from both sides; the sentinel is a fixed private-use frame that is not a special spelling. A caller-supplied
+  U+FDD0 inside a span is dropped at encode (Task 9 F10), so such a span is ignored. Facts pinned by Task 9: on Llama-3.1 the
+  template trims user / assistant / system content and JSON-encodes tool content, so **tool-result spans are never reusable on
+  Llama-3.1 in v1**; Qwen3 keeps content verbatim. `chunk_special_tokens` is not needed: the chat path never parses special
+  spellings in caller text.
 
 - [ ] **Step 1: Write failing tests:** `Qwen3_MidPartSpan_Located`; `Llama31_SpanAtPartEdge_TrimmedIsTemplateAltered`;
   `Llama31_SpanAfterGlueEndingNewline_Located`; `TwoSpansSamePart_BothLocated`; `SentinelInUserText_CannotCollide`;
-  `RenderedOffsets_SubstringEqualsSpanText`; `SpecialTokenSpan_PerTask9Fact`.
+  `RenderedOffsets_SubstringEqualsSpanText`; `SpecialSpellingSpan_LocatedViaMarkedText` (`<think>` inside a Qwen3 span);
+  `CallerFdd0InSpan_Ignored`; `Llama31_ToolResultSpan_AlwaysTemplateAltered`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Rerun; PASS; mutants: skip the R comparison; fixed sentinel string; offsets off by the BOS prefix.
+- [ ] **Step 4:** Rerun; PASS; mutants: skip the R comparison; compare unmarked text; offsets off by the BOS prefix.
 - [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
 
 ### Task 12: Snapshot lineage (L7) [CPU; parallel with Tasks 10–11]
@@ -514,11 +568,13 @@ to any GPL dotLLM project.
   `Exact_IsBitIdenticalToUnannotated` and `Exact_AfterShadow_SameSlot_Identical` (integration, synthetic tiny model, blocking
   and streaming, tokens and `cached_tokens` equal; Review Focus); `StreamingFinalChunk_CarriesReport`;
   `AnthropicMessageDelta_CarriesReport`; `CachedTokens_UnchangedByAnnotations`; `RecurrentModel_ModelUnsupported`;
-  `Metrics_CountersIncrement`; `Exact_WithApproxSnapshotOnSlot_RestoresExactRowsOnly` (approximate entry injected as in
+  `Metrics_CountersIncrement`; `ShadowKey_ChunkWithThinkTag_HitsStoreEntryFromCli` (ruling 21);
+  `Exact_WithApproxSnapshotOnSlot_RestoresExactRowsOnly` (approximate entry injected as in
   Task 12; output equals the unannotated request); `ShortChunk_IgnoredTooShortWarning` (`min_chunk_tokens` 32, counted with
   the server tokenizer).
 - [ ] **Step 2:** Run; expected FAIL.
-- [ ] **Step 3:** Implement; `exact` and `shadow` tokenise the whole rendered prompt exactly as a plain request (§5.3 item 7).
+- [ ] **Step 3:** Implement; `exact` and `shadow` tokenise the whole rendered prompt exactly as a plain request (§5.3 item 7);
+  shadow keys come from `ChunkTokenization.Encode(span text)` (Task 5b), and spans come from Task 10's engine mapping.
 - [ ] **Step 4:** Rerun; PASS; mutants: shadow uses segmented tokenisation; report omitted from the stream; misses counted
   in `chunk_reused`.
 - [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
@@ -567,7 +623,7 @@ to any GPL dotLLM project.
   startup with a clear message) with `Admit(ChunkSpanRef span, ChunkCaller caller) -> AdmissionResult(bool Queued, string?
   Reason)` implementing §5.10 exactly (not `volatile`, not `no_store`, seen in ≥ 2 requests per `(namespace, text hash)`,
   under budget, index-only rule); `SightingTable` (bounded 100,000 rows, LRU; rows carry optional `source.path`);
-  `ChunkEncodeQueue` runs only while the scheduler is idle, encodes with the server's backend, `Put`s under the short store
+  `ChunkEncodeQueue` runs only while the scheduler is idle, tokenises with `ChunkTokenization.Encode` (Task 5b), encodes with the server's backend, `Put`s under the short store
   lock, records ledger rows, and runs LRU eviction of ledger rows to the budget; when eviction cannot free space, encoding stops
   and responses carry `chunk_store_unavailable` as a warning. Warnings `chunk_encode_queued` / `chunk_encode_skipped`.
   `on_miss: "encode"` is accepted in I1 as "queue now, bypassing only the seen-twice rule" (the request itself is still served
@@ -624,7 +680,8 @@ to any GPL dotLLM project.
   `evict` and `prewarm` require `--server`; `--offline` lets `build --encode` and `evict` write directly while holding the
   store lock, and fails if a server ledger shows a live owner (lock held). `select` returns `hash` = `WireChunking.Hash` of the
   LF text and, when `--server` is given, `stored` from posting the selected texts as one `explain` request (text only; no
-  hash lookup exists). `explain` posts a request file.
+  hash lookup exists; body `{"request": ...}` per ruling 15, the texts in an OpenAI string-content message per ruling 19).
+  All chunk text is tokenised with `ChunkTokenization.Encode` (Task 5b). `explain` posts a request file.
   `compare` stays lab-only, not in MCP.
 
 - [ ] **Step 1: Write failing tests:** `EachVerb_Json_MatchesSchema` (schemas from §7.2 as JSON Schema files under
@@ -832,6 +889,7 @@ L9 already exists as `index-<chunker>.json`); recurrent models (Phase T); the E7
 
 ## Self-review notes
 
+- 2026-11-02 rev 3: Task 9 done; rulings 19–21 folded into Tasks 5b (new), 10, 11, 13, 15, 17.
 - Spec coverage: L1 Tasks 15, 17; L2 Task 3; L3 Task 4; L4 Task 1; L5 gate G-I5; L6 Task 5; L7 Task 12; L8 Task 2; L9 noted
   above. I1a Tasks 9–14; I1b Tasks 15–16; I2 Tasks 6–8; I3 Tasks 17–18; I4 Appendix A; I5 and I6 (Phase D) gated sections;
   I7 deferred. §12.6 dotLLM contract tests map to Tasks 9, 10, 11, 13, 1/15 (CPU entry never hits on Vulkan) and 3/16
