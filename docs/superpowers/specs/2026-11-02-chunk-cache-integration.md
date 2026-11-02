@@ -237,8 +237,9 @@ Request level (`chunk_cache`):
      (`Corpus/FixedSizeChunker.cs:41`) **[verified]**. Its chunk text `Decode(slice)` need not re-encode to the slice:
      - pre-tokenisation can split differently at the cut;
      - a cut inside a multi-byte character decodes to U+FFFD.
-   - **The proposed replacement is `lines-512`:** accumulate whole lines up to 512 tokens (tokenising each candidate piece
-     alone), and split an over-long line at a character boundary.
+   - **The wire chunker is `lines-512`:** accumulate whole lines up to 512 tokens (tokenising each candidate piece
+     alone), and split an over-long line at a character boundary. It exists as `TextFirstFixedChunker` (`fixed-text-512`,
+     used by E4c) and is renamed `lines-512` in Phase I (user decision, 2026-11-02).
    - **`build` asserts the round trip.** For every chunk it checks `EncodeRaw(text) == ids` and flags or drops the rest.
    - **Fixed-size chunks on the wire are blocked on E4c** (§5.11). E4's quality numbers for fixed chunks come from
      id-sliced chunks and do not transfer until E4c measures text-first fixed chunks.

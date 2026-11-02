@@ -16,7 +16,8 @@ annotations, locates spans in the rendered prompt, tags snapshot lineage, runs `
 and wraps it in MCP. A golden fixture set in this repo (Task 0) is the shared wire contract all lanes test against.
 
 **Tech Stack:** C# / .NET 10, ASP.NET Core minimal APIs (dotLLM server), `Microsoft.Extensions.AI.Abstractions` (client),
-`ModelContextProtocol` C# SDK (MCP; version pinned at Task 18 start), xUnit with `[SkippableFact]` GPU gating, dotLLM CPU
+official MCP C# SDK (`modelcontextprotocol/csharp-sdk`; `ModelContextProtocol.Core` by default, chosen in Task 18
+Step 0), xUnit with `[SkippableFact]` GPU gating, dotLLM CPU
 and Vulkan backends, GitHub Actions `release.yml` / `ci.yml` (documented, not changed upstream).
 
 **Spec:** `docs/superpowers/specs/2026-11-02-chunk-cache-integration.md` (rev 3, `c6f95e3`, approved by the user). Section
@@ -36,11 +37,18 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
     nothing merges the tiled branch into `feature/chunk-cache`.
   - Lane C: new worktree `chunk-client`, branch `feature/chunk-cache-client` from `origin/dev`.
   - Lane S: new worktree `chunk-server`, branch `feature/chunk-cache-server` from `origin/dev`.
-- **Server code is owned by the dotLLM sessions.** Lane S work is our branch in a worktree off `dev`: small PR-ready diffs
-  (one per task), coordinated with the dotLLM session through the controller, issue first per dotLLM rules (PRs to `dev`,
-  one issue per PR, rebase on `dev` often). Each Lane S task appends its draft issue text to
-  `docs/release/chunk-cache-issues.md` (this repo). **Nothing is filed, pushed or messaged without the user's explicit
-  approval**; spec approval is not that approval.
+- **Lane S ownership (resolved with dotllm-97, 2026-11-02).** We draft and implement small PRs to `dev` from feature
+  branches off `dev`; one issue per PR, issue **first**. dotllm-97 / the user file the issues and review / merge; **our side
+  files nothing** and pushes nothing without the user's explicit approval per PR (spec approval is not that approval).
+- **Issue drafts are a deliverable of every dotLLM-facing task** (Lanes L, C, S, T, Task 22): a file
+  `docs/release/chunk-cache-issues/<NN>-<slug>.md` in this repo with title, body, acceptance criteria and the PR's mutant
+  evidence section; `00-umbrella.md` (written in Task 0) links them all in PR order.
+- **dotLLM PR acceptance criteria (every dotLLM-facing task):** PR targets `dev`, never `main`; `docs/SERVER.md` (or the
+  owning doc) updated in the same PR; every new server / CLI flag documented and covered by a test; System.Text.Json
+  source-generated DTOs follow dotLLM `CLAUDE.md` (no init-property initializers: nullable property plus a resolved
+  default), and each new `JsonSerializerContext` gets a `JsonContextDefaultsTests`-style guard; correctness tests shown to
+  fail against a mutant, recorded in the PR body; `Closes #N` does not auto-close on `dev` (closed by hand); rebase on `dev`
+  often.
 - **Feature flag.** Every server behaviour sits behind `--chunk-cache` (off by default). Flag off: request and response
   bytes are identical to today's for any body, annotated or not.
 - **No lossy default.** Lane S implements only `exact` and `shadow`. `balanced`, `fast` and `auto` parse, then degrade to
@@ -49,7 +57,10 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - **Server is the only K/V writer (L1).** The CLI writes only with `--offline` while holding the store lock.
 - **CPU and Vulkan entries never mix.** The backend is in the key (existing) and in the `.ckv` header (Task 1); a mismatch is
   a miss, never a conversion.
-- **Licences.** `DotLLM.ChunkCache.Client` has a permissive licence (MIT unless the user decides otherwise) and references no
+- **Licences.** `DotLLM.ChunkCache.Client` is MIT, in the dotLLM repo with its own `PackageLicenseExpression` override
+  (decided by James; dotllm-97 will confirm the MIT-in-GPL-repo / NOTICE / trusted-publishing question with him). It is pure
+  HTTP plus DTOs with no project reference to any GPL dotLLM project (wire DTOs are duplicated in the client, not shared with
+  the server), and references no
   `DotLLM.*` engine assembly; everything else inherits dotLLM's `GPL-3.0-only`.
 - **CPU vs GPU.** Tasks are marked **[CPU]** or **[GPU-lock]**. CPU tests run with `DOTLLM_SKIP_VULKAN=1`. GPU work uses the
   dotLLM GPU lock (`scripts/gpu-lock.sh`, stale after 90 min), queues FIFO behind other agents, is coordinated through the
@@ -91,14 +102,15 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 |---|---|---|---|
 | contract | 0 | this repo | first; feeds every lane |
 | L library | 1 → 2 → 3 → 4; 5 may run beside 2–4 in a temporary worktree `chunk-wire` off `feature/chunk-cache` (merge conflict expected only in the index JSON context) | `chunk-cache` | CPU (Task 1 has one GPU-lock step) |
-| C client | 6 → (7 ∥ 8) | `chunk-client` | CPU; fully parallel with L and S |
-| S server | 9 → 10 → 11 → 13 → 14; 12 parallel with 10–11 in worktree `chunk-server-lineage` (separate files: `DotLLM.Engine/PromptCache/*`); 15 → 16 after Lane L Task 4 is merged into the server branch | `chunk-server` | CPU (Task 15 has one GPU-lock step) |
+| C client | 6 → (7 ∥ 8); no dependency on any store task (L or I1b), so it may ship first (user-approved) | `chunk-client` | CPU; fully parallel with L and S |
+| S server (we implement, dotllm-97 / user file and merge) | 9 → 10 → 11 → 13 → 14; 12 parallel with 10–11 in worktree `chunk-server-lineage` (separate files: `DotLLM.Engine/PromptCache/*`); 15 → 16 after Lane L Task 4 is merged into the server branch | `chunk-server` | CPU (Task 15 has one GPU-lock step) |
 | T tooling | 17 → 18, after Tasks 4, 5, 6 and the Task 16 endpoint contract | `chunk-cache` | CPU |
-| gated | 19 (E4c), 20 (tiled kernel, GPU), 21 (release doc) | various | see each |
+| gated | 19 (E4c), 20 (tiled kernel, GPU), 21 (release doc), 23 (E10, GPU, after the tiled kernel supports the dtypes) | various | see each |
+| PR split | 22 (Vulkan wiring PRs), any time after Task 20; docs plus local branches only | `chunk-vulkan` + new worktrees off `dev` | CPU (re-verification GPU steps under the lock) |
 
 **Gates (stop and report to the user):**
-- **G-I0, before Task 9:** the user approves the open decisions below and approves the controller messaging the dotLLM
-  session about Lane S (branch, ownership, the L7 change in `PrefixCache`).
+- **G-I0: passed 2026-11-02.** Decisions answered (see "Decisions (answered 2026-11-02)"); Lane S ownership resolved with
+  dotllm-97.
 - **G-I1, after Tasks 6–14:** I1a wire and client contract done; the user decides on issues / PRs for Lane S and the client.
 - **G-I2, after Tasks 15–18:** I1b store and I3 tooling done; the CodeSharp handoff (Appendix A) may be sent with approval.
 - **G-E4c:** Task 19 runs only on E4c's outcome. **G-tiled:** Task 20 needs the G2b result and a GPU slot via the user.
@@ -129,7 +141,8 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 3:** Write the fixtures and `README.md` (one line per fixture: what it pins, spec section).
 - [ ] **Step 4:** Rerun; expected `OK n fixtures`; write `fixtures.sha256`; mutate one hash byte and one offset to show the
   checker fails.
-- [ ] **Step 5:** Commit (`docs/contracts/`).
+- [ ] **Step 5:** Write `docs/release/chunk-cache-issues/00-umbrella.md` (goal, link to the spec, the PR list in Task 21's
+  order, each to be filled by its task); commit (`docs/contracts/`, `docs/release/`).
 
 ### Task 1: Merge the chunk branches; backend tag in the `.ckv` header (L4) [CPU + one GPU-lock step]
 
@@ -244,6 +257,10 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 **Files:**
 - Create (dotLLM): `src/DotLLM.ChunkReuse/Corpus/WireChunking.cs`
 - Modify (dotLLM): `Corpus/Chunk.cs`, `Corpus/SymbolChunker.cs`, `Store/ChunkRef.cs` (+ its JSON context)
+- Rename (dotLLM): `Corpus/TextFirstFixedChunker.cs` → `Corpus/LinesChunker.cs` (class `LinesChunker`, `Name =>
+  $"lines-{MaxChunkTokens}"`), its tests, and the lab's `e4 --chunker fixed-text` → `--chunker lines`. The class arrived as
+  `TextFirstFixedChunker` / `fixed-text-512` from `feature/chunk-kv-reuse` (`8560d36a`) via Task 1; E4c's artifacts keep the
+  old label and its README gets a one-line note that `fixed-text-512` = `lines-512`.
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/WireChunkingTests.cs`
 
 **Interfaces:**
@@ -254,7 +271,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   public static class WireChunking
   {
       public static IReadOnlySet<string> Eligible { get; }          // {"symbol-512"}
-      public static IReadOnlySet<string> PendingE4c { get; }        // {"fixed-text-512"}; moves to Eligible in Task 19
+      public static IReadOnlySet<string> PendingE4c { get; }        // {"lines-512"}; moves to Eligible in Task 19
       public static bool IsWireChunker(string chunkerName);         // Eligible.Contains
       public static string Hash(string text);                       // "sha256:" + lowercase hex of UTF-8
       public static RoundTripReport VerifyRoundTrip(IReadOnlyList<Chunk> chunks, ITokenizer tokenizer);
@@ -265,14 +282,19 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 
 - [ ] **Step 1: Write failing tests:** `SymbolChunker_OverlongLineSlices_NotWireEligible`; `SymbolChunker_NormalChunks_WireEligible`;
   `VerifyRoundTrip_IdSlicedFixedChunk_FailsAtMultibyteCut` (`FixedSizeChunker` on a fixture whose cut falls inside `é`);
-  `VerifyRoundTrip_TextFirstFixed_AllPass`; `Hash_MatchesFixtures` (Task 0 `inline.json`, `nonascii-crlf.json`);
-  `FixedText512_IsPendingNotEligible`; `ChunkRef_Json_RoundTripsWireEligible`.
+  `VerifyRoundTrip_Lines512_AllPass`; `Hash_MatchesFixtures` (Task 0 `inline.json`, `nonascii-crlf.json`);
+  `Lines512_IsPendingNotEligible`; `ChunkRef_Json_RoundTripsWireEligible`; `LinesChunker_Name_IsLines512` and
+  `ChunkRef_KindOf_Lines_IsFixed` (`ChunkRef.KindOf` throws on unknown prefixes today, so `lines-*` must map to
+  `ChunkKind.Fixed`).
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: slices left eligible; hash over UTF-16; round trip compares lengths only.
 - [ ] **Step 5:** Merge into `feature/chunk-cache` if run in `chunk-wire`; rerun the ChunkReuse suite; commit.
 
-### Task 6: Client core: types, hashing, control-plane client [CPU]
+### Task 6: Client core: types, hashing, control-plane client [CPU; separate package, blocks nothing in Lane S]
+
+Pure HTTP plus DTOs: the wire DTOs are the client's own copies (checked against Task 0 fixtures), with no project reference
+to any GPL dotLLM project.
 
 **Files:**
 - Create (dotLLM, `chunk-client`): `src/DotLLM.ChunkCache.Client/DotLLM.ChunkCache.Client.csproj` (net8.0 + net10.0,
@@ -309,7 +331,9 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - Create (`chunk-client`): `src/DotLLM.ChunkCache.Client/IndexChunkSource.cs`, `IndexFile.cs` (read-only view of
   `index-<chunker>.json`)
 - Create (here): `docs/contracts/chunk-cache-v1/index-format.md` (the index JSON fields the client reads, frozen)
-- Test: `tests/DotLLM.ChunkCache.Client.Tests/IndexChunkSourceTests.cs` (fixture index produced by Lane L's `ChunkIndex.Save`)
+- Test: `tests/DotLLM.ChunkCache.Client.Tests/IndexChunkSourceTests.cs` (fixture index JSON checked in, copied from a
+  `ChunkIndex.Save` output already on `feature/chunk-cache`; the client lane depends on no Lane L or I1b task. A missing
+  `wireEligible` field reads as eligible, so indexes written before Task 5 work.)
 
 **Interfaces:**
 - Produces: `IndexChunkSource(string storeRoot, string chunkerName, string sourceRoot, PathDenyList denyList) : IChunkSource`.
@@ -375,8 +399,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 3:** Correct each failing expectation to the observed behaviour; write each fact and its consequence for §5.3
   items 5–6 into `docs/CHUNK_CACHE.md`; tell the controller of any fact that changes Tasks 10–11 (a ruling goes in the ledger).
 - [ ] **Step 4:** Rerun; PASS; no mutants (characterisation only; the report says so).
-- [ ] **Step 5:** Commit; append the issue draft ("Server: chunk_cache wire convention, flag off by default") to
-  `docs/release/chunk-cache-issues.md` here.
+- [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence); this one is the Lane S lead issue ("Server: chunk_cache wire convention, flag off by default").
 
 ### Task 10: Wire parsing and validation behind `--chunk-cache` (S2) [CPU]
 
@@ -415,7 +438,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: offsets as chars; overlap allowed; conflict served annotated; 422 status.
-- [ ] **Step 5:** Commit; append the issue-draft paragraph.
+- [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
 
 ### Task 11: Span location in the rendered prompt (S2/S3) [CPU]
 
@@ -439,7 +462,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: skip the R comparison; fixed sentinel string; offsets off by the BOS prefix.
-- [ ] **Step 5:** Commit; append the issue-draft paragraph.
+- [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
 
 ### Task 12: Snapshot lineage (L7) [CPU; parallel with Tasks 10–11]
 
@@ -461,7 +484,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 3:** Implement additively (no change for entries without the tag); the dotLLM session reviews this diff before
   merge into the server branch (it owns the prefix cache).
 - [ ] **Step 4:** Rerun plus the existing PromptCache suite; PASS; mutants: cap ignored; approx rows counted in `cache_n`.
-- [ ] **Step 5:** Merge into `feature/chunk-cache-server`; commit; append the issue-draft paragraph (its own issue).
+- [ ] **Step 5:** Merge into `feature/chunk-cache-server`; commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence) (its own issue, prefix cache).
 
 ### Task 13: `exact` / `shadow` execution and response metadata (S5) [CPU]
 
@@ -498,7 +521,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 3:** Implement; `exact` and `shadow` tokenise the whole rendered prompt exactly as a plain request (§5.3 item 7).
 - [ ] **Step 4:** Rerun; PASS; mutants: shadow uses segmented tokenisation; report omitted from the stream; misses counted
   in `chunk_reused`.
-- [ ] **Step 5:** Commit; append the issue-draft paragraph.
+- [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
 
 ### Task 14: Capabilities, explain, auth (S6) [CPU]
 
@@ -516,16 +539,18 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   ChunkCaller(bool Authenticated, string Namespace)`. With `--chunk-cache-api-keys` set: `X-API-Key` / `Bearer` must be in
   the file (constant-time compare), else 401 `authentication_error`; namespace = `ChunkNamespace.ForApiKey(key)`. Unset:
   loopback callers only (403 otherwise), namespace `ChunkNamespace.Default`, `Authenticated = true`. The same rule gates
-  store side effects of annotated inference requests (Task 15). Pending G-I0 decision 1.
+  store side effects of annotated inference requests (Task 15). Approved by the user (2026-11-02). Default OFF (the whole surface sits behind `--chunk-cache`); the issue is flagged security-sensitive.
 
 - [ ] **Step 1: Write failing tests:** `Capabilities_MatchesFixtureShape`; `FlagOff_404`; `NoKeysConfigured_NonLoopback_403`;
-  `KeysConfigured_MissingKey_401`; `KeysConfigured_ValidKey_NamespaceFromKey`; `Explain_PerChunkOnlyForOwnNamespace`;
+  `KeysConfigured_MissingKey_401`; `KeysConfigured_ValidKey_NamespaceFromKey`; `TwoKeys_CannotSeeOrEvictEachOthersEntries`
+  (key → namespace isolation across explain, shadow plan counts and evict; mutants: shared namespace, key ignored);
+  `EnabledWithoutKeys_LoopbackOnly`; `Explain_PerChunkOnlyForOwnNamespace`;
   `Explain_HashListBody_Rejected`; `Endpoints_AreRateLimited`; `ReportPerChunk_UnauthenticatedGetsSummary` (inference
   response with `report: per_chunk`).
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: loopback check skipped; per-chunk leaked to anonymous; key compare not exact.
-- [ ] **Step 5:** Commit; append the issue-draft paragraph. **G-I1 (with Tasks 6–8): stop and report.**
+- [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence). **G-I1 (with Tasks 6–8): stop and report.**
 
 ### Task 15: Sole-writer encode, admission and disk budget (I1b) [CPU + one GPU-lock step]
 
@@ -558,7 +583,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 4:** Rerun; PASS; mutants: seen-once admitted; eviction ignores the budget; ledger written before the file.
 - [ ] **Step 5 [GPU-lock]:** `VulkanServer_CpuWrittenStore_NoHits` (GPU-gated integration: a store encoded by a CPU server
   gives `hit: 0` in `shadow` on a Vulkan server for the same request). Coordinate the slot through the user.
-- [ ] **Step 6:** Commit; append the issue-draft paragraph.
+- [ ] **Step 6:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
 
 ### Task 16: Prewarm, evict and forget, namespaces (I1b) [CPU]
 
@@ -580,7 +605,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: dry run ignored; cross-namespace evict; sightings kept on forget.
-- [ ] **Step 5:** Commit; append the issue-draft paragraph.
+- [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
 
 ### Task 17: CLI revision: `--json`, deny-list, wire eligibility, server-backed writes (L1, I3) [CPU]
 
@@ -603,7 +628,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   `compare` stays lab-only, not in MCP.
 
 - [ ] **Step 1: Write failing tests:** `EachVerb_Json_MatchesSchema` (schemas from §7.2 as JSON Schema files under
-  `tests/.../Fixtures/v1/schemas/`); `Build_DeniedFiles_CountedNotChunked`; `Build_FixedText_IsPendingE4c_RefusedWithoutLab`;
+  `tests/.../Fixtures/v1/schemas/`); `Build_DeniedFiles_CountedNotChunked`; `Build_Lines512_IsPendingE4c_RefusedWithoutLab`;
   `Build_Encode_CallsPrewarm_NeverPut`; `Evict_WithoutServerOrOffline_Exit2`; `Offline_SecondWriter_ExitsNonZeroWithinTimeout`
   (Review Focus); `Select_HashEqualsWireHash`.
 - [ ] **Step 2:** Run; expected FAIL.
@@ -616,8 +641,9 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 
 **Files:**
 - Create (dotLLM): `tools/DotLLM.ChunkCache/McpCommand.cs`, `McpTools.cs`
-- Modify (dotLLM): `tools/DotLLM.ChunkCache/DotLLM.ChunkCache.csproj` (`ModelContextProtocol` package, pinned in
+- Modify (dotLLM): `tools/DotLLM.ChunkCache/DotLLM.ChunkCache.csproj` (the MCP SDK package chosen in Step 0, pinned in
   `Directory.Packages.props`)
+- Create (here): `docs/release/mcp-sdk-choice.md` (Step 0 findings)
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/ChunkCacheMcpTests.cs`
 
 **Interfaces:**
@@ -626,14 +652,25 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   `inputSchema` and `outputSchema` from §7.2, returning `structuredContent` plus a serialised text copy. Each tool runs the
   same verb handler as `chunkcache <verb> --json`; nothing else (thin wrapper). `dry_run` defaults to `true` for evict.
 
+- [ ] **Step 0 (spike, decide the package):** the official SDK (`modelcontextprotocol/csharp-sdk`) ships
+  `ModelContextProtocol.Core` (client and low-level server APIs, minimal dependencies), `ModelContextProtocol` (Core plus
+  hosting / DI and attribute-based tool discovery; depends on `Microsoft.Extensions.Hosting.Abstractions` and
+  `Caching.Abstractions`) and `ModelContextProtocol.AspNetCore` (HTTP); these facts came from memory and are verified here.
+  Check from the SDK docs / nuget.org and a throwaway console in the scratchpad: (1) dependency weight of each package
+  (transitive list, size, AOT / trimming warnings); (2) whether Core alone registers tools programmatically with our §7.2
+  JSON schemas as `inputSchema` / `outputSchema` and returns `structuredContent` over stdio; (3) client compatibility:
+  Claude Code (`.mcp.json` stdio), Microsoft Agent Framework (which consumes MCP servers through this SDK; confirm in its
+  docs) and the MCP Inspector, each listing and calling one tool; (4) licence of each package (Apache-2.0 / MIT; must be
+  GPL-3.0-compatible) and the version (≥ 2 weeks old). **Default to `ModelContextProtocol.Core` if it suffices.** Record the
+  answers and the choice in `docs/release/mcp-sdk-choice.md`.
 - [ ] **Step 1: Write failing tests:** `ToolsList_HasSixTools_WithSchemas`; `EachTool_StructuredContentEqualsCliJson` (same
   args, byte-equal JSON); `Evict_DefaultsToDryRun`; `UnknownArgument_RejectedBySchema`; `ToolError_IsResultWithIsError`.
 - [ ] **Step 2:** Run; expected FAIL.
-- [ ] **Step 3:** Implement with the SDK's stdio transport.
+- [ ] **Step 3:** Implement with the chosen package's stdio transport.
 - [ ] **Step 4:** Rerun; PASS; mutants: tool output re-shaped; dry-run default false.
 - [ ] **Step 5:** Add a Claude Code `.mcp.json` example to `docs/CHUNK_CACHE.md`; commit. **G-I2: stop and report.**
 
-### Task 19: `fixed-text-512` on the wire (gate G-E4c) [CPU]
+### Task 19: `lines-512` on the wire (gate G-E4c) [CPU]
 
 Runs only after E4c's README states its outcome (§5.11).
 
@@ -643,7 +680,7 @@ Runs only after E4c's README states its outcome (§5.11).
 - Test: `WireChunkingTests`, `ChunkCacheEndpointTests`
 
 - [ ] **Step 1:** Read the E4c README. If text-first fixed chunks match id-sliced ones within the CIs: write failing tests
-  `FixedText512_IsWireEligible` and `Capabilities_ListFixedText512`; otherwise write `FixedText512_StaysPending` and update
+  `Lines512_IsWireEligible` and `Capabilities_ListLines512`; otherwise write `Lines512_StaysPending` and update
   §2 / §5.5 wording in `docs/CHUNK_CACHE.md` ("bar unmet for every wire-eligible chunker").
 - [ ] **Step 2:** Run; expected FAIL. **Step 3:** Move the name (or not) and add the enum value. **Step 4:** PASS; mutant:
   list not updated in capabilities.
@@ -668,27 +705,84 @@ Runs only after E4c's README states its outcome (§5.11).
 ### Task 21: Release path (gate G-REL) [CPU, docs only]
 
 **Files:**
-- Create (here): `docs/release/chunk-cache-release-plan.md`; complete `docs/release/chunk-cache-issues.md`
+- Create (here): `docs/release/chunk-cache-release-plan.md`; complete `docs/release/chunk-cache-issues/00-umbrella.md`
 - Create (dotLLM, branch `feature/chunk-cache-release` off `dev`, not pushed): the `release.yml` diff described below
 
-- [ ] **Step 1:** Write the PR split in dependency order: (1) L-library (`DotLLM.ChunkReuse` store, index, scanner, selector,
-  Tasks 1–5); (2) L7 lineage; (3) server wire I1a; (4) server store I1b; (5) client package; (6) CLI + MCP tool; (7) release
-  wiring. One issue per PR, issue texts from `chunk-cache-issues.md`.
+- [ ] **Step 1:** Write the PR split in dependency order: (1) client package (independent; may ship first); (2) L-library
+  (`DotLLM.ChunkReuse` store, index, scanner, selector, Tasks 1–5); (3) L7 lineage; (4) server wire I1a; (5) server store
+  I1b; (6) CLI + MCP tool; (7) release wiring. The Vulkan wiring PRs are Task 22. One issue per PR, issue texts from `docs/release/chunk-cache-issues/`.
 - [ ] **Step 2:** Write the `release.yml` change on the release branch: today only `DOTLLM_TOOL_PACKAGE_ID` is pushed
   (`release.yml:332-353`). Add repo variables `CHUNKCACHE_TOOL_PACKAGE_ID` and `CHUNKCACHE_CLIENT_PACKAGE_ID`, push each when
   set (same skip-if-unset and `--skip-duplicate` behaviour); `tools/DotLLM.ChunkCache` gets `PackAsTool`, `ToolCommandName`
   `chunkcache` and `PackageId` from the variable. Validate with `actionlint` and a local `dotnet pack` that produces both
   nupkgs; do not push.
 - [ ] **Step 3:** Write what the user sets up, in `chunk-cache-release-plan.md`:
-  - choose ids (proposal: tool `dotllm-chunkcache`, client `DotLLM.ChunkCache.Client` if the `DotLLM.` prefix is not
-    reserved by upstream, else `JamesBurton.DotLLM.ChunkCache.Client`); check availability on nuget.org;
+  - ids (decided): tool `dotllm-chunkcache` (`dnx dotllm-chunkcache`, command `chunkcache`), client
+    `DotLLM.ChunkCache.Client` (the user confirms `DotLLM.*` new ids are publishable);
   - set repo variables `CHUNKCACHE_TOOL_PACKAGE_ID`, `CHUNKCACHE_CLIENT_PACKAGE_ID` (`NUGET_USER` already exists);
   - confirm the two existing trusted-publishing policies (`release.yml`, `ci.yml`, owner `jamesburton`, repo `dotLLM`) cover
     new package ids under that owner, or push the first version with a glob-scoped API key;
   - optional prefix reservation;
   - **warning:** any push to `dev` creates a `0.3.0-dev.<n>` prerelease and publishes every package whose variable is set,
     so set the variables only when the PRs are merged.
+  - the client licence / NOTICE question is with dotllm-97, who will confirm it with James.
 - [ ] **Step 4:** Commit here; report to the user. Nothing is filed or pushed.
+
+### Task 22: PR split for the Vulkan wiring [CPU; GPU-lock for re-verification]
+
+Our Vulkan work (`feature/chunk-reuse-vulkan` `bac190ab`, `feature/chunk-reuse-vulkan-tiled` `7bef8f38`) becomes small
+PR-ready branches off `dev`. The tiled kernel itself is dotllm-97's PR #1541; our PRs that need it wait for it to merge.
+
+**Files:**
+- Create (here): `docs/release/chunk-reuse-vulkan-pr-split.md`; `docs/release/chunk-cache-issues/NN-vulkan-*.md` (one per PR)
+- Create (dotLLM, local only): one branch per PR off `origin/dev`, `feature/chunk-reuse-vk-<n>-<slug>`, in worktrees
+
+- [ ] **Step 1:** List the commits of both branches by concern (`git log --stat origin/dev..bac190ab`, then
+  `bac190ab..7bef8f38`): backend seam (`IChunkBackend`, CPU / Vulkan backends, backend tag), resident entries and device
+  copy, single-pass recompute and the `SupportsQueryPositionAttention` refusal, the lab command changes, the floor command.
+  Propose one PR per concern, each ≤ ~600 changed lines where possible, in dependency order, with the tests that come
+  with it.
+- [ ] **Step 2:** For each PR, write the issue draft (title, body, acceptance criteria per the Global Constraints, mutant
+  evidence carried over from the Phase G task reports) and cherry-pick / re-split the commits onto its branch; build; run
+  the CPU suite with `DOTLLM_SKIP_VULKAN=1`.
+- [ ] **Step 3 [GPU-lock]:** Run the GPU-gated tests of each branch once (slot via the user); record results in the issue
+  draft.
+- [ ] **Step 4:** Commit the split doc here; report to the user. Each PR is filed (by dotllm-97 / the user) and pushed only
+  with the user's explicit approval for that PR; rebase each branch on `dev` before review.
+
+### Task 23: E10, reuse error × KV-quantisation error (gated) [CPU first; GPU later]
+
+**Question:** how the reuse error (naive / recompute vs full prefill) and the KV-quantisation error (quantised vs F32 KV)
+compound, on the E4 harness, and therefore which stored-row dtype (Phase D1) each KV dtype needs.
+
+**dtypes (from dotllm-97):** `KvCacheDType` = F32 (F16 on GPU), Q8_0 (34 B / 32 elements), Q4_0 (18 B / 32), TurboQuant
+(rotation + Lloyd-Max, bits via `KvCacheConfig.TurboQuantBits`). CPU `QuantizedKvCache`, Vulkan `KvQuantizeKernel` /
+`KvDequantKernel`, CUDA `CudaQuantizedKvCache`. Per-query-position attention for quantised KV is **not planned** (#1541
+covers F32 / F16 only); dotllm-97 will add F16 KV and 16K / 32K for the tiled kernel, and read the feasibility of Q8_0 for
+qpos after our G2b numbers.
+
+**Gates:** the CPU part needs only Task 1 (assembly into a `QuantizedKvCache` destination; today the assembler refuses
+non-F32 destinations, so a narrow assembler change behind a test comes first). The GPU part for F16 waits for dotllm-97's F16
+tiled kernel; for Q8_0 / Q4_0 / TurboQuant it waits until per-query-position attention supports them (not planned today).
+
+**Files:**
+- Modify (dotLLM, `feature/chunk-cache`): `ChunkAssembler.cs` / `StoredContextAssembler.cs` (quantised destination: write
+  F32 rows through the cache's own quantiser), `benchmarks/ChunkKvLab/E4Command.cs` (`--kv-dtype f32|q8_0|q4_0|turbo<bits>`)
+- Test: `tests/DotLLM.Tests.Unit/ChunkReuse/QuantizedAssemblyTests.cs`
+- Create (here): `experiments/E10-reuse-x-kvquant/` with `run.ps1`, `summarize.py`, `README.md`
+
+- [ ] **Step 1: Write failing tests:** `AssembleIntoQ8_0Cache_EqualsQuantisingTheF32Assembly` (bit-exact against quantising
+  the F32-assembled rows with the cache's quantiser); same for Q4_0 and TurboQuant; `UnsupportedDtype_Refused`.
+- [ ] **Step 2:** Run; expected FAIL. **Step 3:** Implement. **Step 4:** PASS; mutants: rows written unquantised; shift
+  applied after quantisation.
+- [ ] **Step 5 [CPU]:** E4 arms (naive, chunk starts, QR; 5 / 10 / 20 %) × KV dtype {F32, Q8_0, Q4_0, TurboQuant 4 / 3 bits}
+  on the same validated tasks, 3 seeds, 2K. Report the four errors per cell against the F32 full prefill: KV quant alone,
+  reuse alone, both, and the interaction (both − sum), with paired cluster-bootstrap CIs.
+- [ ] **Step 6 [GPU-lock, gated]:** Repeat on Vulkan for F16 when the F16 tiled kernel lands, and for the quantised dtypes
+  only once qpos supports them.
+- [ ] **Step 7:** README: the store implication (compact stored rows must match the KV dtype: F16 rows for F16 KV, Q8_0 rows
+  for Q8_0 KV; whether a Q8_0 store row feeding an F32 cache costs accuracy), which feeds Phase D1; record numbers in
+  `~/.claude/LLMs.md`; commit; report to the user.
 
 ---
 
@@ -700,7 +794,7 @@ direction 2026-11-02).
 
 | # | item | lane / owner | runs |
 |---|---|---|---|
-| D1 | compact stored rows F16 and Q8_0 (≈ 0.5× / 0.27× of F32) plus a payload checksum (xxHash64 per layer slab; mismatch = miss), `.ckv` format v3; dtype stays in key and header | this project, `feature/chunk-cache` | CPU |
+| D1 | compact stored rows F16 and Q8_0 (≈ 0.5× / 0.27× of F32), matching the cache's KV dtype as E10 (Task 23) decides, plus a payload checksum (xxHash64 per layer slab; mismatch = miss), `.ckv` format v3; dtype stays in key and header | this project, `feature/chunk-cache` | CPU |
 | D2 | aligned layout: page- and sector-aligned per-layer K/V slabs in the cache's device dtype, so a slab maps without repacking | this project | CPU |
 | D3 | Vulkan import of mmap'd slabs on the UMA iGPU (`VK_EXT_external_memory_host`, host-pointer import; DirectStorage-style read into host-visible memory as the fallback); our consumer behind `IChunkBackend` | request to the Vulkan owner; our seam | GPU-lock |
 | D4 | readback fix: `ReadRows` runs at 145 MB/s through uncached memory (`experiments/G1-e1-vulkan/vulkan-primitive-requests.md`) | Vulkan owner | GPU-lock |
@@ -723,17 +817,18 @@ I7 transparent mode and the Claude Code recipe; adapters for Semantic Kernel / L
 positioning; by-reference chunks; `hybrid` selector; `numbered-relative` (L9's render suffix is reserved; the chunker half of
 L9 already exists as `index-<chunker>.json`); recurrent models (Phase T); the E7 quality half.
 
-## Open decisions for the user (needed at G-I0)
+## Decisions (answered 2026-11-02)
 
-1. **Auth.** dotLLM has no authentication. Proposal (Task 14): a keys file for `/v1/chunk-cache/*` and store side effects;
-   loopback-only when unset.
-2. **Client licence and home.** Proposal: MIT, in the dotLLM repo as `src/DotLLM.ChunkCache.Client` with a per-project licence
-   override; the alternative is a separate repo.
-3. **Wire chunker name.** The text-first fixed chunker exists as `fixed-text-512` (E4c uses it); the spec says `lines-512`.
-   Proposal: keep `fixed-text-512`.
-4. **Package ids** (Task 21) and whether the client ships before I1b.
-5. **Messaging the dotLLM session** about Lane S ownership and the L7 change, and later the issue / PR split.
-6. **MCP dependency:** the `ModelContextProtocol` SDK (proposal) vs a hand-written stdio JSON-RPC loop.
+1. **Auth:** `--chunk-cache-api-keys` file, one namespace per key; loopback-only without a file; the whole surface is OFF by
+   default (`--chunk-cache`). Approved by the user.
+2. **Client package:** MIT, in the same dotLLM repo with its own licence setting; pure HTTP / DTOs, no GPL project
+   references. Decided by James; dotllm-97 will confirm (NOTICE, trusted publishing).
+3. **Lane S:** we implement PR-ready branches; dotllm-97 / the user file issues and merge; we file nothing.
+4. **Wire chunker name:** `lines-512` everywhere; the existing `TextFirstFixedChunker` / `fixed-text-512` is renamed in
+   Task 5.
+5. **Package ids:** tool `dotllm-chunkcache`, client `DotLLM.ChunkCache.Client`.
+6. **MCP:** the official MCP C# SDK; `ModelContextProtocol.Core` unless Task 18 Step 0 shows it does not suffice.
+7. **Client before store:** approved; the client lane depends on no store task.
 
 ## Self-review notes
 
@@ -743,11 +838,16 @@ L9 already exists as `index-<chunker>.json`); recurrent models (Phase T); the E7
   (orphans keep ledger entries).
 - Server-surface facts checked on `dev` while planning: no authentication (`SERVER.md` § Security, hence decision 1);
   prefix cache in `DotLLM.Engine/PromptCache/`; only `DOTLLM_TOOL_PACKAGE_ID` is pushed by `release.yml`.
-- `TextFirstFixedChunker` (`fixed-text-512`) already exists on `feature/chunk-kv-reuse` (`8560d36a`); Task 1 merges it.
+- `TextFirstFixedChunker` (`fixed-text-512`) already exists on `feature/chunk-kv-reuse` (`8560d36a`); Task 1 merges it and
+  Task 5 renames it to `LinesChunker` / `lines-512`.
+- 2026-11-02 revision: user decisions and dotllm-97's answers folded in; Tasks 22 (Vulkan PR split) and 23 (E10) added.
 
 ---
 
 ## Appendix A: CodeSharp handoff (for the CodeSharp session; not tasks for us)
+
+> **HANDOFF: status NOT SENT.** Owner: the CodeSharp session (codesharp-d1). Send condition: G-I2 passed and the user's
+> approval. CodeSharp's B3 / B9 precondition gates their reuse comparisons, not this plan.
 
 Sent by the controller after G-I2 and with the user's approval. CodeSharp owns the design and the code; this is the brief.
 
