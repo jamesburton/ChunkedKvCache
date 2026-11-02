@@ -93,3 +93,9 @@ warnings from the requests and compares them with `expected.json`, and checks th
 - **Ruling 4 (strict first defect)** is clarified: "document order" means inline annotations in (message, part) order and manifest entries in array order.
 - Rulings 23 (`chunk_annotation_malformed`) and 26 (`chunk_not_wire_eligible` is strict-mode 400) stand and MUST be implemented; §5.8 of the spec lists both codes.
 - Task 10 does not ship as a standalone PR: Tasks 10, 11 and 13 ship together (the flag must do something when merged).
+
+## Rulings on the Task 10 fix round (controller, 2026-11-02)
+
+33. Check order is: structure, version, id, eligibility (`chunk_not_wire_eligible`), range/boundary, overlap/conflict, hash. An ineligible span never reserves a range.
+34. Unknown string values for `report` and `on_miss` are malformed (`chunk_annotation_malformed`: warning, strict 400) and the default is used otherwise; an invalid `query.message` is also malformed. (Task 11's first step brings the parser in line.)
+35. `chunk_not_wire_eligible` drops the span (warning; strict 400), as in ruling 26.
