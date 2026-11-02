@@ -57,3 +57,11 @@ warnings from the requests and compares them with `expected.json`, and checks th
 11. `start == 0` and `end == len` are on-boundary.
 12. Inline `v` is required; `chunk_not_wire_eligible` is covered by the server task's own tests, not by a fixture.
 13. `chunk_ignored_too_short` is tokenizer-dependent and has no pinned request fixture.
+
+## Rulings from the Task 6 review (controller, 2026-11-02)
+
+14. Prewarm items may carry an optional `source` object (`{path}`), advisory only: the server applies its deny-list to `source.path` when present and can never rely on it (a client can omit it); the MCP schema lists `source`. The spec's prewarm item is `{id, text}` plus this optional field.
+15. Explain request shape is pinned: `POST /v1/chunk-cache/explain` with body `{"request": <the chat request body>}`. `chunkcache select --server` uses the same shape.
+16. Probe failure semantics: any exception or non-2xx from the capability probe (401, 403, 5xx, timeout, 404) means "strip annotations and send a plain request"; the client never sends `chunk_cache` unless the probe succeeded.
+17. Lone surrogates in chunk text hash as UTF-8 with U+FFFD replacement (the default `Encoding.UTF8` behaviour); server and client must do the same; `check.py` uses the equivalent (`errors="replace"` on the surrogate-escaped form) if a fixture ever carries one.
+18. The CLI must emit UTF-8 JSON on stdout (no console code-page dependence) and read the API key from an environment variable (`CHUNKCACHE_API_KEY`), never from the command line. List options with commas in values need a non-splitting form (repeatable option): Task 17 adds it; until then the client rejects commas in path globs.
