@@ -1,0 +1,18 @@
+# provenance
+dotLLM 955a0af4a8cd58b1d7bfd79394e8f167d0694f8b branch feature/chunk-store dirty=0 (binary built from a806f4c0; 955a0af4 changes tests only)
+model /c/Users/james/.cache/huggingface/hub/models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF/snapshots/ae44f08e1392f39c0e474af10c3ff8355c8b6688/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+date 2026-11-02T15:54:40+00:00
+args: store-assembly afclaude symbol kept contexts=3 threads=8
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.9 s; engine 0.3.0-dev.3628.27+8d1d83ffe92f420b9a472094c6942113e2b4b30b
+corpus C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), symbol-512: 74 chunks, 12744 tokens (chunk tokens median 107, max 510); Decode(Encode(file)) == file for 9/9; 0.5 s
+chunk-id sha256 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+plans verified against C:/Development/ChunkedkvCache/experiments/corpus/afclaude.plans.jsonl: 16 plans, identical chunk ids
+kept task ids: 16; found 16; missing 
+contexts (first task id): src/AFClaude/FoundryTools.cs:23:48 src/AFClaude/FoundryTools.cs:31:34 src/AFClaude/Program.cs:328:38
+plans: 3 contexts, 6 tasks (kept, seed 0, 2.0 s); mean context 2045 tokens, 15.0 chunks
+store C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/t3-store-af; backend cpu, dtype F32, kv-output version 1; threads 8; tokenizer id gguf-embedded:Qwen_Qwen3-4B-Instruct-2507-Q4_K_M
+plan 0: L=2045, 12 chunks; fresh 27340 ms; cold 27399 ms (AssemblyStats { Hits = 0, Misses = 12, EncodedTokens = 2045 }); warm 684 ms (AssemblyStats { Hits = 12, Misses = 0, EncodedTokens = 0 }); caches bit-exact cold=True warm=True
+plan 1: L=2041, 14 chunks; fresh 30386 ms; cold 32310 ms (AssemblyStats { Hits = 2, Misses = 12, EncodedTokens = 1823 }); warm 735 ms (AssemblyStats { Hits = 14, Misses = 0, EncodedTokens = 0 }); caches bit-exact cold=True warm=True
+plan 2: L=2048, 19 chunks; fresh 43167 ms; cold 9481 ms (AssemblyStats { Hits = 8, Misses = 11, EncodedTokens = 602 }); warm 658 ms (AssemblyStats { Hits = 19, Misses = 0, EncodedTokens = 0 }); caches bit-exact cold=True warm=True
+done: 3 contexts, 6 tasks in 4.5 min; cache mismatches 0, logit mismatches 0; mean assembly fresh 33631 ms, cold 23063 ms, warm 693 ms; store 35 entries, 1318290340 bytes
+exit 0

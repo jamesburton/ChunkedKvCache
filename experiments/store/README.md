@@ -89,3 +89,66 @@ into `float[][]`. The OS page cache was warm, because the file had just been wri
   the 2K-token E4 context alone is 576 MiB. F16 rows would halve that (≈ 221 GB / 206 GiB). Q8_0 rows (34 B per 32 elements)
   would bring it to ≈ 0.27× of F32 (≈ 117 GB / 110 GiB). Compact F16/Q8_0 rows are deferred to a separate task, as the
   controller ruled. The key and header already carry the dtype.
+
+# Store-backed assembly parity (Phase S, Task 3)
+
+dotLLM branch `feature/chunk-store`: `src/DotLLM.ChunkReuse/Store/StoredContextAssembler.cs` (`8d1d83ff`), tests
+`tests/DotLLM.Tests.Unit/ChunkReuse/StoredAssemblyTests.cs` (`8d1d83ff`, `955a0af4`), lab command `ChunkKvLab store-assembly`
+(`benchmarks/ChunkKvLab/StoreAssemblyCheck.cs`, `a806f4c0`).
+
+## What it does
+
+`StoredContextAssembler(fingerprint, tokenizerId).Assemble(chunks, model, store, destination?, query)` returns
+`StoredAssembly(Context, Stats, Entries)` (deconstructs to `(Context, Stats)`), where `Stats = AssemblyStats(Hits, Misses,
+EncodedTokens)`.
+
+- It looks each chunk up under `ChunkKey.Create(fingerprint, tokenizer, RoPE from config, "cpu", F32, tokens)`.
+- It accepts a hit only when the entry has this fingerprint, exactly the chunk's token ids, and one `[n, stride(l)]` K and V
+  array per KV layer. A well-formed entry that fails these checks is evicted, re-encoded and replaced (`Rejected`).
+- A damaged, truncated, old-format, foreign-key or stale-schema entry is a miss: it is re-encoded and stored, never an error.
+- A chunk that appears twice in one context is encoded once.
+- If Put throws `ChunkStoreBusyException`, the fresh entry is used and not stored (`StoreFailures`), and a later call repairs
+  the entry. Any other store exception propagates.
+- The entries are then placed with `ChunkAssembler`.
+
+## Measurement (Qwen3-4B-Instruct-2507 Q4_K_M, CPU, 8 threads)
+
+`ChunkKvLab store-assembly`, E4 kept contexts (symbol chunker, seed 0, 2K tokens):
+
+- 17 docagent contexts (all that docagent has) and the first 3 afclaude contexts, giving 20 contexts and 33 tasks.
+- Logs: [`assembly-docagent.log`](assembly-docagent.log), [`assembly-afclaude.log`](assembly-afclaude.log). Per-task CSVs are
+  next to them.
+- Release build of `a806f4c0` (dirty=0).
+
+Each context is assembled three ways:
+
+- **fresh:** `ChunkEncoder` plus `ChunkAssembler`, with no store.
+- **cold:** store-backed, against one store shared across contexts, so a chunk seen in an earlier context is a hit.
+- **warm:** store-backed, with a new store instance, so every chunk is read from disk.
+
+Every task is then evaluated teacher-forced on the fresh cache and on the warm cache.
+
+| quantity | value |
+|---|---|
+| caches bit-identical (fresh = cold = warm, all layers, all rows) | **20 / 20 contexts** |
+| continuation logits bit-identical (warm vs fresh) | **33 / 33 tasks** (max \|Δ\| 0, KL 0, top-1 1.0) |
+| masked-call NLL identical / greedy EM fresh vs warm | 33 / 33; 6 vs 6 (naive concatenation, no recompute) |
+| warm assembly (2K tokens, 12–23 chunks) | mean **668 ms** (556–801), all hits |
+| fresh assembly | mean 32,989 ms (median 30,830) |
+| cold assembly (encode + put; 91 hits, 241 misses over 20 contexts) | mean 22,764 ms |
+| fresh / warm | mean **49.7×**, min 31.1× |
+| store after 17 docagent contexts | 206 entries, 7.99 GB (F32) |
+
+**Caveats:**
+
+- The box was shared with other agents' builds, so the times are rough.
+- The fresh pass ran first in each context. On the 3 contexts where cold had no hits, cold was faster than fresh (29.8 s vs
+  43.5 s), so the order and the contention matter at this scale. Put costs about 0.2 s per chunk (Task 2).
+- Warm reads come from a just-written store, so the OS page cache is warm. A cold-disk read was not measured.
+- The stores were deleted after the run.
+
+**Open point:**
+
+- The `.ckv` header does not yet persist the backend tag.
+- `ChunkKvEntry.Backend` exists only on `feature/chunk-reuse-vulkan`.
+- Until those branches meet, the skipped test `StoredAssemblyTests.TODO_StoreHeader_PersistsBackendTag` holds the place for this.

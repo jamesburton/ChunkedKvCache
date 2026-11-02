@@ -1,0 +1,7 @@
+corpus,chunker,plan,task_id,context_tokens,chunks,fresh_ms,cold_ms,cold_hits,cold_misses,cold_encoded_tokens,warm_ms,warm_hits,warm_misses,cache_cold_bit_exact,cache_warm_bit_exact,fresh_mask_nll,warm_mask_nll,fresh_mask_em,warm_mask_em,fresh_cont_nll,warm_cont_nll,kl_cont_warm_vs_fresh,top1_cont_warm_vs_fresh,logits_bit_exact,max_abs_logit_diff
+afclaude,symbol,0,"src/AFClaude/FoundryTools.cs:23:48",2045,12,27340,27399,0,12,2045,684,12,0,1,1,3.87797962,3.87797962,0,0,35.5183063,35.5183063,0,1,1,0
+afclaude,symbol,1,"src/AFClaude/FoundryTools.cs:31:34",2041,14,30386,32310,2,12,1823,735,14,0,1,1,9.89806456,9.89806456,0,0,13.4185596,13.4185596,0,1,1,0
+afclaude,symbol,1,"src/AFClaude/Program.cs:314:39",2041,14,30386,32310,2,12,1823,735,14,0,1,1,2.82996609,2.82996609,0,0,48.9220534,48.9220534,0,1,1,0
+afclaude,symbol,1,"src/AFClaude/Program.cs:253:39",2041,14,30386,32310,2,12,1823,735,14,0,1,1,1.09700812,1.09700812,1,1,50.156833,50.156833,0,1,1,0
+afclaude,symbol,1,"src/AFClaude/Program.cs:215:39",2041,14,30386,32310,2,12,1823,735,14,0,1,1,3.71021831,3.71021831,0,0,47.1033577,47.1033577,0,1,1,0
+afclaude,symbol,2,"src/AFClaude/Program.cs:328:38",2048,19,43167,9481,8,11,602,658,19,0,1,1,1.48246188,1.48246188,1,1,27.5633315,27.5633315,0,1,1,0
