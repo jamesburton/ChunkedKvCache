@@ -36,7 +36,7 @@ not auto-close on `dev`; close by hand.
 |---|---|---|---|---|---|
 | 1 | Client package `DotLLM.ChunkCache.Client` (MIT; may ship first) | C: Tasks 6, 7, 8 | #1544 (types, `06-client-types.md`); chat client: _Task 8_ | none (no store task) | branch `feature/chunk-cache-client` (types done, chat client in progress) |
 | 2 | Library: `DotLLM.ChunkReuse` store, index, scanner, selector; backend tag, namespace in `ChunkKey`, ledger, locks, `lines-512` | L: Tasks 1-5 | _Tasks 1-5_ | none | not started |
-| 3 | Snapshot lineage (`exact` / `approx` tags) | S: Task 12 | _Task 12_ | none | not started |
+| 3 | Snapshot lineage (`exact` / `approx` tags) | S: Task 12 | `12-snapshot-lineage.md` (not filed) | none | done on `feature/chunk-cache-lineage` (`918bb68d`, off `dev` `857c55b9`); awaiting review |
 | 4 | Server wire (I1a): parsing, span location, `exact` / `shadow`, response metadata, capabilities / explain / auth | S: Tasks 9, 10, 11, 13, 14 | #1543 (behaviour pin, `09-server-behaviour-pin.md`, titled 'Server: chunk_cache wire convention, flag off by default'); _Tasks 10-14_ | 3 | Task 9 done on `feature/chunk-cache-server` |
 | 5 | Server store (I1b): sole-writer encode, admission, disk budget, prewarm / evict / forget | S: Tasks 15, 16 | _Tasks 15-16_ | 2, 4 | not started |
 | 6 | CLI (`--json`, deny-list, server-backed writes) and MCP tool | T: Tasks 17, 18 | _Tasks 17-18_ | 2, 5 (endpoint contract), 1 | not started |
