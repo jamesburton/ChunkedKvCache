@@ -34,8 +34,14 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - **Worktrees and branches** (never switch branches in the shared `C:\Development\dotLLM` checkout):
   - Lane L and T: `C:\Development\dotLLM\.claude\worktrees\chunk-cache`, branch `feature/chunk-cache`.
   - Vulkan backend and tiled kernel: `chunk-vulkan` worktree, branches `feature/chunk-reuse-vulkan` (`bac190ab`) and
-    `feature/chunk-reuse-vulkan-tiled` (`7bef8f38`, carries unmerged PR #1541). Only Task 20 and Phase D use the tiled one;
-    nothing merges the tiled branch into `feature/chunk-cache`.
+    `feature/chunk-reuse-vulkan-tiled` (`7bef8f38`). **Task 1 merged the tiled branch into `feature/chunk-cache`**
+    (`42fcc8f1`, coordinator-approved deviation): `feature/chunk-cache` now contains `7bef8f38` and with it PR #1541
+    (`9ddf5f00`, upstream on `dev` as `857c55b9`; `1421f319`'s "not merged upstream" is stale), plus the regenerated
+    `attention_flash_gqa*.spv` from `dev` `3ebc0959`. Task 20 and Phase D can run from `chunk-cache`.
+  - **Updating `feature/chunk-cache` from `dev`: `git merge origin/dev`, never a rebase.** It is the integration branch and
+    holds 7 merge commits with hand resolutions (`2cc12bd9`, `1421f319`, `03ff5fb9`, `5e0bdceb`, `69eb5772`, `e7d58383`,
+    `42fcc8f1`); a linear rebase would redo all of them. A trial `git merge-tree --write-tree HEAD origin/dev` was clean
+    (2026-11-02). "Rebase on `dev` often" applies to PR branches cut fresh from `dev` (Lanes C and S, Task 22).
   - Lane C: new worktree `chunk-client`, branch `feature/chunk-cache-client` from `origin/dev`.
   - Lane S: new worktree `chunk-server`, branch `feature/chunk-cache-server` from `origin/dev`.
 - **Lane S ownership (resolved with dotllm-97, 2026-11-02).** We draft and implement small PRs to `dev` from feature
@@ -149,14 +155,17 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 
 **Files:**
 - Merge into `feature/chunk-cache`: `feature/chunk-kv-reuse` (`c4579f55`: `TextFirstFixedChunker`, E4b) and
-  `feature/chunk-reuse-vulkan` (`bac190ab`: `IChunkBackend`, `ChunkKvEntry.Backend`, `ResidentChunkKvEntry`)
+  `feature/chunk-reuse-vulkan-tiled` (`7bef8f38`, which contains `feature/chunk-reuse-vulkan` `bac190ab`: `IChunkBackend`,
+  `ChunkKvEntry.Backend`, `ResidentChunkKvEntry`; plus PR #1541 `9ddf5f00` via `1421f319`). Done: `e7d58383`, `42fcc8f1`
+  (report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-1-report.md`).
 - Modify (dotLLM): `src/DotLLM.ChunkReuse/Store/FileChunkStore.cs` (format version 2), `Store/StoredContextAssembler.cs`
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/ChunkStoreTests.cs`, `StoredAssemblyTests.cs`
 
 **Interfaces:**
 - Consumes: `ChunkKvEntry(..., string Backend = "cpu")`, `IChunkBackend.Tag`, `ChunkKey.Create(..., backend, dtype, tokens,
   positioning)`.
-- Produces: `.ckv` format version 2 whose header carries the backend tag (length-prefixed UTF-8); version-1 files are misses.
+- Produces: `.ckv` format version 2 whose header carries the backend tag (int32 length + ASCII, 1–64 chars of
+  `[a-z0-9._-]`); version-1 files are misses.
   `StoredContextAssembler(ChunkFingerprint, string tokenizerId, IChunkBackend backend)` and `ForModel(config, modelId, quant,
   tokenizerId, IChunkBackend backend)`; the old overloads mean `CpuChunkBackend`. Lookups key on `backend.Tag`; an entry whose
   `Backend` differs from `backend.Tag` is rejected and re-encoded.
@@ -658,6 +667,13 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
   is set, `--chunk-store-index-only`)
 - Test: `tests/DotLLM.Tests.Unit/Server/ChunkCache/ChunkStoreServiceTests.cs`
 
+**Open question (decide before the server stores any Vulkan entry; from the Task 1 review):** `ChunkReuseSchema.KvOutputVersion`
+is one global version and its golden test pins CPU K/V bits only. Vulkan K/V also depend on the shader binaries and the
+driver (Task 1's merge alone changed four `.spv` files). Either a per-backend schema version, or the shader set and driver
+identity hashed into the Vulkan fingerprint. Until decided, Task 15 stores CPU entries only. (Also a Phase D question.)
+Constraint from the same review: `FileChunkStore.Put` replaces an existing entry whose header tag differs (Task 1 fix round),
+but the sole writer should still evict a rejected entry before `Put`, as `StoredContextAssembler` does.
+
 **Interfaces:**
 - Consumes: `ServerLedger`, `ChunkNamespace`, lock model, `IChunkBackend` of the loaded model, `ChunkEncoder`.
 - Produces: `ChunkStoreService` (singleton; opens the store, takes ownership; a second server on the same root fails at
@@ -923,6 +939,7 @@ direction 2026-11-02).
 | D3 | Vulkan import of mmap'd slabs on the UMA iGPU (`VK_EXT_external_memory_host`, host-pointer import; DirectStorage-style read into host-visible memory as the fallback); our consumer behind `IChunkBackend` | request to the Vulkan owner; our seam | GPU-lock |
 | D4 | readback fix: `ReadRows` runs at 145 MB/s through uncached memory (`experiments/G1-e1-vulkan/vulkan-primitive-requests.md`) | Vulkan owner | GPU-lock |
 | D5 | backend tag in the header | done early in Task 1 (needed by I1) | — |
+| D5b | Vulkan K/V schema identity: `KvOutputVersion` is global and pins CPU bits only; decide per-backend version vs shader-set + driver identity in the Vulkan fingerprint (see the open question in Task 15) before any Vulkan entry is persisted | this project | CPU |
 | D6 | measure TTFT cold disk vs warm page cache vs resident, per chunk count, 2K–32K | this project, `experiments/D-direct-load/` | GPU-lock |
 
 Each item keeps the Global Constraints (TDD, mutants, review, CPU-vs-Vulkan separation, no push).
