@@ -63,6 +63,7 @@ Per-PR sections live in the individual issue drafts. Wire-contract fixtures: see
 - #1542 umbrella (this file)
 - #1543 server behaviour pin / lane S lead (`09`)
 - #1544 client types (`06`)
+- #1546 client chat client (`08`)
 - #1545 empty-body 400 on OpenAI array content (found by Task 9; not part of this feature)
 - #1540 tiled per-query-position attention; PR #1541 (dotllm-97's)
 
