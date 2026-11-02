@@ -21,7 +21,7 @@ quality E4 measured. The request for the Vulkan owner is in `vulkan-primitive-re
 | ctx | full prefill | naive (assembly only, device copy) | reuse, 5 % recompute | 10 % | 20 % | 20 % if ATTN_QPOS cost what the ordinary kernel costs (control arm) |
 |---:|---:|---|---|---|---|---|
 | 2K (8 contexts) | 1.66 s | 76 ms (**22× faster**) | 1.68 s (1.0×) | 3.29 s (0.5×) | 6.69 s (0.25×) | ~0.58 s (~2.9× faster) |
-| 8K (CTX8) | 19.2 s | 0.30 s (**64× faster**) | 24.2 s (0.8×) | 47.2 s (0.4×) | 94.1 s (0.2×) | ≤ ~9 s (≥ ~2× faster) |
+| 8K (2 contexts) | 19.1 s | 0.31 s (**62× faster**) | 26.3 s (0.7×) | 52.3 s (0.4×) | 104.6 s (0.2×) | ≤ ~9 s (≥ ~2× faster) |
 
 Every other way of counting is worse for reuse:
 - **Host entries** (the Phase S store's read path, `WriteRows`): assembly takes 0.5 s longer at 2K and 2.2 s longer at 8K.
@@ -75,34 +75,35 @@ Full tables: `summary.md`. The worst max/min over a context's 3 repeats is ≤ 7
 - **Row cap:** `2k-cap128` (2 contexts) batches the single pass into forwards of ≤ 128 rows. At 20 % it takes 6.62 s vs 6.61 s uncapped.
   Batching costs nothing measurable, which is why the 8K/16K runs could cap every submit.
 
-### 8K (CTX8, L ≈ 8,190, ~58–66 symbol chunks; single pass capped at 128 rows per forward)
+### 8K (2 contexts, L ≈ 8,190, 58 and 66 symbol chunks; single pass capped at 128 rows per forward)
+
+The two contexts ran in two processes. A reboot at ~13:29 UTC killed the first run after it had finished context afclaude
+(`timing-8k-a.csv`; the interrupted run's raw CSV and log are in `logs/`). Context docagent was rerun after the reboot
+(`timing-8k-b.csv`, group `8k-timing-b`). Each value below is the mean of the two per-context medians.
 
 | arm | time | notes |
 |---|---:|---|
-| full prefill, 512-row / 2048-row blocks | 19.3 s / 19.2 s | 424 tok/s; G1 had 19.2 s |
-| chunk encode, host entries | 22.0 s | 1.1× the full prefill |
-| upload to resident / assembly host write / device copy | 3.5 s / 2.25 s / 0.30 s | |
-| **control:** 128 rows as the tail (ordinary) / one row earlier (ATTN_QPOS) | **0.68 s / 18.6 s (27×)** | ATTN_QPOS 17.9 µs per (row × visible key) |
+| full prefill, 512-row / 2048-row blocks | 19.2 s / 19.1 s | 428 tok/s; G1 had 19.2 s |
+| chunk encode, host entries | 22.7 s | 1.2× the full prefill |
+| upload to resident / assembly host write / device copy | 3.9 s / 2.5 s / 0.31 s | |
+| **control:** 128 rows as the tail (ordinary) / one row earlier (ATTN_QPOS) | **0.68 s / 18.5 s (27×)** | ATTN_QPOS 17.8 µs per (row × visible key) |
 
 | selection | rows | runs | single pass (forwards) | per-run | per-run / single |
 |---|---:|---:|---:|---:|---:|
-| chunk_starts 5 % | 409 | 57 | 23.9 s (4) | 19.7 s | 0.8× |
-| chunk_starts 10 % | 819 | 52 | 46.9 s (7) | 41.9 s | 0.9× |
-| chunk_starts 20 % | 1,638 | 46 | 93.8 s (13) | 85.7 s | 0.9× |
-| random 5 % | 409 | 386 | 30.6 s (4) | 32.1 s | 1.1× |
-| random 10 % | 819 | 736 | 60.3 s (7) | 63.4 s | 1.1× |
-| random 20 % | 1,638 | 1,311 | 114.9 s (13) | 120.8 s | 1.1× |
+| chunk_starts 5 % | 410 | 61 | 26.0 s (4) | 19.7 s | 0.8× |
+| chunk_starts 10 % | 819 | 56 | 52.0 s (7) | 46.0 s | 0.9× |
+| chunk_starts 20 % | 1,638 | 52 | 104.2 s (13) | 93.2 s | 0.9× |
+| random 5 % | 410 | 388 | 30.6 s (4) | 31.9 s | 1.0× |
+| random 10 % | 819 | 735 | 60.7 s (7) | 63.1 s | 1.0× |
+| random 20 % | 1,638 | 1,304 | 113.9 s (13) | 118.7 s | 1.0× |
 
-- At 8K the attention dominates everything:
-  - The per-call overhead that made per-run slow at 2K is now noise (per-run / single ≈ 1).
-  - The single pass's advantage over per-run disappears.
-- **Random rows cost ~20 % more than chunk_starts rows in the single pass** at 8K, though both selections are spread over the context. At 2K
-  the two were equal. A plausible cause (not instrumented) is the non-contiguous K/V write in the Vulkan forward, which records one copy
-  per row and layer (`VulkanKvCache.RecordUpdate`), against one per batch for a contiguous run.
+- **Attention dominates at 8K.** The per-call overhead that made per-run slow with scattered rows at 2K is noise here (per-run / single
+  ≈ 1). With few runs, per-run is 10–25 % faster than the capped single pass: its forwards are small and are not batched at 128 rows.
+- **Per-context spread:** the single pass on chunk_starts differs by ~20 % between the two contexts (afclaude 23.9 s, docagent 28.1 s at
+  5 %). Random selections cost 10–17 % more than chunk_starts. Not instrumented.
 - **The ideal column** in the verdict table uses the control arm's ordinary-kernel cost per row at 8K (5.3 ms) for 1,638 rows:
-  ~8.7 s + 0.30 s assembly ≈ 9 s, against 19.2 s for full prefill. It is an upper bound: the control rows sit at the end of the context,
+  ~8.7 s + 0.31 s assembly ≈ 9 s, against 19.1 s for full prefill. It is an upper bound: the control rows sit at the end of the context,
   where each row sees the most keys.
-
 
 ## Numerics: is the single pass right? (eval group, 2K, 20 contexts, 28 tasks)
 
