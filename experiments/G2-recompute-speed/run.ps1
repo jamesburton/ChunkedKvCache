@@ -44,7 +44,7 @@ $groupSpec = @{
     '8k-probe'   = @{ label = '8k-probe'; context = 8192; mode = 'unfiltered'; contexts = '1,0,0'; maxRows = 256; extra = @('--repeats', 1, '--eval', 0, '--budgets', 5, '--selectors', 'chunk_starts', '--full-blocks', 512) }
     '8k-timing'  = @{ label = '8k';  context = 8192;  mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
     '8k-timing-b' = @{ label = '8k-b'; context = 8192; mode = 'unfiltered'; contexts = '0,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
-    '16k-point'  = @{ label = '16k'; context = 16384; mode = 'unfiltered'; contexts = '1,0,0'; maxRows = 64; extra = @('--repeats', 1, '--eval', 0, '--budgets', 5, '--selectors', 'chunk_starts', '--full-blocks', 512) }
+    '16k-point'  = @{ label = '16k'; context = 16384; mode = 'unfiltered'; contexts = '0,0,1'; maxRows = 64; extra = @('--repeats', 1, '--eval', 0, '--budgets', 5, '--selectors', 'chunk_starts', '--full-blocks', 512) }
     '2k-eval'    = @{ label = '2k-eval'; context = 2048; mode = 'kept';    contexts = '7,7,6'; maxRows = 512; extra = @('--repeats', 1, '--eval', 1, '--cpu-contexts', 6, '--full-blocks', 512) }
     '8k-eval'    = @{ label = '8k-eval'; context = 8192; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 1, '--eval', 1, '--full-blocks', 512) }
 }

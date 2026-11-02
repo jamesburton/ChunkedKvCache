@@ -1,0 +1,3 @@
+[gpu-lock] acquired by 'chunk-vulkan-t4' (pid 108681): ChunkedkvCache G2 recompute 8k-probe (Phase G Task 4), Qwen3-4B
+start 8k-probe (8k-probe)
+8k-probe: exit 0 in 3.7 min

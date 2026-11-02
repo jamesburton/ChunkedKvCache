@@ -74,6 +74,26 @@ Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row bloc
 | random | 10 % | 819 | 735 | 60.68 s | 7 | 63.12 s | 1.0× | 60.99 s | 0.3× | 63.21 s | 0.3× | 85.91 s | 0.22× |
 | random | 20 % | 1638 | 1304 | 113.93 s | 13 | 118.66 s | 1.0× | 114.24 s | 0.2× | 116.46 s | 0.2× | 139.16 s | 0.14× |
 
+## Speed, 16k (1 contexts, median L 16384, median 91 symbol chunks)
+
+Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
+
+| arm | median | [min, max] | rep | tok/s |
+|---|---:|---|---:|---:|
+| full512 | 68.63 s | [68.63 s, 68.63 s] | 0.00 | 239 |
+| encode_host | 59.94 s | [59.94 s, 59.94 s] | 0.00 | 273 |
+| upload_resident | 9.96 s | [9.96 s, 9.96 s] | 0.00 | 1,644 |
+| asm_host | 4.83 s | [4.83 s, 4.83 s] | 0.00 | 3,391 |
+| asm_device | 641 ms | [641 ms, 641 ms] | 0.00 | 25,548 |
+
+**Attention-kernel control** (64 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 876 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 68.44 s: 78.1×. ATTN_QPOS total 65.4 µs per (row × visible key) over 36 layers; the ordinary tail 13.7 ms per row.
+
+Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 68.63 s.
+
+| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| chunk_starts | 5 % | 819 | 86 | 364.06 s | 13 | 284.55 s | 0.8× | 364.70 s | 0.2× | 368.89 s | 0.2× | 428.83 s | 0.16× |
+
 ## Speed, 8k-probe-cap256 (1 contexts, median L 8188, median 58 symbol chunks)
 
 Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
@@ -150,4 +170,47 @@ Same context, task and selection (E4 random seed formula and budget rounding). M
 | naive | 0 | 23 | 4.963 | 5.020 | 0.220 | 1.806 | 5 | 5 / 5 |
 | random | 5 | 23 | 4.493 | 4.498 | 0.250 | 0.985 | 8 | 5 / 5 |
 | random | 20 | 23 | 3.622 | 3.494 | 0.226 | 1.317 | 6 | 6 / 9 |
+
+## Numerics and quality, 8k-eval
+
+### K/V pooled over contexts (8k-eval), against G0 8k
+
+All-layer = mean of the 36 per-layer means. Ratio = worst per-layer mean (p99) over the matching G0 per-layer mean (p99).
+
+| pair | contexts | K all-layer | V all-layer | worst-layer mean ratio K / V | worst-layer p99 ratio K / V | G0 pair | G0 K / V all-layer |
+|---|---:|---:|---:|---|---|---|---|
+| perrun_vs_single_chunk_starts5 | 2 | 3.9e-05 | 7.88e-05 | 0.01 / 0.01 | 0.04 / 0.03 | b_vk512_vs_vk64 | 0.011 / 0.0211 |
+| perrun_vs_single_chunk_starts10 | 2 | 0.000188 | 0.000381 | 0.02 / 0.02 | 0.69 / 0.75 | b_vk512_vs_vk64 | 0.011 / 0.0211 |
+| perrun_vs_single_chunk_starts20 | 2 | 0.00171 | 0.00345 | 0.20 / 0.20 | 0.89 / 0.90 | b_vk512_vs_vk64 | 0.011 / 0.0211 |
+| perrun_vs_single_random5 | 2 | 4.49e-05 | 8.31e-05 | 0.01 / 0.01 | 0.04 / 0.03 | b_vk512_vs_vk64 | 0.011 / 0.0211 |
+| perrun_vs_single_random10 | 2 | 9.09e-05 | 0.000171 | 0.01 / 0.01 | 0.05 / 0.04 | b_vk512_vs_vk64 | 0.011 / 0.0211 |
+| perrun_vs_single_random20 | 2 | 0.000174 | 0.000328 | 0.03 / 0.02 | 0.63 / 0.69 | b_vk512_vs_vk64 | 0.011 / 0.0211 |
+| d_vk128_vs_qpos128 | 2 | 0.000607 | 0.00116 | 2.03 / 1.97 | 3.06 / 3.16 | b_vk512_vs_vk2048 | 0.000491 / 0.000939 |
+| d_vk512_vs_qpos128 | 2 | 0.000614 | 0.00118 | 6.49 / 9.14 | 2.77 / 2.86 | b_vk512_vs_vk2048 | 0.000491 / 0.000939 |
+
+### Logits per pair (8k-eval): mean over tasks
+
+| pair | selector | budget | tasks | KL mean | KL max (task) | top-1 | mean |Δ mask NLL| | max |Δ mask NLL| | EM ref / cmp |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| d_vk128_vs_qpos128 |  | 100 | 5 | 0.000314 | 0.000391 | 0.994 | 0.047 | 0.104 | 1 / 1 |
+| d_vk512_vs_qpos128 |  | 100 | 5 | 0.000338 | 0.000495 | 1.000 | 0.115 | 0.34 | 1 / 1 |
+| naive_vs_vk512 |  | 0 | 5 | 1.28 | 1.89 | 0.669 | 15.2 | 28.9 | 1 / 1 |
+| perrun_vs_single | chunk_starts | 5 | 5 | 0.000384 | 0.00063 | 1.000 | 0.0993 | 0.323 | 1 / 1 |
+| perrun_vs_single | chunk_starts | 10 | 5 | 0.000385 | 0.000485 | 1.000 | 0.165 | 0.314 | 1 / 1 |
+| perrun_vs_single | chunk_starts | 20 | 5 | 0.000333 | 0.000409 | 1.000 | 0.111 | 0.324 | 1 / 1 |
+| perrun_vs_single | random | 5 | 5 | 0.000536 | 0.000642 | 0.994 | 0.0529 | 0.121 | 1 / 1 |
+| perrun_vs_single | random | 10 | 5 | 0.000544 | 0.000663 | 0.981 | 0.127 | 0.26 | 1 / 1 |
+| perrun_vs_single | random | 20 | 5 | 0.000555 | 0.000814 | 0.975 | 0.106 | 0.141 | 0 / 0 |
+| perrun_vs_vk512 | chunk_starts | 5 | 5 | 0.368 | 0.59 | 0.806 | 4.32 | 10.4 | 1 / 1 |
+| perrun_vs_vk512 | chunk_starts | 10 | 5 | 0.26 | 0.42 | 0.831 | 3.72 | 7.36 | 1 / 1 |
+| perrun_vs_vk512 | chunk_starts | 20 | 5 | 0.194 | 0.309 | 0.844 | 0.833 | 1.58 | 1 / 1 |
+| perrun_vs_vk512 | random | 5 | 5 | 1.23 | 1.84 | 0.656 | 14.7 | 28.1 | 1 / 1 |
+| perrun_vs_vk512 | random | 10 | 5 | 1.17 | 1.78 | 0.675 | 14.1 | 27.5 | 1 / 1 |
+| perrun_vs_vk512 | random | 20 | 5 | 1.05 | 1.61 | 0.669 | 13.2 | 24.7 | 1 / 0 |
+| single_vs_vk512 | chunk_starts | 5 | 5 | 0.37 | 0.595 | 0.806 | 4.42 | 10.7 | 1 / 1 |
+| single_vs_vk512 | chunk_starts | 10 | 5 | 0.262 | 0.426 | 0.831 | 3.8 | 7.24 | 1 / 1 |
+| single_vs_vk512 | chunk_starts | 20 | 5 | 0.192 | 0.304 | 0.844 | 0.909 | 1.57 | 1 / 1 |
+| single_vs_vk512 | random | 5 | 5 | 1.24 | 1.84 | 0.656 | 14.7 | 28.1 | 1 / 1 |
+| single_vs_vk512 | random | 10 | 5 | 1.17 | 1.78 | 0.669 | 14.2 | 27.5 | 1 / 1 |
+| single_vs_vk512 | random | 20 | 5 | 1.05 | 1.6 | 0.681 | 13.3 | 24.6 | 1 / 0 |
 

@@ -1,0 +1,94 @@
+# provenance
+utc: 2026-11-02 15:39:42
+group: 8k-eval
+command: ChunkKvLab recompute --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --names afclaude,docagent,codesharp --corpus-dirs C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 --hashes 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938,5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7,bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb --contexts 1,1,0 --kept-dir C:\Development\ChunkedkvCache\experiments\corpus --mode unfiltered --context 8192 --max-rows 128 --label 8k-eval --out-dir C:\Development\ChunkedkvCache\experiments\G2-recompute-speed --repeats 1 --eval 1 --full-blocks 512
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX
+gpu: AMD Radeon(TM) 8060S Graphics, Windows driver 32.0.32015.7029; vulkaninfo: apiVersion=1.4.359; deviceName=AMD Radeon(TM) 8060S Graphics; driverName=AMD proprietary driver; driverInfo=26.10.1 (LLPC)
+gpu lock: HELD name='chunk-vulkan-t4' pid=4931 age=1s reason='ChunkedkvCache G2 recompute 8k-eval (Phase G Task 4), Qwen3-4B'
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-vulkan @ b3fd24a6efbca7a01f176c87e15801b4fbdbe9bd (branch feature/chunk-reuse-vulkan); dirty files: 0
+corpus afclaude: t8-corpus-AFClaude-b3f29c30-20261101111141 = git archive b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c of C:\Development\AFClaude; expected chunk-id sha256 (symbol-512) 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+corpus docagent: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 of C:\Development\CSharpDocAgentFrameworkMCP; expected chunk-id sha256 (symbol-512) 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+corpus codesharp: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 of C:\Development\codesharp; expected chunk-id sha256 (symbol-512) bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+power requests held: ExecutionRequired, SystemRequired, DisplayRequired
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on vulkan in 2.8 s; engine 0.3.0-dev.3644.22+b3fd24a6efbca7a01f176c87e15801b4fbdbe9bd
+vulkan device: AMD Radeon(TM) 8060S Graphics; eval on; single-pass row cap 128
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), symbol-512: 74 chunks, 12744 tokens (chunk tokens median 107, max 510); Decode(Encode(file)) == file for 9/9; 0.8 s
+chunk-id sha256 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+plans: 1 contexts, 4 tasks (unfiltered, seed 0, 2.9 s); mean context 8188 tokens, 58.0 chunks
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +1 s] full prefill block 512 rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +19 s] reference evaluation blocks
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +25 s] encode (host entries: forward + readback)
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +61 s] upload host entries into resident caches
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +77 s] naive evaluation blocks
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +85 s] control tail_ordinary: 128 rows at 8060.. rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +86 s] control tail_qpos: 128 rows at 8059.. rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +106 s] chunk_starts 5 % (409 rows, 57 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +130 s] chunk_starts 5 % (409 rows, 57 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +152 s] chunk_starts 5 %: evaluation blocks and single vs per-run K/V
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +211 s] chunk_starts 10 % (819 rows, 52 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +256 s] chunk_starts 10 % (819 rows, 52 runs) PerRun rep 0
+[heartbeat 2026-11-02 15:44:43 UTC, +5.0 min, 5.0 min since previous]
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +300 s] chunk_starts 10 %: evaluation blocks and single vs per-run K/V
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +365 s] chunk_starts 20 % (1638 rows, 46 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +460 s] chunk_starts 20 % (1638 rows, 46 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +562 s] chunk_starts 20 %: evaluation blocks and single vs per-run K/V
+[heartbeat 2026-11-02 15:49:43 UTC, +10.0 min, 5.0 min since previous]
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +619 s] random 5 % (409 rows, 386 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +650 s] random 5 % (409 rows, 386 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +686 s] random 5 %: evaluation blocks and single vs per-run K/V
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +744 s] random 10 % (819 rows, 736 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +804 s] random 10 % (819 rows, 736 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +875 s] random 10 %: evaluation blocks and single vs per-run K/V
+[heartbeat 2026-11-02 15:54:43 UTC, +15.0 min, 5.0 min since previous]
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +933 s] random 20 % (1638 rows, 1311 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +1053 s] random 20 % (1638 rows, 1311 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +1179 s] random 20 %: evaluation blocks and single vs per-run K/V
+[heartbeat 2026-11-02 15:59:43 UTC, +20.0 min, 5.0 min since previous]
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +1235 s] pair (d): full prefill in 128-row blocks
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +1282 s] pair (d): all 8188 positions recomputed single-pass in 128-row batches over 8189 rows
+[heartbeat 2026-11-02 16:04:43 UTC, +25.0 min, 5.0 min since previous]
+[heartbeat 2026-11-02 16:09:43 UTC, +30.0 min, 5.0 min since previous]
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 tasks 4] done in 1964 s; at 32.8 min
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 0.6 s
+chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+plans: 1 contexts, 1 tasks (unfiltered, seed 0, 2.1 s); mean context 8192 tokens, 66.0 chunks
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +0 s] full prefill block 512 rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +18 s] reference evaluation blocks
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +19 s] encode (host entries: forward + readback)
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +47 s] upload host entries into resident caches
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +59 s] naive evaluation blocks
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +62 s] control tail_ordinary: 128 rows at 8064.. rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +64 s] control tail_qpos: 128 rows at 8063.. rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +82 s] chunk_starts 5 % (410 rows, 65 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +110 s] chunk_starts 5 % (410 rows, 65 runs) PerRun rep 0
+[heartbeat 2026-11-02 16:14:43 UTC, +35.0 min, 5.0 min since previous]
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +132 s] chunk_starts 5 %: evaluation blocks and single vs per-run K/V
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +179 s] chunk_starts 10 % (819 rows, 61 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +234 s] chunk_starts 10 % (819 rows, 61 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +288 s] chunk_starts 10 %: evaluation blocks and single vs per-run K/V
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +329 s] chunk_starts 20 % (1638 rows, 58 runs) SinglePass rep 0
+[heartbeat 2026-11-02 16:19:43 UTC, +40.0 min, 5.0 min since previous]
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +436 s] chunk_starts 20 % (1638 rows, 58 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +537 s] chunk_starts 20 %: evaluation blocks and single vs per-run K/V
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +581 s] random 5 % (410 rows, 389 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +616 s] random 5 % (410 rows, 389 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +653 s] random 5 %: evaluation blocks and single vs per-run K/V
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +699 s] random 10 % (819 rows, 734 runs) SinglePass rep 0
+[heartbeat 2026-11-02 16:24:43 UTC, +45.0 min, 5.0 min since previous]
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +754 s] random 10 % (819 rows, 734 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +820 s] random 10 %: evaluation blocks and single vs per-run K/V
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +866 s] random 20 % (1638 rows, 1296 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +971 s] random 20 % (1638 rows, 1296 runs) PerRun rep 0
+[heartbeat 2026-11-02 16:29:43 UTC, +50.0 min, 5.0 min since previous]
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +1091 s] random 20 %: evaluation blocks and single vs per-run K/V
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +1133 s] pair (d): full prefill in 128-row blocks
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +1180 s] pair (d): all 8192 positions recomputed single-pass in 128-row batches over 8193 rows
+[heartbeat 2026-11-02 16:34:43 UTC, +55.0 min, 5.0 min since previous]
+[heartbeat 2026-11-02 16:39:43 UTC, +60.0 min, 5.0 min since previous]
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 tasks 1] done in 1816 s; at 63.2 min
+recompute 8k-eval: 2 contexts in 63.2 min -> C:\Development\ChunkedkvCache\experiments\G2-recompute-speed
+# exit code 0 after 63.4 min

@@ -13,9 +13,15 @@ prefill, and 20 % costs about 4x more, so chunk reuse with recompute cannot beat
 **Observed** (Qwen3-4B Q4_K_M, F32 KV, Radeon 8060S, driver 26.10.1; `ChunkKvLab recompute`, dotLLM `feature/chunk-reuse-vulkan`):
 - A single forward of k rows recomputed inside a 2K cache: ~15-17 ms per row (102 rows 1.6 s, 205 rows 3.4 s, 409 rows 7.1 s, 2045 rows
   30 s), linear in k. A full prefill of the 2045 rows (512- or 2048-row blocks, ordinary attention) takes 1.66 s, ~0.8 ms per row.
-- Control arm (same k rows, same forward shape and matmul regime, only the attention kernel differs): the k rows as the tail `[L-k, L)`
-  (ordinary kernel) vs one row earlier `[L-k-1, L-1)` (`ATTN_QPOS`): see the G2 README table "attention-kernel control".
-- 8K: see the G2 README (cost per row grows with the cache length).
+- Control arm: the same k rows, same forward shape and matmul regime; only the attention kernel differs. The k rows run as the tail
+  `[L-k, L)` (ordinary kernel) vs one row earlier `[L-k-1, L-1)` (`ATTN_QPOS`).
+- Control arm results:
+  - 2K: 410 rows, 0.51 s vs 11.4 s (22×).
+  - 8K: 128 rows, 0.68 s vs 18.5 s (27×).
+  - 16K: 64 rows, 0.88 s vs 68.4 s (78×).
+- Cost per (row × visible key) over 36 layers: ~15 µs at 2K, ~18 µs at 8K, ~65 µs at 16K. It grows faster than linearly past 8K.
+- Single submits of 30–68 s did not trigger a TDR reset (`TdrDelay` 10 s). A 64-row ATTN_QPOS forward at 16K already takes 68 s, so
+  long contexts need a split inside the forward or a faster kernel.
 
 **Likely cause (from the shader, not instrumented).** `attention_f32.glsl` with `ATTN_QPOS` dispatches one 256-thread workgroup per
 (query row, head) and streams the whole K and V of its KV head for every query row, with no reuse across the query rows (or the 4 query

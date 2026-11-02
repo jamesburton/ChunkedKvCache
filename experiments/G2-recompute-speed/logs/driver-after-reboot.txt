@@ -3,3 +3,7 @@ start 8k-timing-b (8k-b)
 8k-timing-b: exit 0 in 44.0 min
 [gpu-lock] acquired by 'chunk-vulkan-t4' (pid 4931): ChunkedkvCache G2 recompute 8k-eval (Phase G Task 4), Qwen3-4B
 start 8k-eval (8k-eval)
+8k-eval: exit 0 in 63.4 min
+[gpu-lock] acquired by 'chunk-vulkan-t4' (pid 20656): ChunkedkvCache G2 recompute 16k-point (Phase G Task 4), Qwen3-4B
+start 16k-point (16k)
+16k-point: exit 0 in 2.3 min

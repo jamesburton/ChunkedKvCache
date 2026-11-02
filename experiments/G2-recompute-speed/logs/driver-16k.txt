@@ -1,0 +1,3 @@
+[gpu-lock] acquired by 'chunk-vulkan-t4' (pid 20928): ChunkedkvCache G2 recompute 16k-point (Phase G Task 4), Qwen3-4B
+start 16k-point (16k)
+16k-point: exit 0 in 15.3 min
