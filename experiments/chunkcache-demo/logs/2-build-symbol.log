@@ -1,0 +1,28 @@
+== 2-build-symbol : chunkcache build --store C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\demo-store --solution C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx --configuration Release --symbol ChunkIndex.Update --hops 2 --budget 24000 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --threads 8
+model Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf: Qwen, 36 layers, 8192 B/token/layer; id 383e0dc94d87; fingerprint 0921b80ed9e7 [0.4 s]
+solution C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx (Configuration=Release): 29 projects, 0 skipped, 2622 files (88 generated), 2534 authored files indexed; root C:\Development\dotLLM\.claude\worktrees\chunk-cache [21.8 s]
+waiting up to 30 s for the store lock ...
+index index-symbol-512.ba7b72752ab0.json: 2534 files, 40029 chunks (37211 distinct keys, 8044994 tokens); added 40029, removed 0, unchanged 0; 37211 distinct chunks missing from the store [35.0 s]
+selection: 81 chunks / 23708 tokens selected (389 trimmed); 81 of them missing [71.1 s]
+to encode: 81 chunks, 23708 tokens, about 6.51 GiB (8192 B/token/layer x 36 layers, F32); the whole tree would need about 2.11 TiB
+  encoded 3/81 chunks, 1142 tokens, 70 tokens/s, ~5.4 min left
+  encoded 8/81 chunks, 2483 tokens, 73 tokens/s, ~4.9 min left
+  encoded 15/81 chunks, 3607 tokens, 72 tokens/s, ~4.6 min left
+  encoded 21/81 chunks, 4681 tokens, 72 tokens/s, ~4.4 min left
+  encoded 25/81 chunks, 6065 tokens, 71 tokens/s, ~4.2 min left
+  encoded 29/81 chunks, 7574 tokens, 71 tokens/s, ~3.8 min left
+  encoded 32/81 chunks, 8857 tokens, 70 tokens/s, ~3.5 min left
+  encoded 39/81 chunks, 9913 tokens, 70 tokens/s, ~3.3 min left
+  encoded 48/81 chunks, 11087 tokens, 70 tokens/s, ~3.0 min left
+  encoded 51/81 chunks, 12554 tokens, 70 tokens/s, ~2.7 min left
+  encoded 54/81 chunks, 13674 tokens, 70 tokens/s, ~2.4 min left
+  encoded 58/81 chunks, 14877 tokens, 70 tokens/s, ~2.1 min left
+  encoded 61/81 chunks, 15908 tokens, 69 tokens/s, ~1.9 min left
+  encoded 64/81 chunks, 17209 tokens, 69 tokens/s, ~1.6 min left
+  encoded 68/81 chunks, 18347 tokens, 68 tokens/s, ~1.3 min left
+  encoded 71/81 chunks, 19443 tokens, 68 tokens/s, ~1.1 min left
+  encoded 74/81 chunks, 20604 tokens, 67 tokens/s, ~0.8 min left
+  encoded 77/81 chunks, 21686 tokens, 67 tokens/s, ~0.5 min left
+  encoded 79/81 chunks, 22686 tokens, 67 tokens/s, ~0.3 min left
+  encoded 81/81 chunks, 23708 tokens, 66 tokens/s, ~0.0 min left
+exit 0 in 490.9 s

@@ -1,0 +1,3 @@
+== 5-status : chunkcache status --store C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\demo-store --no-scan --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --threads 8
+model Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf: Qwen, 36 layers, 8192 B/token/layer; id 383e0dc94d87; fingerprint 0921b80ed9e7 [0.4 s]
+exit 0 in 1.6 s

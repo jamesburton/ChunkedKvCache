@@ -1,0 +1,17 @@
+{
+  "total_chunks": 40029,
+  "missing_chunks": 39948,
+  "missing_tokens": 8021286,
+  "up_to_date": false,
+  "stale_files": [],
+  "new_files": [],
+  "deleted_files": [],
+  "store_bytes": 8152403216,
+  "entries": 89,
+  "temp_files": 0,
+  "temp_bytes": 0,
+  "scanned": false,
+  "index_path": "C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\demo-store\\index-symbol-512.ba7b72752ab0.json",
+  "root": "C:\\Development\\dotLLM\\.claude\\worktrees\\chunk-cache",
+  "chunker": "symbol-512"
+}

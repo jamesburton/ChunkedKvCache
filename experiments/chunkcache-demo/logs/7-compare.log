@@ -1,0 +1,42 @@
+== 7-compare : chunkcache compare --task C:\Development\ChunkedkvCache\experiments\chunkcache-demo\logs\task.json --store C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\demo-store --chunkers symbol,fixed --selectors chunkstarts,queryrelevance,hybrid --budgets 5,10,20 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --threads 8
+model Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf: Qwen, 36 layers, 8192 B/token/layer; id 383e0dc94d87; fingerprint 0921b80ed9e7 [0.5 s]
+recompute path: cpu-per-run (CPU, one Forward per contiguous run of selected positions (SelectiveRecomputer); scattered selections pay one trunk pass per run); full prefill path: cpu-prefill (blocks of 512)
+solution C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx (Configuration=Release): 29 projects, 0 skipped, 2622 files (88 generated), 2534 authored files indexed; root C:\Development\dotLLM\.claude\worktrees\chunk-cache [21.7 s]
+symbol-512: context 15 chunks / 3870 tokens (selection 15 chunks, trimmed 29); query 225 tokens; continuation 13 tokens (from the task) [84.8 s]
+symbol-512: 11 arms in 356.0 s
+fixed-512: context 8 chunks / 3935 tokens (selection 8 chunks, trimmed 30); query 225 tokens; continuation 13 tokens (from the task) [39.6 s]
+fixed-512: 11 arms in 376.5 s
+compare buildcommand-update-call
+  full prefill: path cpu-prefill (CPU forward over the context then the query, blocks of 512 tokens)
+  reuse: store read + RoPE assembly, scoring, recompute on path cpu-per-run (CPU, one Forward per contiguous run of selected positions (SelectiveRecomputer); scattered selections pay one trunk pass per run), then the query
+  symbol-512: 15 chunks, 3870 context tokens, query 225, continuation 13 (task); store hits 15, misses 0; full prefill 146741 ms; reference EM no
+  fixed-512: 8 chunks, 3935 context tokens, query 225, continuation 13 (task); store hits 8, misses 0; full prefill 132270 ms; reference EM no
+
+| chunker    | arm            | budget | recomputed | calls |        KL | top-1 |  EM |  reuse ms |   full ms | speedup | path        |
+|------------|----------------|--------|------------|-------|-----------|-------|-----|-----------|-----------|---------|-------------|
+| symbol-512 | full           |   100% |       3870 |     0 |    0.0000 |  1.00 |  no |    146741 |    146741 |   1.00x | cpu-prefill |
+| symbol-512 | naive          |     0% |          0 |     0 |    0.2395 |  0.92 |  no |     11880 |    146741 |  12.35x | -           |
+| symbol-512 | chunkstarts    |     5% |        194 |    14 |    0.0433 |  1.00 |  no |     19420 |    146741 |   7.56x | cpu-per-run |
+| symbol-512 | chunkstarts    |    10% |        387 |    13 |    0.0383 |  1.00 |  no |     24709 |    146741 |   5.94x | cpu-per-run |
+| symbol-512 | chunkstarts    |    20% |        774 |    10 |    0.0303 |  1.00 |  no |     31724 |    146741 |   4.63x | cpu-per-run |
+| symbol-512 | queryrelevance |     5% |        194 |   139 |    0.0499 |  1.00 |  no |     81973 |    146741 |   1.79x | cpu-per-run |
+| symbol-512 | queryrelevance |    10% |        387 |   234 |    0.0244 |  1.00 |  no |     84744 |    146741 |   1.73x | cpu-per-run |
+| symbol-512 | queryrelevance |    20% |        774 |   369 |    0.0243 |  1.00 |  no |    106794 |    146741 |   1.37x | cpu-per-run |
+| symbol-512 | hybrid         |     5% |        194 |    11 |    0.2063 |  0.92 |  no |     53608 |    146741 |   2.74x | cpu-per-run |
+| symbol-512 | hybrid         |    10% |        387 |   160 |    0.1782 |  0.92 |  no |     67917 |    146741 |   2.16x | cpu-per-run |
+| symbol-512 | hybrid         |    20% |        774 |   352 |    0.0189 |  1.00 |  no |     99400 |    146741 |   1.48x | cpu-per-run |
+| fixed-512  | full           |   100% |       3935 |     0 |    0.0000 |  1.00 |  no |    132270 |    132270 |   1.00x | cpu-prefill |
+| fixed-512  | naive          |     0% |          0 |     0 |    0.3113 |  0.92 |  no |     12091 |    132270 |  10.94x | -           |
+| fixed-512  | chunkstarts    |     5% |        197 |     7 |    0.1155 |  1.00 |  no |     17893 |    132270 |   7.39x | cpu-per-run |
+| fixed-512  | chunkstarts    |    10% |        394 |     7 |    0.0876 |  1.00 |  no |     23683 |    132270 |   5.58x | cpu-per-run |
+| fixed-512  | chunkstarts    |    20% |        787 |     7 |    0.1305 |  0.92 |  no |     41204 |    132270 |   3.21x | cpu-per-run |
+| fixed-512  | queryrelevance |     5% |        197 |   137 |    0.1021 |  1.00 |  no |     60630 |    132270 |   2.18x | cpu-per-run |
+| fixed-512  | queryrelevance |    10% |        394 |   231 |    0.0625 |  1.00 |  no |     70773 |    132270 |   1.87x | cpu-per-run |
+| fixed-512  | queryrelevance |    20% |        787 |   363 |    0.0468 |  1.00 |  no |    108505 |    132270 |   1.22x | cpu-per-run |
+| fixed-512  | hybrid         |     5% |        197 |    12 |    0.3021 |  0.92 |  no |     55250 |    132270 |   2.39x | cpu-per-run |
+| fixed-512  | hybrid         |    10% |        394 |    92 |    0.2471 |  0.92 |  no |     62383 |    132270 |   2.12x | cpu-per-run |
+| fixed-512  | hybrid         |    20% |        787 |   305 |    0.0399 |  1.00 |  no |    103055 |    132270 |   1.28x | cpu-per-run |
+
+  reuse ms = assembly (store read + RoPE) + scoring + selection + recompute + query prefill; full ms = context + query prefill.
+  On CPU the recompute is per run (cpu-per-run): scattered selections pay one forward per run, so reuse can be slower than full prefill here.
+exit 0 in 1230.2 s

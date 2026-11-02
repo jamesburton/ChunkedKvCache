@@ -1,0 +1,43 @@
+== 2026-11-02 20:39:32 mutants in C:/Users/james/AppData/Local/Temp/t7m
+pristine: PASS []
+M1 KILLED: encoding driven by the diff, not Status; failing: Build_MaxChunks_EncodesAtMostN_StatusListsTheRest
+M2 KILLED: build takes no lock; failing: Lock_ConcurrentBuildAndEvict_LeaveTheStoreComplete, Lock_HeldByAnotherWriter_BuildAndEvictApplyFail_DryRunsDoNot, Lock_BuildHoldsItFromIndexSaveThroughEncoding
+M3 KILLED: build releases the lock after saving the index; failing: Lock_BuildHoldsItFromIndexSaveThroughEncoding
+M4 KILLED: --strict ignored; failing: Build_SkippedProject_ExitsNonZeroOnlyWithStrictFlag
+M5 KILLED: extra target framework fails --strict; failing: Build_SkippedProject_ExitsNonZeroOnlyWithStrictFlag
+M6 KILLED: dry run saves the index; failing: Build_DryRun_WritesNothing_AndEstimatesFromTheModelGeometry
+M7 KILLED: --max-chunks off by one; failing: Build_MaxChunks_EncodesAtMostN_StatusListsTheRest
+M8 KILLED: other root accepted silently; failing: Build_OtherTreeRoot_IsRefusedWithoutReroot
+M9 KILLED: selection does not restrict encoding; failing: Build_WithSelection_EncodesOnlySelectedChunks_ButIndexesTheTree, Select_PathSymbolBudget_AndStoredFlags
+M10 KILLED: estimate counts K only; failing: Build_DryRun_WritesNothing_AndEstimatesFromTheModelGeometry
+M11 KILLED: compilations not re-keyed when the root widens; failing: Select_CrossProjectSymbol_OnASolutionWhoseRootWidens
+M12 KILLED: one index per chunker (not per model); failing: Evict_AllForModel_RemovesOnlyThatModelsEntriesAndIndexes, Evict_Apply_KeepsEntriesReferencedByAnyIndex
+M13 KILLED: orphans ignore the oldest index; failing: Evict_DryRun_DoesNotDelete_ApplyDeletesOnlyOrphans, Evict_Apply_KeepsEntriesReferencedByAnyIndex
+M14 KILLED: dry run deletes; failing: Evict_DryRun_DoesNotDelete_ApplyDeletesOnlyOrphans, Evict_AllForModel_RemovesOnlyThatModelsEntriesAndIndexes
+M15 KILLED: --all-for-model takes every entry; failing: Evict_AllForModel_RemovesOnlyThatModelsEntriesAndIndexes
+M16 KILLED: --all-for-model keeps the index files; failing: Evict_AllForModel_RemovesOnlyThatModelsEntriesAndIndexes
+M17 KILLED: evict --apply takes no lock; failing: Lock_ConcurrentBuildAndEvict_LeaveTheStoreComplete, Lock_HeldByAnotherWriter_BuildAndEvictApplyFail_DryRunsDoNot, Lock_BuildHoldsItFromIndexSaveThroughEncoding
+M18 KILLED: status --strict never fails; failing: Build_MaxChunks_EncodesAtMostN_StatusListsTheRest, Status_AfterEdit_ListsTheStaleFile_AndARebuildEncodesOnlyItsChangedChunks
+M19 KILLED: status ignores the rescan; failing: Status_AfterEdit_ListsTheStaleFile_AndARebuildEncodesOnlyItsChangedChunks
+M20 KILLED: select: stored always true; failing: Select_PathSymbolBudget_AndStoredFlags
+M21 SURVIVED: select: --order rank ignored; failing: 
+M22 KILLED: wire hash over UTF-16; failing: Select_PathSymbolBudget_AndStoredFlags
+M23 KILLED: KL direction swapped; failing: Compare_Metrics_KlIsReferenceToArm_Top1AndLineRange
+M24 KILLED: recompute only the first selected position; failing: Compare_PrintsTheTable_NamesThePathOfEachTiming_AndFullRecomputeEqualsFullPrefill
+M25 BUILD-ERROR: compare writes misses to the store; failing: C:\Users\james\AppData\Local\Temp\t7m\tools\DotLLM.ChunkCache\CompareCommand.cs(200,111): error CS1503: Argument 7: cannot convert from 'DotLLM.ChunkReuse.Store.FileChunkStore' to 'DotLLM.ChunkCache.ReadOnlyChunkStore'
+M26 KILLED: arms reuse the previous arm's recomputed cache; failing: Compare_PrintsTheTable_NamesThePathOfEachTiming_AndFullRecomputeEqualsFullPrefill
+M27 KILLED: list options not split on commas; failing: Compare_PrintsTheTable_NamesThePathOfEachTiming_AndFullRecomputeEqualsFullPrefill
+M28 KILLED: usage errors exit 1; failing: Compare_BadTaskOrSelector_IsAUsageError, Usage_ExitCodes
+M29 KILLED: busy lock exits 2; failing: Lock_HeldByAnotherWriter_BuildAndEvictApplyFail_DryRunsDoNot, Lock_BuildHoldsItFromIndexSaveThroughEncoding
+M30 KILLED: header fingerprint misread; failing: Evict_AllForModel_RemovesOnlyThatModelsEntriesAndIndexes
+M31 KILLED: wire-eligibility inverted; failing: Build_EncodesEveryMissingChunk_StoreMatchesIndex
+M32 KILLED: relative paths against the process directory; failing: Paths_SpacesNonAsciiAndRelativeStore
+M33 SURVIVED: arm exact match read from the reference rows; failing: 
+M34 SURVIVED: unattributed load failures do not fail --strict; failing: 
+M35 KILLED: estimate without headers; failing: Build_DryRun_WritesNothing_AndEstimatesFromTheModelGeometry
+pristine after: PASS []
+== 2026-11-02 21:09:59 mutants in C:/Users/james/AppData/Local/Temp/t7m
+pristine: PASS []
+M21 KILLED: select: --order rank ignored; failing: Select_PathSymbolBudget_AndStoredFlags
+M25 KILLED: compare writes misses to the store; failing: Compare_ColdStore_EncodesMissesInMemory_AndWritesNothing
+pristine after: PASS []

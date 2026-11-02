@@ -1,0 +1,18 @@
+{
+  "select": {
+    "exclude": [
+      "tools/DotLLM.ChunkCache/BuildCommand.cs"
+    ],
+    "budget": 4096,
+    "hops": 1,
+    "symbol": "ChunkIndex.Update"
+  },
+  "continuation": "        IndexDiff diff = index.Update(tree.Files, chunker);\n",
+  "continuation_tokens": 16,
+  "query_from": {
+    "start_line": 155,
+    "end_line": 166,
+    "path": "tools/DotLLM.ChunkCache/BuildCommand.cs"
+  },
+  "name": "buildcommand-update-call"
+}

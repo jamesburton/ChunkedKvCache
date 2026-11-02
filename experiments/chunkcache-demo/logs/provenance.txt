@@ -1,0 +1,1 @@
+provenance: solution C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx; dotLLM commit 94ed86302dba5bfded73956966b8c5a4f196f64f dirty=0; model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf; threads 8; 2026-11-02T20:02:01.8912455+00:00

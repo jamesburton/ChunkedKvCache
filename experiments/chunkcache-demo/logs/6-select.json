@@ -1,0 +1,278 @@
+{
+  "chunks": [
+    {
+      "id": "src/DotLLM.ChunkReuse/Corpus/Chunk.cs:1-6@0",
+      "path": "src/DotLLM.ChunkReuse/Corpus/Chunk.cs",
+      "start_line": 1,
+      "end_line": 6,
+      "tokens": 101,
+      "hash": "sha256:5001ae19abc805367d8a075eff1bb32e62a5af62035fd90c205785f9e960c3fb",
+      "reason": "callee",
+      "detail": "referenced by hop-0 chunks (hop 1, 13 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "callee"
+      ],
+      "priority": 599,
+      "key": "f6d906a25c16eae1b43406d341f5768d8db9fc4a65b8e86919dfc54d95b64ad8"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Corpus/Chunk.cs:30-35@1634",
+      "path": "src/DotLLM.ChunkReuse/Corpus/Chunk.cs",
+      "start_line": 30,
+      "end_line": 35,
+      "tokens": 69,
+      "hash": "sha256:e51b565161a4218298b91c7db1689b28b296e9136fdd4f55fd5fbb9a5196c857",
+      "reason": "callee",
+      "detail": "referenced by hop-0 chunks (hop 1, 4 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "callee"
+      ],
+      "priority": 599,
+      "key": "228c21bcf453e4673d9ff514367f262a6dead64d5f3cbaa72e6f4101f90a5e7d"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:17-37@663",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs",
+      "start_line": 17,
+      "end_line": 37,
+      "tokens": 361,
+      "hash": "sha256:1fe227eb04deafed70d4b86a6e2081e80b0b1b6758d996dd02b102dbd4133390",
+      "reason": "callee",
+      "detail": "referenced by hop-0 chunks (hop 1, 4 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "callee"
+      ],
+      "priority": 599,
+      "key": "bd2db893dfdb0bd059775efce91117dc1559aa45a570a8692185f564ce10f01f"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:156-168@8897",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs",
+      "start_line": 156,
+      "end_line": 168,
+      "tokens": 146,
+      "hash": "sha256:9c62ad0ede08e39073fe93fe5f1d60ea47cf1501a439ad2812d0ac42ee7be6f2",
+      "reason": "callee",
+      "detail": "referenced by hop-0 chunks (hop 1, 10 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "callee"
+      ],
+      "priority": 599,
+      "key": "89725ef0c5dc9f8e4580f626c2ba872bb4ef4a4dcad2a4df9c5692360951d4b3"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:178-180@9942",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs",
+      "start_line": 178,
+      "end_line": 180,
+      "tokens": 46,
+      "hash": "sha256:0c017f8625762f8358a6a8e9a45b9d1e625b99b7e458a6947b32578f72165b5a",
+      "reason": "callee",
+      "detail": "referenced by hop-0 chunks (hop 1, 3 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "callee"
+      ],
+      "priority": 599,
+      "key": "678c7733e6d71caa76ccfbe9061f69799bfb338964fa4b64a5e26d41a6b2758a"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:352-388@20342",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs",
+      "start_line": 352,
+      "end_line": 388,
+      "tokens": 486,
+      "hash": "sha256:0088ce776d40c72c715be9c684a6d7497528360a64f513f075ead2677668296a",
+      "reason": "definition",
+      "detail": "definition of DotLLM.ChunkReuse.Store.ChunkIndex.Update",
+      "hop": 0,
+      "stored": true,
+      "reasons": [
+        "definition"
+      ],
+      "priority": 1000,
+      "key": "6f57eb1d68d760c85b7c493f0e5f1df66e2d88c68fbd35dd46dcbd2432b86214"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:389-438@22519",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs",
+      "start_line": 389,
+      "end_line": 438,
+      "tokens": 503,
+      "hash": "sha256:6dde262a407ff136ad45c8b756a9633b65b031d22dfb55cc2f8bc8e267aa99a4",
+      "reason": "definition_body",
+      "detail": "body of DotLLM.ChunkReuse.Store.ChunkIndex.Update",
+      "hop": 0,
+      "stored": true,
+      "reasons": [
+        "definition_body"
+      ],
+      "priority": 900,
+      "key": "843b152a6d70d3cef7c4fd52776400d0369e96297de308e04aeb6038b94eefab"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:439-459@24878",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs",
+      "start_line": 439,
+      "end_line": 459,
+      "tokens": 184,
+      "hash": "sha256:3cb51031139bc3c6d6879b389116323a1dd54dcc0d96feec8e8c6953a827e35a",
+      "reason": "definition_body",
+      "detail": "body of DotLLM.ChunkReuse.Store.ChunkIndex.Update",
+      "hop": 0,
+      "stored": true,
+      "reasons": [
+        "definition_body"
+      ],
+      "priority": 900,
+      "key": "e2fa8f109fcd2e44cb33ed728753da9532f5feec096261daac277691f9c008c7"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:830-831@45286",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs",
+      "start_line": 830,
+      "end_line": 831,
+      "tokens": 22,
+      "hash": "sha256:1b5b8111a4502ecef290a5a056f43f47b6c678668e22f7020f11c163704c16f5",
+      "reason": "callee",
+      "detail": "referenced by hop-0 chunks (hop 1, 13 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "callee"
+      ],
+      "priority": 599,
+      "key": "31a2172103ea7d599f3373cef8b80b8b555423823063442dc66e76fe89a352b6"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Store/ChunkRef.cs:45-49@2463",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkRef.cs",
+      "start_line": 45,
+      "end_line": 49,
+      "tokens": 58,
+      "hash": "sha256:d4263d020a35175a978388cc96a1a21c36edcd8686ba2de3496ea730934fd37d",
+      "reason": "callee",
+      "detail": "referenced by hop-0 chunks (hop 1, 16 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "callee"
+      ],
+      "priority": 599,
+      "key": "ca3a2674cff7f4ff9f0b942d821a100b9ab94bb4ff5fb126aa96158dc194339c"
+    },
+    {
+      "id": "src/DotLLM.ChunkReuse/Store/ChunkRef.cs:52-54@2858",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkRef.cs",
+      "start_line": 52,
+      "end_line": 54,
+      "tokens": 37,
+      "hash": "sha256:3ce8e7112ed9fcf3188716a5a502b10ba0765d3e461d94d8240c16e0defd29dc",
+      "reason": "callee",
+      "detail": "referenced by hop-0 chunks (hop 1, 4 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "callee"
+      ],
+      "priority": 599,
+      "key": "726acc161ec8586acf8582557b292b6d927cec1b25644a00e78fe36360276e7c"
+    },
+    {
+      "id": "tests/DotLLM.Tests.Unit/ChunkReuse/ChunkIndexTests.cs:102-133@4317",
+      "path": "tests/DotLLM.Tests.Unit/ChunkReuse/ChunkIndexTests.cs",
+      "start_line": 102,
+      "end_line": 133,
+      "tokens": 458,
+      "hash": "sha256:30ed2ef21bf09af68da7b7f753e37824a756860d6247119e30b1d252df4d300a",
+      "reason": "caller",
+      "detail": "references hop-0 chunks (hop 1, 4 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "caller"
+      ],
+      "priority": 599,
+      "key": "449e8fd7621bd641f18d4b14f000032349e85c05472c1b63c894860cf9d7f057"
+    },
+    {
+      "id": "tests/DotLLM.Tests.Unit/ChunkReuse/ChunkIndexTests.cs:175-211@8486",
+      "path": "tests/DotLLM.Tests.Unit/ChunkReuse/ChunkIndexTests.cs",
+      "start_line": 175,
+      "end_line": 211,
+      "tokens": 509,
+      "hash": "sha256:4d9762428ada67e9160f471734797b71ced62c395509772d43f3a0978bd9c972",
+      "reason": "caller",
+      "detail": "references hop-0 chunks (hop 1, 3 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "caller"
+      ],
+      "priority": 599,
+      "key": "788b8e7efae6ee0771834d71a430a086e08d74bee9f3a13d1408f8ff6df7546f"
+    },
+    {
+      "id": "tests/DotLLM.Tests.Unit/ChunkReuse/ChunkIndexTests.cs:214-256@10554",
+      "path": "tests/DotLLM.Tests.Unit/ChunkReuse/ChunkIndexTests.cs",
+      "start_line": 214,
+      "end_line": 256,
+      "tokens": 476,
+      "hash": "sha256:f669d00c5f96553c8f34c8429ddf67475554184942f4c70e00d1eb446be9dbc5",
+      "reason": "caller",
+      "detail": "references hop-0 chunks (hop 1, 4 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "caller"
+      ],
+      "priority": 599,
+      "key": "9e17cf2ff17809a879b2b8b61e684d2d6e7410e968d8fea80c23d612e8cbccae"
+    },
+    {
+      "id": "tests/DotLLM.Tests.Unit/ChunkReuse/ChunkIndexTests.cs:620-648@31149",
+      "path": "tests/DotLLM.Tests.Unit/ChunkReuse/ChunkIndexTests.cs",
+      "start_line": 620,
+      "end_line": 648,
+      "tokens": 414,
+      "hash": "sha256:79adbbc65af5069f5a525bbe76839f110b205dead5e05f7a625e3b296849407a",
+      "reason": "caller",
+      "detail": "references hop-0 chunks (hop 1, 7 edges)",
+      "hop": 1,
+      "stored": true,
+      "reasons": [
+        "caller"
+      ],
+      "priority": 599,
+      "key": "5bd81cc9d3ad8e26f14bf2464ba315dc6dfd8175ce825dc62d0d479cbbf5f3aa"
+    }
+  ],
+  "selected_tokens": 3870,
+  "candidate_tokens": 12207,
+  "trimmed": 29,
+  "unmatched_patterns": [],
+  "notes": [],
+  "unmatched_changed_files": [],
+  "symbol_definitions": [
+    {
+      "qualified_name": "DotLLM.ChunkReuse.Store.ChunkIndex.Update",
+      "kind": "method",
+      "path": "src/DotLLM.ChunkReuse/Store/ChunkIndex.cs",
+      "line": 365
+    }
+  ],
+  "order": "document",
+  "root": "C:\\Development\\dotLLM\\.claude\\worktrees\\chunk-cache",
+  "chunker": "symbol-512",
+  "stored_chunks": 15,
+  "elapsed_ms": 96409
+}

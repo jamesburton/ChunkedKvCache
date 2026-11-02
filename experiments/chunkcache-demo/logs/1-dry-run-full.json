@@ -1,0 +1,184 @@
+{
+  "files": 2534,
+  "chunks": 40029,
+  "tokens": 8044994,
+  "denied_files": 0,
+  "added": 40029,
+  "removed": 0,
+  "unchanged": 0,
+  "encode_queued_tokens": 7877157,
+  "skipped_projects": [],
+  "elapsed_ms": 59556,
+  "dry_run": true,
+  "strict_failed": false,
+  "store": "C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\demo-store\\dry",
+  "root": "C:\\Development\\dotLLM\\.claude\\worktrees\\chunk-cache",
+  "index_path": "C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\demo-store\\dry\\index-symbol-512.ba7b72752ab0.json",
+  "chunker": "symbol-512",
+  "model_id": "gguf-sha256:383e0dc94d87e73eb6a4557b5f4a2b4b13cc3e1768fccf2baee379da8337ee0f",
+  "fingerprint": "0921b80ed9e72f6a9291d310004f3bea9943156ecc4b8cedfd58b8c052c0cb89",
+  "distinct_keys": 37211,
+  "distinct_tokens": 7877157,
+  "already_stored": 0,
+  "selected_for_encoding": 37211,
+  "to_encode_chunks": 37211,
+  "encoded_chunks": 0,
+  "encoded_tokens": 0,
+  "store_hits": 0,
+  "store_failures": 0,
+  "encode_ms": 0,
+  "tokens_per_second": 0,
+  "missing_after": 40029,
+  "missing_tokens_after": 8044994,
+  "estimated_bytes": 2323116453184,
+  "estimated_full_store_bytes": 2323116453184,
+  "bytes_per_token_per_layer": 8192,
+  "layers": 36,
+  "store_entries": 0,
+  "store_bytes": 0,
+  "scan_ms": 23085.8731,
+  "index_ms": 35138.8774,
+  "would_encode": [
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 1,
+      "end_line": 10,
+      "tokens": 123,
+      "key": "078f79c99b2940d8899af16094572004b4d2e643394d45f055bc2b3e9a19d4a0"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 11,
+      "end_line": 21,
+      "tokens": 238,
+      "key": "c262c962d3d2df247889104e62c4bbe53b8fa3807b86893fe05d1671f08a5a7e"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 22,
+      "end_line": 31,
+      "tokens": 96,
+      "key": "98ab514d15f0ce8ec935c76caf95f7a7d36989d3c98bcaabeff6e7d14a691796"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 32,
+      "end_line": 48,
+      "tokens": 187,
+      "key": "4d0b0dce31b0af08acb491aacb514092b0697b9b6142b38dff7bcc752bcf9041"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 49,
+      "end_line": 62,
+      "tokens": 196,
+      "key": "ec16b55f9361accc4ef2aa7a48bad01b14995a7cb85432b97d3b0457e1a713b0"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 63,
+      "end_line": 65,
+      "tokens": 21,
+      "key": "9ff0c2bbbf850585439d3c4b0b5fff0c30ece0e756d191bcc556a94a6f93c1c1"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 66,
+      "end_line": 68,
+      "tokens": 28,
+      "key": "b119ef4e5a02726b5ae9bbb8510bedd6c40c1fb711142aca917ec9e42d00acaa"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 69,
+      "end_line": 71,
+      "tokens": 23,
+      "key": "4a50b21246b58b8b3937c496ffa558f106949e023584b3981651693dfe6f7b83"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 72,
+      "end_line": 87,
+      "tokens": 168,
+      "key": "e165edfd5b8e796fec0ed46392f5d8a0cb0cb3d4e36e08170810a74741c5f952"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 88,
+      "end_line": 126,
+      "tokens": 504,
+      "key": "83034ea1c426556cb1a332e3730de5fd2ec68fc474de14d1a40e3b47831b2323"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/ContextBuilder.cs",
+      "start_line": 127,
+      "end_line": 139,
+      "tokens": 97,
+      "key": "7e7515297faf0d23dbc37d7cecbec9e51cd03f570737a331e834f9e6eae03a32"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/E1Runner.cs",
+      "start_line": 1,
+      "end_line": 11,
+      "tokens": 88,
+      "key": "813f2cc5007e41bdc299e3a7eecde82c1d5025cb376dd2369d096ccd44fe4b53"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/E1Runner.cs",
+      "start_line": 12,
+      "end_line": 21,
+      "tokens": 98,
+      "key": "767e22e98d994cf1e02def4c7c0f860ff3d4875656f818b6a3966209b37e49ca"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/E1Runner.cs",
+      "start_line": 22,
+      "end_line": 53,
+      "tokens": 502,
+      "key": "b08883f435e1dd666b30a62397a1aef6462830d3cf7a4158f511affe8723fcfe"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/E1Runner.cs",
+      "start_line": 54,
+      "end_line": 92,
+      "tokens": 487,
+      "key": "f159f4093c846d596e33477536a323d8f5e5d1088360d8fef89afeeffa9378ac"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/E1Runner.cs",
+      "start_line": 93,
+      "end_line": 99,
+      "tokens": 86,
+      "key": "48925276ae6c912be1c7bfa01c183a9be0d511cd18dbd7d823a2ff1b8d42289e"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/E1Runner.cs",
+      "start_line": 100,
+      "end_line": 102,
+      "tokens": 53,
+      "key": "b2447ca53ac32670e630b90e3beb57b078a060286764eed2e341085eb168f51c"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/E1Runner.cs",
+      "start_line": 103,
+      "end_line": 121,
+      "tokens": 256,
+      "key": "94d2ad6deffcf1dd943ca63725014cfe0efeea08748b3c3de7f8f07a30df4233"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/E1Runner.cs",
+      "start_line": 122,
+      "end_line": 144,
+      "tokens": 421,
+      "key": "02b19dfaa363780d60b9937645278e3a34edfda7e2667f4da671239b8a7f0c4f"
+    },
+    {
+      "path": "benchmarks/ChunkKvLab/E1Runner.cs",
+      "start_line": 145,
+      "end_line": 148,
+      "tokens": 128,
+      "key": "f1f936a689945641bf3a045374579d11a84f6ca03428cabcf93e550c9f51a5ab"
+    }
+  ],
+  "would_encode_truncated_from": 37211
+}
