@@ -144,3 +144,95 @@ and the pristine tests passed after every round. **All 30 distinct compiled muta
    when the root widens.
 6. **Line endings:** my new files are LF in the working tree; git converts them to CRLF on checkout, as the warnings show.
    The content is unchanged.
+
+---
+
+## Fix round (review `review-task6-report.md`)
+
+**Status: DONE.** All six should-fixes and the nits are addressed.
+
+The box rebooted mid-round. The uncommitted work survived intact; I rebuilt, retested and committed it.
+
+### dotLLM commits (`feature/chunk-cache`, not pushed)
+
+- `2948d9c4`: the fixes.
+- `1f87c375`: a hub test for the per-hop cap, added after mutants F13 and F14 survived.
+
+### Should-fixes
+
+- **S1: links.**
+  - `GitCliInfo` builds the top level from the working directory plus `rev-parse --show-cdup`, so changed paths keep the
+    caller's spelling through a junction, symlink or `subst` drive. Before, `--show-toplevel` resolved the link.
+  - `ContextSelector` also maps a resolved path against the link-resolved root (`ResolveLinks`), for other `IGitInfo`
+    implementations.
+  - Tests use real junctions (symlinks off Windows; skipped if a link cannot be created) for both mechanisms.
+- **S2: git version.**
+  - `--end-of-options` is passed only for git 2.30 or later. The version comes from `GitVersion` (`git version`, parsed by
+    `ParseVersion`) and is applied by `RevParseArguments`.
+  - Older or unrecognised git still works safely, because refs starting with `-` are rejected first.
+  - README: git 2.30 or later is recommended.
+- **S3: environment.** Every inherited `GIT_*` variable is removed (`SanitizeEnvironment`). A non-parallel test sets
+  `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` and `GIT_CEILING_DIRECTORIES` to another repository; there is also a unit
+  test on a dictionary.
+- **S4: Exclude.** Tested in the path loop and in the changed-file loop. Excluded changed files are listed in a note.
+- **S5: merge base.**
+  - New `SelectionRequest.ChangedSinceMergeBase` and `IGitInfo.ChangedFiles(ref, sinceMergeBase)`: `merge-base <sha> HEAD`,
+    then a diff against the working tree, plus untracked files.
+  - Unrelated histories give a "no merge base" `GitException`.
+  - Lab option: `--since-merge-base 1`.
+  - On dotLLM against `dev`, which is 14 commits ahead: two-dot gives 1,864 chunks / 353.6 K tokens in 94 files plus 48
+    unmatched files; the merge base gives 1,543 / 304.2 K in 89 files plus 30 unmatched. Two-dot sweeps in 321 chunks and
+    18 non-corpus files that only `dev` changed.
+- **S6: README.**
+  - The hop-2 composition is reworded: it is callers of hop-1 callers *and* users of hop-1 callees; the no-tests run reaches
+    118 hop-2 callers only through callees; the logs do not split the full run.
+  - "Edges to or from hop 1".
+  - Timing: 0.17–0.51 s per selection, with the first request of each process including JIT.
+  - Hop 2: 7.6 times hop 0+1 in chunks, 6.6 times in tokens.
+  - The paths + since example is now pinned to `69eb5772`. All five Tooling files are in that range after the fix round,
+    and the README says so.
+
+### Nits
+
+- **Lookup and globs:**
+  - Glob literals (`[..]`, `{a,b}`) are documented and tested.
+  - `./` and empty segments are dropped in paths as well as in patterns.
+  - Positional record properties are found.
+  - Indexers, operators, conversion operators and finalizers are documented as unsupported, and keyword names such as
+    `this` are rejected with an explanation.
+  - `\uXXXX` identifiers and submodules are documented.
+- **New tests:**
+  - two patterns matching one file;
+  - git missing;
+  - timeout;
+  - ordinal order under sv-SE, tr-TR and en-US, with paths such as `B.cs` / `a.b.cs` / `a_b.cs` / `Ä.cs`.
+- **Hub cap:** `MaxNeighboursPerHop`, off by default.
+  - It keeps the heaviest neighbours (weight, path, offset), notes what it dropped, and dropped neighbours never return at a
+    later hop.
+  - dotLLM with `--max-per-hop 25`: 53 chunks / 15.7 K tokens, with "kept 25 of 40" at hop 1 and "kept 25 of 330" at hop 2.
+- **Lab:** `List()` intent clarified, plus the `--since-merge-base` and `--max-per-hop` options.
+
+### Tests and mutants
+
+- **Red run:** 24 of 100 failed against stubs.
+- **Green:** `ContextSelectorTests` and the GitCliInfo tests now have 101 test cases; the ChunkReuse suite passes 474, with
+  1 skipped.
+- **Mutants:**
+  - Round 4: 22 mutants, 20 killed. F13 (dropped neighbours returning) and F14 (the cap keeping the lightest) survived and
+    were killed in round 5 after the hub fixture was added.
+  - **All 52 distinct compiled mutants of the task are killed.** Every restore was checked, and the pristine run passed
+    after each round.
+
+### Worked example rerun
+
+- At `1f87c375`, dirty=0, Release, git 2.53: six requests.
+- The corpus grew a little, because the new test file is part of the solution: 2,519 authored files, 39,651 chunks,
+  8,003,073 tokens, 374,804 edges.
+- The 2-hop neighbourhood of `ChunkIndex.Update`: 378 chunks / 90,480 tokens in 45 files, or 71 chunks / 19,856 tokens in
+  13 files under 20 K. The budgeted selection is unchanged.
+
+### Remaining concerns
+
+- Linux is still unverified.
+- Within the changed set, the budget takes files in path order, because changed files carry no relevance ranking. The
+  README says so and suggests combining `ChangedSince` with `Symbol` or `Paths`.

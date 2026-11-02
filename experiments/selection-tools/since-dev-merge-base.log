@@ -1,0 +1,42 @@
+# provenance
+utc: 2026-11-02 19:14:46
+dotLLM: 1f87c37535179a88a47015e15b6d554c3dcb427f dirty=0 (scanned solution = this worktree)
+dev: 16b25d65dbc0ce8e5b9d27bc1d6b9a1ac7f45e80; merge-base(dev, HEAD): 4a7818290766b69a3bae0999874154185c7fa587
+git: git version 2.53.0.windows.2
+sdk: 10.0.401
+model (tokenizer only): C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+command: ChunkKvLab select --solution C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx --configuration Release --chunker symbol --chunk 512 --show 15 --since dev --since-merge-base 1 --budget 20000
+
+scan C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx (Configuration=Release): 28 projects, 0 skipped entries, 2604 files (85 generated), 2519 authored files after RelativizeScan (excluded 0); root C:\Development\dotLLM\.claude\worktrees\chunk-cache [17.7 s]
+chunker symbol-512: 39651 chunks, 8003073 tokens [25.2 s]
+graph (per-project compilations): 374804 edges [29.8 s]
+
+request: symbol=- hops=1 paths=[] exclude=[] since=dev (merge base) max-per-hop=off budget=none [300 ms]
+  candidates 1543 chunks / 304158 tokens in 89 files; selected 1543 chunks / 304158 tokens in 89 files; trimmed 0 chunks / 0 tokens
+  by reason (selected / candidates, tokens selected / candidates):
+    Changed         hop -1:  1543 /  1543 chunks,  304158 /  304158 tokens
+  changed files with no chunk (30): Directory.Packages.props, benchmarks/ChunkKvLab/ChunkKvLab.csproj, dotLLM.slnx, src/DotLLM.ChunkReuse.Solution/DotLLM.ChunkReuse.Solution.csproj, src/DotLLM.ChunkReuse/DotLLM.ChunkReuse.csproj, src/DotLLM.Models/DotLLM.Models.csproj, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/App.csproj, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/Generated/Stamp.g.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/Heuristics.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/Program.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/Tooling.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Broken/Broken.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Broken/Broken.csproj, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Directory.Build.props, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Directory.Build.targets, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Directory.Packages.props, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Lib/Greeter.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Lib/Lib.csproj, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Lib/LibInfo.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Lib/Polyfill.cs
+
+request: symbol=- hops=1 paths=[] exclude=[] since=dev (merge base) max-per-hop=off budget=20000 [239 ms]
+  candidates 1543 chunks / 304158 tokens in 89 files; selected 73 chunks / 19848 tokens in 6 files; trimmed 1470 chunks / 284310 tokens
+  by reason (selected / candidates, tokens selected / candidates):
+    Changed         hop -1:    73 /  1543 chunks,   19848 /  304158 tokens
+  changed files with no chunk (30): Directory.Packages.props, benchmarks/ChunkKvLab/ChunkKvLab.csproj, dotLLM.slnx, src/DotLLM.ChunkReuse.Solution/DotLLM.ChunkReuse.Solution.csproj, src/DotLLM.ChunkReuse/DotLLM.ChunkReuse.csproj, src/DotLLM.Models/DotLLM.Models.csproj, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/App.csproj, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/Generated/Stamp.g.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/Heuristics.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/Program.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/App/Tooling.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Broken/Broken.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Broken/Broken.csproj, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Directory.Build.props, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Directory.Build.targets, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Directory.Packages.props, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Lib/Greeter.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Lib/Lib.csproj, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Lib/LibInfo.cs, tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution/Lib/Polyfill.cs
+  first 15 selected (rank order):
+     700 w0     123 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:1-10  changed since the merge base of dev and HEAD
+     700 w0     238 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:11-21  changed since the merge base of dev and HEAD
+     700 w0      96 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:22-31  changed since the merge base of dev and HEAD
+     700 w0     187 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:32-48  changed since the merge base of dev and HEAD
+     700 w0     196 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:49-62  changed since the merge base of dev and HEAD
+     700 w0      21 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:63-65  changed since the merge base of dev and HEAD
+     700 w0      28 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:66-68  changed since the merge base of dev and HEAD
+     700 w0      23 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:69-71  changed since the merge base of dev and HEAD
+     700 w0     168 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:72-87  changed since the merge base of dev and HEAD
+     700 w0     504 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:88-126  changed since the merge base of dev and HEAD
+     700 w0      97 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:127-139  changed since the merge base of dev and HEAD
+     700 w0      88 tok  benchmarks/ChunkKvLab/E1Runner.cs:1-11  changed since the merge base of dev and HEAD
+     700 w0      98 tok  benchmarks/ChunkKvLab/E1Runner.cs:12-21  changed since the merge base of dev and HEAD
+     700 w0     502 tok  benchmarks/ChunkKvLab/E1Runner.cs:22-53  changed since the merge base of dev and HEAD
+     700 w0     487 tok  benchmarks/ChunkKvLab/E1Runner.cs:54-92  changed since the merge base of dev and HEAD
+  first trimmed: 700 w0 498 tok benchmarks/ChunkKvLab/E7Command.cs:35-66 changed since the merge base of dev and HEAD
+exit 0; wall 73.7 s

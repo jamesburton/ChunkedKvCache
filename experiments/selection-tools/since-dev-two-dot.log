@@ -1,0 +1,42 @@
+# provenance
+utc: 2026-11-02 19:13:34
+dotLLM: 1f87c37535179a88a47015e15b6d554c3dcb427f dirty=0 (scanned solution = this worktree)
+dev: 16b25d65dbc0ce8e5b9d27bc1d6b9a1ac7f45e80; merge-base(dev, HEAD): 4a7818290766b69a3bae0999874154185c7fa587
+git: git version 2.53.0.windows.2
+sdk: 10.0.401
+model (tokenizer only): C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+command: ChunkKvLab select --solution C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx --configuration Release --chunker symbol --chunk 512 --show 15 --since dev --budget 20000
+
+scan C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx (Configuration=Release): 28 projects, 0 skipped entries, 2604 files (85 generated), 2519 authored files after RelativizeScan (excluded 0); root C:\Development\dotLLM\.claude\worktrees\chunk-cache [15.4 s]
+chunker symbol-512: 39651 chunks, 8003073 tokens [24.0 s]
+graph (per-project compilations): 374804 edges [31.7 s]
+
+request: symbol=- hops=1 paths=[] exclude=[] since=dev max-per-hop=off budget=none [415 ms]
+  candidates 1864 chunks / 353592 tokens in 94 files; selected 1864 chunks / 353592 tokens in 94 files; trimmed 0 chunks / 0 tokens
+  by reason (selected / candidates, tokens selected / candidates):
+    Changed         hop -1:  1864 /  1864 chunks,  353592 /  353592 tokens
+  changed files with no chunk (48): CLAUDE.md, Directory.Packages.props, README.md, benchmarks/ChunkKvLab/ChunkKvLab.csproj, benchmarks/Q4KVerifyProbe/Program.cs, docs/BENCHMARKS.md, docs/COMPARISONS.md, docs/EMBEDDINGS.md, docs/GPU.md, docs/PERFORMANCE.md, docs/PERPLEXITY.md, docs/PRECISION.md, docs/SERVER.md, docs/SPECULATIVE.md, docs/SUPPORTED_MODELS.md, docs/VULKAN.md, dotLLM.slnx, native/vulkan/shaders/matmul_q4_k_gemv_f32_multi.comp, native/vulkan/shaders/matmul_q5_k_gemv_f32_multi.comp, native/vulkan/spv/matmul_q4_k_gemv_f32_multi.spv
+
+request: symbol=- hops=1 paths=[] exclude=[] since=dev max-per-hop=off budget=20000 [226 ms]
+  candidates 1864 chunks / 353592 tokens in 94 files; selected 73 chunks / 19848 tokens in 6 files; trimmed 1791 chunks / 333744 tokens
+  by reason (selected / candidates, tokens selected / candidates):
+    Changed         hop -1:    73 /  1864 chunks,   19848 /  353592 tokens
+  changed files with no chunk (48): CLAUDE.md, Directory.Packages.props, README.md, benchmarks/ChunkKvLab/ChunkKvLab.csproj, benchmarks/Q4KVerifyProbe/Program.cs, docs/BENCHMARKS.md, docs/COMPARISONS.md, docs/EMBEDDINGS.md, docs/GPU.md, docs/PERFORMANCE.md, docs/PERPLEXITY.md, docs/PRECISION.md, docs/SERVER.md, docs/SPECULATIVE.md, docs/SUPPORTED_MODELS.md, docs/VULKAN.md, dotLLM.slnx, native/vulkan/shaders/matmul_q4_k_gemv_f32_multi.comp, native/vulkan/shaders/matmul_q5_k_gemv_f32_multi.comp, native/vulkan/spv/matmul_q4_k_gemv_f32_multi.spv
+  first 15 selected (rank order):
+     700 w0     123 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:1-10  changed since dev
+     700 w0     238 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:11-21  changed since dev
+     700 w0      96 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:22-31  changed since dev
+     700 w0     187 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:32-48  changed since dev
+     700 w0     196 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:49-62  changed since dev
+     700 w0      21 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:63-65  changed since dev
+     700 w0      28 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:66-68  changed since dev
+     700 w0      23 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:69-71  changed since dev
+     700 w0     168 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:72-87  changed since dev
+     700 w0     504 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:88-126  changed since dev
+     700 w0      97 tok  benchmarks/ChunkKvLab/ContextBuilder.cs:127-139  changed since dev
+     700 w0      88 tok  benchmarks/ChunkKvLab/E1Runner.cs:1-11  changed since dev
+     700 w0      98 tok  benchmarks/ChunkKvLab/E1Runner.cs:12-21  changed since dev
+     700 w0     502 tok  benchmarks/ChunkKvLab/E1Runner.cs:22-53  changed since dev
+     700 w0     487 tok  benchmarks/ChunkKvLab/E1Runner.cs:54-92  changed since dev
+  first trimmed: 700 w0 498 tok benchmarks/ChunkKvLab/E7Command.cs:35-66 changed since dev
+exit 0; wall 72.1 s

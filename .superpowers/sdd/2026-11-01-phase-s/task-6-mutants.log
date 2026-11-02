@@ -45,3 +45,34 @@ pristine: Passed!  - Failed:     0, Passed:    73, Skipped:     0, Total:    73,
 task6 mutants round 3 2026-11-02T17:01:56 at fe6b7fea
 M29 changed outranks path again : KILLED (1 failed: Select_ChangedSince_UsesGitDiff) ; restored-ok
 pristine: Passed!  - Failed:     0, Passed:    73, Skipped:     0, Total:    73, Duration: 4 s - DotLLM.Tests.Unit.dll (net10.0) ; git status: []
+
+# Review fix round (task6-mutants-r4.ps1, -r5.ps1)
+task6 mutants round 4 2026-11-02T18:57:58 at 2948d9c4
+F1 top from --show-toplevel (resolved) : KILLED (1 failed: ChangedFiles_ThroughALinkedDirectory_AreUnderTheLinkNotTheTarget) ; restored-ok
+F2 no resolved-root fallback in selector : KILLED (1 failed: Select_ChangedSince_RootReachedThroughALink_MapsResolvedPaths) ; restored-ok
+F3 end-of-options always : KILLED (1 failed: RevParse_UsesEndOfOptions_OnlyFromGit230) ; restored-ok
+F4 end-of-options from > 2.30 : KILLED (1 failed: RevParse_UsesEndOfOptions_OnlyFromGit230) ; restored-ok
+F5 sanitize removes nothing : KILLED (2 failed: SanitizeEnvironment_RemovesEveryGitVariable_AndSetsNonInteractiveOnes, ChangedFiles_IgnoresInheritedGitDirWorkTreeAndIndex) ; restored-ok
+F6 sanitize not called : KILLED (1 failed: ChangedFiles_IgnoresInheritedGitDirWorkTreeAndIndex) ; restored-ok
+F7 merge base ignored : KILLED (1 failed: ChangedFiles_SinceMergeBase_LeavesOutWhatTheOtherBranchChanged) ; restored-ok
+F8 selector drops merge-base flag : KILLED (1 failed: Select_ChangedSinceMergeBase_IsPassedToGit_AndNamedInTheDetail) ; restored-ok
+F9 excluded changed not noted : KILLED (1 failed: Select_Exclude_AppliesToPathsAndChangedFiles_AndReportsExcludedChangedFiles) ; restored-ok
+F10 changed loop ignores Exclude : KILLED (1 failed: Select_Exclude_AppliesToPathsAndChangedFiles_AndReportsExcludedChangedFiles) ; restored-ok
+F11 path loop ignores Exclude : KILLED (1 failed: Select_Exclude_AppliesToPathsAndChangedFiles_AndReportsExcludedChangedFiles) ; restored-ok
+F12 cap ignored : KILLED (1 failed: Select_MaxNeighboursPerHop_CapsEachHop_OffByDefault) ; restored-ok
+F13 dropped neighbours come back later : SURVIVED ; restored-ok
+F14 cap keeps lightest : SURVIVED ; restored-ok
+F15 path ./ not normalised : KILLED (2 failed: PathGlob_Matches(pattern:) ; restored-ok
+F16 positional record params skipped : KILLED (1 failed: Select_Symbol_PositionalRecordProperty_IsFound) ; restored-ok
+F17 keyword check removed : KILLED (1 failed: Select_Symbol_PositionalRecordProperty_IsFound) ; restored-ok
+F18 rank by culture : KILLED (3 failed: Select_Order_IsOrdinal_UnderAnyCulture(culture:) ; restored-ok
+F19 document order by culture : KILLED (3 failed: Select_Order_IsOrdinal_UnderAnyCulture(culture:) ; restored-ok
+F20 only first pattern marked matched : KILLED (1 failed: Select_TwoPatternsMatchingOneFile_NeitherIsUnmatched) ; restored-ok
+F21 links not resolved : KILLED (1 failed: Select_ChangedSince_RootReachedThroughALink_MapsResolvedPaths) ; restored-ok
+F22 no merge base not an error : KILLED (1 failed: ChangedFiles_SinceMergeBase_LeavesOutWhatTheOtherBranchChanged) ; restored-ok
+pristine: Passed!  - Failed:     0, Passed:   100, Skipped:     0, Total:   100, Duration: 7 s - DotLLM.Tests.Unit.dll (net10.0) ; git status: []
+
+task6 mutants round 5 2026-11-02T19:06:40 at 1f87c375
+F13 dropped neighbours come back later : KILLED (1 failed: Select_MaxNeighboursPerHop_KeepsTheHeaviest_AndDroppedNeighboursNeverReturn) ; restored-ok
+F14 cap keeps lightest : KILLED (1 failed: Select_MaxNeighboursPerHop_KeepsTheHeaviest_AndDroppedNeighboursNeverReturn) ; restored-ok
+pristine: Passed!  - Failed:     0, Passed:   101, Skipped:     0, Total:   101, Duration: 14 s - DotLLM.Tests.Unit.dll (net10.0) ; git status: []

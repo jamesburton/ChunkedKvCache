@@ -1,26 +1,27 @@
 # provenance
-utc: 2026-11-02 17:05:17
-dotLLM: fe6b7fea3f6cd819af97e843060d7c1ec2e033c4 dirty=0 (scanned solution = this worktree)
-HEAD~3: 69eb5772e52cd44633385bcf35e1057c642a2777
+utc: 2026-11-02 19:12:24
+dotLLM: 1f87c37535179a88a47015e15b6d554c3dcb427f dirty=0 (scanned solution = this worktree)
+dev: 16b25d65dbc0ce8e5b9d27bc1d6b9a1ac7f45e80; merge-base(dev, HEAD): 4a7818290766b69a3bae0999874154185c7fa587
+git: git version 2.53.0.windows.2
 sdk: 10.0.401
 model (tokenizer only): C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
-command: ChunkKvLab select --solution C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx --configuration Release --chunker symbol --chunk 512 --show 15 --paths src/DotLLM.ChunkReuse/Tooling/,src/DotLLM.ChunkReuse/Store/ChunkRef.cs --since HEAD~3 --budget 20000
+command: ChunkKvLab select --solution C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx --configuration Release --chunker symbol --chunk 512 --show 15 --paths src/DotLLM.ChunkReuse/Tooling/,src/DotLLM.ChunkReuse/Store/ChunkRef.cs --since 69eb5772 --budget 20000
 
-scan C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx (Configuration=Release): 28 projects, 0 skipped entries, 2603 files (85 generated), 2518 authored files after RelativizeScan (excluded 0); root C:\Development\dotLLM\.claude\worktrees\chunk-cache [17.2 s]
-chunker symbol-512: 39612 chunks, 7995530 tokens [24.2 s]
-graph (per-project compilations): 374392 edges [30.8 s]
+scan C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx (Configuration=Release): 28 projects, 0 skipped entries, 2604 files (85 generated), 2519 authored files after RelativizeScan (excluded 0); root C:\Development\dotLLM\.claude\worktrees\chunk-cache [16.2 s]
+chunker symbol-512: 39651 chunks, 8003073 tokens [25.0 s]
+graph (per-project compilations): 374804 edges [27.9 s]
 
-request: symbol=- hops=1 paths=[src/DotLLM.ChunkReuse/Tooling/, src/DotLLM.ChunkReuse/Store/ChunkRef.cs] exclude=[] since=HEAD~3 budget=none [288 ms]
-  candidates 148 chunks / 26485 tokens in 9 files; selected 148 chunks / 26485 tokens in 9 files; trimmed 0 chunks / 0 tokens
+request: symbol=- hops=1 paths=[src/DotLLM.ChunkReuse/Tooling/, src/DotLLM.ChunkReuse/Store/ChunkRef.cs] exclude=[] since=69eb5772 max-per-hop=off budget=none [265 ms]
+  candidates 187 chunks / 34028 tokens in 10 files; selected 187 chunks / 34028 tokens in 10 files; trimmed 0 chunks / 0 tokens
   by reason (selected / candidates, tokens selected / candidates):
-    Path            hop -1:    91 /    91 chunks,   12878 /   12878 tokens
-    Changed         hop -1:    57 /    57 chunks,   13607 /   13607 tokens
+    Path            hop -1:   104 /   104 chunks,   15619 /   15619 tokens
+    Changed         hop -1:    83 /    83 chunks,   18409 /   18409 tokens
 
-request: symbol=- hops=1 paths=[src/DotLLM.ChunkReuse/Tooling/, src/DotLLM.ChunkReuse/Store/ChunkRef.cs] exclude=[] since=HEAD~3 budget=20000 [235 ms]
-  candidates 148 chunks / 26485 tokens in 9 files; selected 117 chunks / 19986 tokens in 9 files; trimmed 31 chunks / 6499 tokens
+request: symbol=- hops=1 paths=[src/DotLLM.ChunkReuse/Tooling/, src/DotLLM.ChunkReuse/Store/ChunkRef.cs] exclude=[] since=69eb5772 max-per-hop=off budget=20000 [171 ms]
+  candidates 187 chunks / 34028 tokens in 10 files; selected 114 chunks / 19590 tokens in 7 files; trimmed 73 chunks / 14438 tokens
   by reason (selected / candidates, tokens selected / candidates):
-    Path            hop -1:    91 /    91 chunks,   12878 /   12878 tokens
-    Changed         hop -1:    26 /    57 chunks,    7108 /   13607 tokens
+    Path            hop -1:   104 /   104 chunks,   15619 /   15619 tokens
+    Changed         hop -1:    10 /    83 chunks,    3971 /   18409 tokens
   first 15 selected (rank order):
      800 w0     157 tok  src/DotLLM.ChunkReuse/Store/ChunkRef.cs:1-17  path glob 'src/DotLLM.ChunkReuse/Store/ChunkRef.cs'
      800 w0     494 tok  src/DotLLM.ChunkReuse/Store/ChunkRef.cs:18-44  path glob 'src/DotLLM.ChunkReuse/Store/ChunkRef.cs'
@@ -34,8 +35,8 @@ request: symbol=- hops=1 paths=[src/DotLLM.ChunkReuse/Tooling/, src/DotLLM.Chunk
      800 w0     136 tok  src/DotLLM.ChunkReuse/Store/ChunkRef.cs:87-98  path glob 'src/DotLLM.ChunkReuse/Store/ChunkRef.cs'
      800 w0     128 tok  src/DotLLM.ChunkReuse/Store/ChunkRef.cs:99-108  path glob 'src/DotLLM.ChunkReuse/Store/ChunkRef.cs'
      800 w0      39 tok  src/DotLLM.ChunkReuse/Tooling/ContextSelector.cs:1-5  path glob 'src/DotLLM.ChunkReuse/Tooling/'
-     800 w0     494 tok  src/DotLLM.ChunkReuse/Tooling/ContextSelector.cs:6-31  path glob 'src/DotLLM.ChunkReuse/Tooling/'
-     800 w0     186 tok  src/DotLLM.ChunkReuse/Tooling/ContextSelector.cs:32-43  path glob 'src/DotLLM.ChunkReuse/Tooling/'
-     800 w0      60 tok  src/DotLLM.ChunkReuse/Tooling/ContextSelector.cs:44-47  path glob 'src/DotLLM.ChunkReuse/Tooling/'
-  first trimmed: 700 w0 130 tok tests/DotLLM.Tests.Unit/ChunkReuse/ContextSelectorTests.cs:141-155 changed since HEAD~3
-exit 0; wall 73 s
+     800 w0     491 tok  src/DotLLM.ChunkReuse/Tooling/ContextSelector.cs:6-29  path glob 'src/DotLLM.ChunkReuse/Tooling/'
+     800 w0     335 tok  src/DotLLM.ChunkReuse/Tooling/ContextSelector.cs:30-49  path glob 'src/DotLLM.ChunkReuse/Tooling/'
+     800 w0      60 tok  src/DotLLM.ChunkReuse/Tooling/ContextSelector.cs:50-53  path glob 'src/DotLLM.ChunkReuse/Tooling/'
+  first trimmed: 700 w0 510 tok benchmarks/ChunkKvLab/SelectCommand.cs:1-36 changed since 69eb5772
+exit 0; wall 70 s

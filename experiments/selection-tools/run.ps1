@@ -13,7 +13,12 @@ $lab = Join-Path $Worktree 'benchmarks\ChunkKvLab\bin\Release\net10.0\ChunkKvLab
 $runs = [ordered]@{
     'symbol-2hops-20k'         = @('--symbol', 'ChunkIndex.Update', '--hops', '2', '--budget', '20000')
     'symbol-2hops-20k-no-tests' = @('--symbol', 'ChunkIndex.Update', '--hops', '2', '--budget', '20000', '--exclude', 'tests/**,benchmarks/**')
-    'paths-since-20k'          = @('--paths', 'src/DotLLM.ChunkReuse/Tooling/,src/DotLLM.ChunkReuse/Store/ChunkRef.cs', '--since', 'HEAD~3', '--budget', '20000')
+    'symbol-2hops-20k-cap25'   = @('--symbol', 'ChunkIndex.Update', '--hops', '2', '--budget', '20000', '--max-per-hop', '25')
+    # 69eb5772 = merge of the scanner fix round into feature/chunk-cache (pinned, so the example does not drift with HEAD).
+    'paths-since-20k'          = @('--paths', 'src/DotLLM.ChunkReuse/Tooling/,src/DotLLM.ChunkReuse/Store/ChunkRef.cs', '--since', '69eb5772', '--budget', '20000')
+    # dev has moved on since this branch forked: two-dot sweeps in dev's own changes, the merge base does not.
+    'since-dev-two-dot'        = @('--since', 'dev', '--budget', '20000')
+    'since-dev-merge-base'     = @('--since', 'dev', '--since-merge-base', '1', '--budget', '20000')
 }
 foreach ($name in $runs.Keys) {
     $log = Join-Path $here "$name.log"
@@ -23,7 +28,8 @@ foreach ($name in $runs.Keys) {
         '# provenance'
         "utc: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss'))"
         "dotLLM: $(git -C $Worktree rev-parse HEAD) dirty=$dirty (scanned solution = this worktree)"
-        "HEAD~3: $(git -C $Worktree rev-parse HEAD~3)"
+        "dev: $(git -C $Worktree rev-parse dev); merge-base(dev, HEAD): $(git -C $Worktree merge-base dev HEAD)"
+        "git: $(git --version)"
         "sdk: $(dotnet --version)"
         "model (tokenizer only): $model"
         "command: ChunkKvLab $($args[0]) $(($args[3..($args.Length - 1)]) -join ' ')"
