@@ -43,6 +43,7 @@ $groupSpec = @{
     '2k-cap128'  = @{ label = '2k-cap128'; context = 2048; mode = 'kept';  contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0, '--budgets', 20) }
     '8k-probe'   = @{ label = '8k-probe'; context = 8192; mode = 'unfiltered'; contexts = '1,0,0'; maxRows = 256; extra = @('--repeats', 1, '--eval', 0, '--budgets', 5, '--selectors', 'chunk_starts', '--full-blocks', 512) }
     '8k-timing'  = @{ label = '8k';  context = 8192;  mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
+    '8k-timing-b' = @{ label = '8k-b'; context = 8192; mode = 'unfiltered'; contexts = '0,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
     '16k-point'  = @{ label = '16k'; context = 16384; mode = 'unfiltered'; contexts = '1,0,0'; maxRows = 64; extra = @('--repeats', 1, '--eval', 0, '--budgets', 5, '--selectors', 'chunk_starts', '--full-blocks', 512) }
     '2k-eval'    = @{ label = '2k-eval'; context = 2048; mode = 'kept';    contexts = '7,7,6'; maxRows = 512; extra = @('--repeats', 1, '--eval', 1, '--cpu-contexts', 6, '--full-blocks', 512) }
     '8k-eval'    = @{ label = '8k-eval'; context = 8192; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 1, '--eval', 1, '--full-blocks', 512) }
@@ -78,6 +79,11 @@ foreach ($group in $Groups) {
     if (-not $s) { throw "unknown group $group" }
     & $gitBash $lock acquire $LockName "ChunkedkvCache G2 recompute $group (Phase G Task 4), Qwen3-4B" 7200
     if ($LASTEXITCODE -ne 0) { throw "GPU lock not acquired" }
+    # Do not start beside a large load: wait (holding the lock) until >= 30 GB of RAM is free.
+    while (((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB) -lt 30) {
+        Write-Output ("{0:u} waiting for >= 30 GB free RAM" -f (Get-Date)); Start-Sleep -Seconds 60
+        & $gitBash $lock refresh $LockName | Out-Null
+    }
     $null = [G2Power.Native]::SetThreadExecutionState($esContinuous -bor $esSystemRequired)
     try {
         $label = if ($Smoke) { "$($s.label)-smoke" } else { $s.label }

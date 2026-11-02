@@ -21,7 +21,7 @@ quality E4 measured. The request for the Vulkan owner is in `vulkan-primitive-re
 | ctx | full prefill | naive (assembly only, device copy) | reuse, 5 % recompute | 10 % | 20 % | 20 % if ATTN_QPOS cost what the ordinary kernel costs (control arm) |
 |---:|---:|---|---|---|---|---|
 | 2K (8 contexts) | 1.66 s | 76 ms (**22× faster**) | 1.68 s (1.0×) | 3.29 s (0.5×) | 6.69 s (0.25×) | ~0.58 s (~2.9× faster) |
-8K_ROW
+| 8K (CTX8) | 19.2 s | 0.30 s (**64× faster**) | 24.2 s (0.8×) | 47.2 s (0.4×) | 94.1 s (0.2×) | ≤ ~9 s (≥ ~2× faster) |
 
 Every other way of counting is worse for reuse:
 - **Host entries** (the Phase S store's read path, `WriteRows`): assembly takes 0.5 s longer at 2K and 2.2 s longer at 8K.
@@ -75,7 +75,34 @@ Full tables: `summary.md`. The worst max/min over a context's 3 repeats is ≤ 7
 - **Row cap:** `2k-cap128` (2 contexts) batches the single pass into forwards of ≤ 128 rows. At 20 % it takes 6.62 s vs 6.61 s uncapped.
   Batching costs nothing measurable, which is why the 8K/16K runs could cap every submit.
 
-8K_SPEED
+### 8K (CTX8, L ≈ 8,190, ~58–66 symbol chunks; single pass capped at 128 rows per forward)
+
+| arm | time | notes |
+|---|---:|---|
+| full prefill, 512-row / 2048-row blocks | 19.3 s / 19.2 s | 424 tok/s; G1 had 19.2 s |
+| chunk encode, host entries | 22.0 s | 1.1× the full prefill |
+| upload to resident / assembly host write / device copy | 3.5 s / 2.25 s / 0.30 s | |
+| **control:** 128 rows as the tail (ordinary) / one row earlier (ATTN_QPOS) | **0.68 s / 18.6 s (27×)** | ATTN_QPOS 17.9 µs per (row × visible key) |
+
+| selection | rows | runs | single pass (forwards) | per-run | per-run / single |
+|---|---:|---:|---:|---:|---:|
+| chunk_starts 5 % | 409 | 57 | 23.9 s (4) | 19.7 s | 0.8× |
+| chunk_starts 10 % | 819 | 52 | 46.9 s (7) | 41.9 s | 0.9× |
+| chunk_starts 20 % | 1,638 | 46 | 93.8 s (13) | 85.7 s | 0.9× |
+| random 5 % | 409 | 386 | 30.6 s (4) | 32.1 s | 1.1× |
+| random 10 % | 819 | 736 | 60.3 s (7) | 63.4 s | 1.1× |
+| random 20 % | 1,638 | 1,311 | 114.9 s (13) | 120.8 s | 1.1× |
+
+- At 8K the attention dominates everything:
+  - The per-call overhead that made per-run slow at 2K is now noise (per-run / single ≈ 1).
+  - The single pass's advantage over per-run disappears.
+- **Random rows cost ~20 % more than chunk_starts rows in the single pass** at 8K, though both selections are spread over the context. At 2K
+  the two were equal. A plausible cause (not instrumented) is the non-contiguous K/V write in the Vulkan forward, which records one copy
+  per row and layer (`VulkanKvCache.RecordUpdate`), against one per batch for a contiguous run.
+- **The ideal column** in the verdict table uses the control arm's ordinary-kernel cost per row at 8K (5.3 ms) for 1,638 rows:
+  ~8.7 s + 0.30 s assembly ≈ 9 s, against 19.2 s for full prefill. It is an upper bound: the control rows sit at the end of the context,
+  where each row sees the most keys.
+
 
 ## Numerics: is the single pass right? (eval group, 2K, 20 contexts, 28 tasks)
 

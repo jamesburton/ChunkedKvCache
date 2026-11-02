@@ -35,7 +35,12 @@ def fmt_ms(x):
 
 # ---------------------------------------------------------------- speed
 def speed(label):
-    rows = read(f'timing-{label}.csv')
+    if label == '8k':
+        # 8K ran as two processes: context afclaude (timing-8k-a.csv, rows kept from the run the reboot interrupted, which had finished
+        # that context) and context docagent (timing-8k-b.csv, rerun after the reboot).
+        rows = (read('timing-8k-a.csv') or []) + (read('timing-8k-b.csv') or [])
+    else:
+        rows = read(f'timing-{label}.csv')
     if not rows:
         return
     ctxs = sorted({r['context_id'] for r in rows})

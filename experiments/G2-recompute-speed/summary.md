@@ -48,6 +48,32 @@ Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row bloc
 | chunk_starts | 20 % | 408 | 10 | 6.62 s | 4 | 6.27 s | 0.9× | 6.69 s | 0.2× | 7.15 s | 0.2× | 12.60 s | 0.13× |
 | random | 20 % | 408 | 328 | 6.47 s | 4 | 11.12 s | 1.7× | 6.54 s | 0.3× | 6.99 s | 0.2× | 12.45 s | 0.13× |
 
+## Speed, 8k (1 contexts, median L 8188, median 58 symbol chunks)
+
+Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
+
+| arm | median | [min, max] | rep | tok/s |
+|---|---:|---|---:|---:|
+| full512 | 19.32 s | [19.32 s, 19.32 s] | 1.00 | 424 |
+| full2048 | 19.17 s | [19.17 s, 19.17 s] | 1.00 | 427 |
+| encode_host | 22.00 s | [22.00 s, 22.00 s] | 0.00 | 372 |
+| upload_resident | 3.48 s | [3.48 s, 3.48 s] | 0.00 | 2,355 |
+| asm_host | 2.25 s | [2.25 s, 2.25 s] | 1.00 | 3,640 |
+| asm_device | 301 ms | [301 ms, 301 ms] | 1.05 | 27,204 |
+
+**Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 684 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 18.59 s: 27.2×. ATTN_QPOS total 17.9 µs per (row × visible key) over 36 layers; the ordinary tail 5.3 ms per row.
+
+Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 19.17 s.
+
+| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| chunk_starts | 5 % | 409 | 57 | 23.88 s | 4 | 19.69 s | 0.8× | 24.18 s | 0.8× | 26.13 s | 0.7× | 48.14 s | 0.40× |
+| chunk_starts | 10 % | 819 | 52 | 46.89 s | 7 | 41.92 s | 0.9× | 47.19 s | 0.4× | 49.14 s | 0.4× | 71.14 s | 0.27× |
+| chunk_starts | 20 % | 1638 | 46 | 93.83 s | 13 | 85.72 s | 0.9× | 94.13 s | 0.2× | 96.08 s | 0.2× | 118.09 s | 0.16× |
+| random | 5 % | 409 | 386 | 30.55 s | 4 | 32.11 s | 1.1× | 30.85 s | 0.6× | 32.80 s | 0.6× | 54.81 s | 0.35× |
+| random | 10 % | 819 | 736 | 60.25 s | 7 | 63.38 s | 1.1× | 60.55 s | 0.3× | 62.50 s | 0.3× | 84.50 s | 0.23× |
+| random | 20 % | 1638 | 1311 | 114.88 s | 13 | 120.84 s | 1.1× | 115.18 s | 0.2× | 117.13 s | 0.2× | 139.14 s | 0.14× |
+
 ## Speed, 8k-probe-cap256 (1 contexts, median L 8188, median 58 symbol chunks)
 
 Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
