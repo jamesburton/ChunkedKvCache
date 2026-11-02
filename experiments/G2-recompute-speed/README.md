@@ -2,46 +2,74 @@
 
 **Result in one line:** single-pass selective recompute on Vulkan is correct, but it is **slow**. It matches the per-run loop and the CPU
 within the floors, and its attention kernel adds no more error than a 512-vs-2048-row batching change. With the current per-query-position
-attention, **chunk reuse with recompute does not beat full prefill on this iGPU at any measured budget or context size**:
-- At 2K, recomputing 5 % costs as much as a full prefill, and 20 % costs about 4× more.
-- At 8K, even 5 % is slower than a full prefill, and at 16K 5 % takes 5.3× as long as a full prefill.
+attention, **chunk reuse with recompute roughly ties full prefill at the smallest budget on the smallest context, and loses everywhere
+else**. Taking the faster of single-pass and per-run at each point:
+- 2K, 5 % with chunk_starts: 1.07× (a tie within the per-context spread; seed 0, no intervals).
+- 2K, 10 % and 20 %: 0.56× and 0.28×.
+- 8K, 5 %: 0.96×; 8K, 20 %: 0.20×.
+- 16K, 5 %: ~0.7–0.85× (estimate; the measured 16K recompute arms ran ~3.5× slow, see the 16K section).
 
-The cause is one kernel. ATTN_QPOS (dotLLM #1534) costs ~15 µs per (recomputed row × visible key) over 36 layers at 2K and 8K, ~20–27×
-the ordinary prefill attention on the same rows; at 16K it rises to ~65 µs and 78×. Only naive concatenation (no recompute) is faster than full prefill (~20× at 2K), and it loses the
-quality E4 measured. The request for the Vulkan owner is in `vulkan-primitive-requests.md` §5.
+The cause is one kernel. ATTN_QPOS (dotLLM #1534) is 18–28× slower than the ordinary prefill attention on the same rows at 2K, 8K and
+16K (control arm). As whole-forward time per (recomputed row × visible key) over 36 layers, that is 13–19 µs at every size. A GPU-timestamp
+profile puts 97–99.6 % of the ATTN_QPOS forward in the attention kernel. Only naive
+concatenation (no recompute) is clearly faster than full prefill (22× at 2K), and it loses the quality E4 measured. The request for the
+Vulkan owner is in `vulkan-primitive-requests.md` §5.
 
 ## Verdict: does chunk reuse beat full prefill here?
 
-**No, not with recompute, and not with the current kernel.**
+**Not with recompute, and not with the current kernel.** It is a tie at best (2K, 5 %) and a loss at every larger budget or context.
 - Time to first token (TTFT) of a reused context = assembly (+ RoPE shift) + selective recompute.
 - The query forward afterwards is the same in both flows and is left out.
 - Ratios are full-prefill time / reuse TTFT (above 1 = reuse wins).
-- All rows below use warm entries (device-resident chunks, device-copy assembly), the chunk_starts selection and the single pass.
+- All rows below use warm entries (device-resident chunks, device-copy assembly) and the chunk_starts selection.
+- Each cell takes the faster recompute arm. With these few, long runs that is per-run at every point; the single-pass value is in
+  brackets.
+- **Point estimates only:** seed 0, 8 / 2 / 1 contexts, no bootstrap intervals (deviation from the plan's "≥ 3 seeds with paired,
+  cluster-bootstrapped intervals").
+  - At 2K, single-pass chunk_starts 5 % alone ranges 0.95–1.80 s across the 8 contexts.
+  - The 1.07× and 0.96× cells are therefore ties, not wins or losses.
 
 | ctx | full prefill | naive (assembly only, device copy) | reuse, 5 % recompute | 10 % | 20 % | 20 % if ATTN_QPOS cost what the ordinary kernel costs (control arm) |
 |---:|---:|---|---|---|---|---|
-| 2K (8 contexts) | 1.66 s | 76 ms (**22× faster**) | 1.68 s (1.0×) | 3.29 s (0.5×) | 6.69 s (0.25×) | ~0.58 s (~2.9× faster) |
-| 8K (2 contexts) | 19.1 s | 0.31 s (**62× faster**) | 26.3 s (0.7×) | 52.3 s (0.4×) | 104.6 s (0.2×) | ≤ ~9 s (≥ ~2× faster) |
-| 16K (1 context, 1 repeat) | 68.6 s | 0.64 s (**107× faster**) | 364.7 s (0.19×) | not run | not run | 20 % not run; at 5 %: ≤ ~12 s (≥ ~5.7× faster) |
+| 2K (8 contexts) | 1.66 s | 76 ms (**22× faster**) | 1.54 s (1.07×) [single 1.68 s, 0.99×] | 2.97 s (0.56×) [3.29 s, 0.50×] | 5.99 s (0.28×) [6.69 s, 0.25×] | ≤ ~0.58 s (~2.8× faster) |
+| 8K (2 contexts) | 19.1 s | 0.31 s (**62× faster**) | 20.0 s (0.96×) [26.3 s, 0.73×] | 46.3 s (0.41×) [52.3 s, 0.37×] | 93.5 s (0.20×) [104.5 s, 0.18×] | ≤ ~9 s (≥ ~2× faster) |
+| 16K (1 context) | 68.6 s | 0.64 s (**107× faster**) | est. ~80–100 s (~0.7–0.85×) [est. ~100–125 s]; measured 285 / 365 s in a run with ATTN_QPOS ~3.5× slow | not run | not run | 20 % not run; at 5 %: ≤ ~12 s (≥ ~5.7× faster) |
 
-Every other way of counting is worse for reuse:
-- **Host entries** (the Phase S store's read path, `WriteRows`): assembly takes 0.5 s longer at 2K and 2.2 s longer at 8K.
+How other choices change this:
+- **Host entries** (the Phase S store's read path, `WriteRows`): assembly takes 0.5 s longer at 2K and 2.2 s longer at 8K. That turns
+  the 2K 5 % tie into a loss (2.0 s).
 - **Cold chunks** (encode + readback first): +5.6 s at 2K and +22 s at 8K.
-  - The chunk encode alone (forward + G1's slow `ReadRows`) takes 3.4× the full prefill at 2K and 1.1× at 8K.
+  - The chunk encode alone (forward + G1's slow `ReadRows`) takes 3.4× the full prefill at 2K and 1.2× at 8K.
   - In a real store it is offline work, but here it never pays back.
-- **Per-run instead of single pass:**
-  - Few runs (chunk_starts): about the same (0.9×).
-  - Scattered selections (random, ~1 forward per 1.25 rows): 1.7–1.8× slower.
-  - The single pass removes the per-call overhead. It cannot remove the attention cost: in either mode, every recomputed row inside the
-    cache goes through ATTN_QPOS.
+- **Single pass vs per-run:**
+  - chunk_starts (few long runs): per-run is **faster**, 0.9× of the single-pass time at 2K and 0.76–0.89× at 8K (and 0.78× in the slow 16K run). This is
+    unexplained (not instrumented). It is not the 128-row cap: the uncapped single pass at 2K shows the same ~10 % gap.
+  - random (~1 forward per 1.25 rows): per-run is 1.7–1.8× slower at 2K and ~1.04× at 8K, where attention dominates.
+  - Either way every recomputed row inside the cache goes through ATTN_QPOS, so neither mode removes the attention cost.
 
 **What it would take.**
-- **Break-even:** at 2K the recompute must fit into full prefill − assembly ≈ 1.58 s. ATTN_QPOS must be about 1.0× / 2.0× / 4.2× faster at
-  5 / 10 / 20 %. A 2× TTFT gain at 20 % needs it ~9× faster.
-- **Ceiling:** the control arm recomputes the same 410 rows as the tail, through the ordinary kernel, in 0.51 s. A flash-class
-  per-query-position kernel would therefore put 20 % recompute at ~0.6 s TTFT, 2.9× faster than full prefill at 2K.
-- **Length does not help:** the recompute scales with rows × keys and the full prefill with keys², so at a fixed budget the ratio does not
-  improve with L. A gain from reuse has to come from a fast kernel.
+- **Two targets.** The figures below are needed speedups of the whole recompute. Speedups of the ATTN_QPOS kernel alone follow: the
+  non-attention work (matmuls, KV write, norms) does not shrink with a better kernel.
+- **Bounding the non-attention work:** it is at most the ordinary-tail control's forward time for the same number of rows (0.51 s for
+  410 rows at 2K, 5.3 ms per row at 8K, 13.7 ms per row at 16K).
+- **Needed speedups of the ATTN_QPOS kernel** (single pass; range from "non-attention ≈ 0" to "= the control bound"):
+
+  | point | kernel speedup to break even | kernel speedup for a 2× TTFT gain |
+  |---|---|---|
+  | 2K, 5 % | ~1.0× | 2.1–2.4× |
+  | 2K, 10 % | 2.0–2.2× | 4.3–5.9× |
+  | 2K, 20 % | 4.2–5.7× | 8.8–25× |
+  | 8K, 5 % | 1.4× | 2.8–3.4× |
+  | 8K, 20 % | 5.5–9.5× | ≥ 11×, and impossible if the non-attention work is at the bound (8.8 s of a 9.3 s budget) |
+  | 16K, 5 % (estimated recompute 100–125 s) | 1.5–2.0× | 3.1–5.1× |
+
+- **Ceiling:** the control arm recomputes the same 410 rows as the tail, through the ordinary kernel, in 0.51 s. A per-query-position
+  kernel as fast as the ordinary one would put 20 % recompute at 2K at ≤ 0.58 s TTFT, 1.656 / 0.584 = **2.8×** faster than full prefill.
+- **Length neither helps nor hurts much with this kernel:** its cost per (row × key) stays at 13–19 µs from 2K to 16K. The ratio at a fixed
+  budget is set by the kernel gap, not by L.
+- **With a flash-class kernel, the budget would set the ratio.** Both the recompute (f·L rows, each seeing ~L/2 keys) and the full prefill
+  scale with L², so the ideal ratio is set mainly by the budget fraction f: ~2.8× at 20 % (2K) and ~5.7× at 5 % (16K). Assembly becomes
+  negligible as L grows.
 - **Quality is the second hurdle** (next sections):
   - Even at 20 %, chunk_starts gets 24 of 28 masked-call exact matches (full prefill: 28), and random selection 11 of 28.
   - E4's better selectors (query relevance, hybrid) need the Vulkan probe (Task 5).
@@ -73,9 +101,11 @@ Full tables: `summary.md`.
 | random 20 % | 410 | 328 | 6.51 s | 1 | 10.98 s | 1.7× |
 
 - **Single pass:** linear in the selected rows (~16 ms per row at 2K), whether or not they are scattered.
-- **Per-run:** pays ~5 ms per extra forward. It wins slightly when there are few runs (chunk_starts), and loses badly with scattered rows.
-- **ATTN_QPOS cost follows position:** it scales with each row's visible keys (its position), not with L. The 2K single-pass and control
-  arms and the 8K arms all fit ~15 µs per (row × visible key) to within ~20 %.
+- **Per-run:** pays ~5 ms per extra forward. It is ~10 % faster than the single pass with few runs (chunk_starts; unexplained), and
+  1.7–1.8× slower with scattered rows.
+- **ATTN_QPOS cost follows position:** it scales with each row's visible keys (its position), not with L.
+  - The 2K single-pass and control arms and the 8K arms all fit ~15 µs per (row × visible key) to within ~20 %.
+  - That figure is the whole forward (matmuls included) divided by row-keys. Net of the ordinary-tail forward it is ~14.4 µs at 2K.
 - **Row cap:** `2k-cap128` (2 contexts) batches the single pass into forwards of ≤ 128 rows. At 20 % it takes 6.62 s vs 6.61 s uncapped.
   Batching costs nothing measurable, which is why the 8K/16K runs could cap every submit.
 
@@ -102,28 +132,51 @@ The two contexts ran in two processes. A reboot at ~13:29 UTC killed the first r
 | random 20 % | 1,638 | 1,304 | 113.9 s (13) | 118.7 s | 1.0× |
 
 - **Attention dominates at 8K.** The per-call overhead that made per-run slow with scattered rows at 2K is noise here (per-run / single
-  ≈ 1). With few runs, per-run is 10–25 % faster than the capped single pass: its forwards are small and are not batched at 128 rows.
+  ≈ 1.04).
+- **With few runs, per-run is 11–24 % faster than the single pass.** This is unexplained (not instrumented). The 2K uncapped single pass
+  shows the same ~10 % gap, so it is not the 128-row cap.
 - **Per-context spread:** the single pass on chunk_starts differs by ~20 % between the two contexts (afclaude 23.9 s, docagent 28.1 s at
   5 %). Random selections cost 10–17 % more than chunk_starts. Not instrumented.
 - **The ideal column** in the verdict table uses the control arm's ordinary-kernel cost per row at 8K (5.3 ms) for 1,638 rows:
   ~8.7 s + 0.31 s assembly ≈ 9 s, against 19.1 s for full prefill. It is an upper bound: the control rows sit at the end of the context,
   where each row sees the most keys.
 
-### 16K (1 context, codesharp, L = 16,384, 91 symbol chunks; 1 repeat; chunk_starts 5 % only; 64-row cap)
+### 16K (1 context, codesharp, L = 16,384, 91 symbol chunks; chunk_starts 5 % only; 64-row cap)
 
-| arm | time |
-|---|---:|
-| full prefill, 512-row blocks | 68.6 s (239 tok/s; G1 72.2 s) |
-| chunk encode (host) / upload / assembly host / device | 59.9 s / 10.0 s / 4.8 s / 0.64 s |
-| **control:** 64 rows as the tail (ordinary) / one row earlier (ATTN_QPOS) | **0.88 s / 68.4 s (78×)** |
-| chunk_starts 5 % (819 rows, 86 runs): single pass (13 forwards) / per-run | 364 s / 285 s |
+Three processes ran this context.
 
-- **ATTN_QPOS gets worse per key at 16K:** ~65 µs per (row × visible key), against 15–18 µs at 2K and 8K. A plausible cause (not
-  instrumented) is that each KV head's 8 MB of K plus 8 MB of V per layer no longer fits in the GPU's caches and MALL. The cost therefore
-  grows faster than rows × keys, and the gap to full prefill widens with context length.
-- **The first 16K attempt was really 8.5K:** the afclaude corpus has only 12.7K tokens, so the generator capped the context at 8,549. It is
-  kept as `logs/timing-16k-afclaude-capped-at-8549.csv` and agrees with the 8K numbers. 16K was rerun on codesharp.
-- **32K was not run:** at the 16K rate, 5 % of 32K would take on the order of 25 min.
+| arm | first run (16:46 UTC) | rerun (17:18 UTC, froze, see Caveats) | profiled run (17:15 UTC) |
+|---|---:|---:|---:|
+| full prefill, 512-row blocks | 68.6 s | 68.5 s | 68.7 s |
+| chunk encode (host) / upload / assembly device | 59.9 / 10.0 / 0.64 s | 47.7 / 6.4 / 0.51 s | 52.6 / 6.5 / 0.63 s |
+| **control:** 64 rows as the tail (ordinary) / one row earlier (ATTN_QPOS) | 0.88 s / **68.4 s (78×)** | 0.69 s / **19.6 s (28×)** | 0.71 s / **19.7 s (28×)** |
+| chunk_starts 5 % (819 rows, 86 runs): single pass (13 forwards) / per-run | 364 s / 285 s | not reached | not run |
+
+- **The first run's ATTN_QPOS was ~3.5× slower than in two later runs** on the same context. Its full prefill and the ordinary-kernel arms
+  were normal.
+  - Its 65 µs per (row × key) and "78×" are an anomaly, not a 16K effect. The two later runs give 18.7–18.8 µs, the same as 2K / 8K.
+  - The cause is unknown: other agents' CPU jobs may have contended for memory, or the GPU may have been degrading. Of the two box freezes
+    (Caveats), the second came ~20 min after this run.
+  - Its recompute arms are therefore not used directly. **Estimate:** divide by the control's 3.5× (single ≈ 104 s, per-run ≈ 82 s), or
+    use 18.8 µs × rows × mean position (single ≈ 126 s, ~13 % high at 8K). That gives a best TTFT of ~80–100 s against a 68.6 s full
+    prefill, ~0.7–0.85×.
+  - A clean 16K recompute timing was not obtained: the rerun froze the box during its first single-pass batches.
+- **The first 16K attempt (afclaude) was really 8.5K:** the afclaude corpus has only 12.7K tokens, so the generator capped the context at
+  8,549. It is kept as `logs/timing-16k-afclaude-capped-at-8549.csv` and agrees with the 8K numbers.
+- **32K was not run.** At ~19 µs per (row × key), 5 % of 32K would take ~7 min of recompute against a ~275 s full prefill (G1).
+
+### GPU-timestamp profile of the control arm (`DOTLLM_VULKAN_PREFILL_PROFILE=gpu`; review item 6)
+
+One profiled control-only run per size (`logs/profile-{2k,16k}-profile.txt`, `timing-{2k,16k}-profile.csv`; `logs/fixround-gpu.sh`):
+
+| ctx, rows | ordinary tail: forward / attention (GPU) | ATTN_QPOS: forward / attention (GPU) | attention kernel ratio | non-attention per forward |
+|---|---|---|---:|---|
+| 2K, 128 | 178 ms / 122 ms (68 %) | 3,273 ms / 3,187 ms (97.4 %) | 26× | 56–86 ms |
+| 16K, 64 | 707 ms / 639 ms (90 %) | 19,720 ms / 19,640 ms (99.6 %) | 31× | 68–80 ms |
+
+- The ATTN_QPOS forward is almost all attention, so the kernel-speedup targets above are close to their "non-attention ≈ 0" ends.
+- The attention-kernel gap itself (26–31×) is slightly larger than the whole-forward control ratio (18–28×).
+- The profiled 16K run did **not** reproduce the first 16K run's 68 s.
 
 ## Numerics: is the single pass right? (eval group, 2K, 20 contexts, 28 tasks)
 
@@ -134,8 +187,8 @@ The two contexts ran in two processes. A reboot at ~13:29 UTC killed the first r
 | pair | what it isolates | K / V all-layer mean | worst layer vs floor (mean; p99) | logits | verdict |
 |---|---|---|---|---|---|
 | **(d)** Vulkan full prefill in 512-row blocks vs the same rows recomputed single-pass in 512-row batches over a cache one row longer | the ATTN_QPOS kernel vs the ordinary kernel, same tokens and forward shapes | **5.0e-4 / 9.5e-4** | vs (b, 2048): 1.66× / 1.61×; p99 1.50× / 1.50× | KL 2.6e-4 (max task 7.2e-4); top-1 differs on 1 row of 896; \|Δ masked NLL\| ≤ 0.031; EM 28 / 28 | **pass** (pooled bound 2×; p99 at the 1.5× edge). **New floor (d) = 5.0e-4 / 9.5e-4**, about (b, 2048) |
-| per-run vs single pass, same selection (chunk_starts, random; 5/10/20 %) | one forward vs one per run | 2.9e-5 – 1.7e-3 / 5.5e-5 – 3.5e-3 | vs (b, 64): ≤ 0.20×; p99 ≤ 0.90× | median per-task KL 3e-4; 2 of 168 task cells exceed the (b) per-task bound 1.4e-3 | **pass** on K/V; logits: note 2 |
-| **(a)** CPU per-run recompute vs Vulkan single pass, random 10 %, 6 contexts / 10 tasks | backend, on the recomputed (mostly stale) state | 0.023 / 0.047 | vs (a): mean 1.12× / 1.09×; p99 **2.67× (V, layer 2)** | KL 4.1e-3 (max task 7.5e-3; bound 8.1e-3); top-1 differs on 4 rows of 320 | K/V means **pass**; p99 fails in 5 of 72 layer-kinds (layers 2–5); masked NLL: note 3 |
+| per-run vs single pass, same selection (chunk_starts, random; 5/10/20 %) | one forward vs one per run | **per recomputed row:** K 2.9e-4 – 8.8e-3 / V 5.5e-4 – 1.8e-2 (whole cache: 2.9e-5 – 1.7e-3) | per recomputed row vs (b, 64): all-layer ≤ 0.81×, worst layer ≤ 1.03× | median per-task KL 3e-4; 2 of 168 task cells exceed the (b) per-task bound 1.4e-3 | **pass** on K/V; logits: note 2 |
+| **(a)** CPU per-run recompute vs Vulkan single pass, random 10 %, 6 contexts / 10 tasks | backend, on the recomputed (mostly stale) state | 0.023 / 0.047 | vs (a): mean 1.12× / 1.09×; p99 **2.67× (V, layer 2)** | KL 4.1e-3: above the pooled (a) bound 3.5e-3 (1.78× the floor), which formally needs ≥ 20 tasks; max task 7.5e-3 (single-task bound 8.1e-3); top-1 differs on 4 rows of 320 | K/V means **pass**; p99 over in 5 of 72 layer-kinds (layers 2–5); mean KL over the pooled bound (10 tasks, not a formal fail); masked NLL: note 3 |
 
 1. **The attention-kernel floor (d) is now measured.** G0 had no pair that runs ATTN_QPOS.
    - Swapping the attention kernel alone moves K/V by about as much as G0's 512-vs-2048-row batching (b, 2048), and the logits by 2.6e-4 KL.
@@ -143,7 +196,12 @@ The two contexts ran in two processes. A reboot at ~13:29 UTC killed the first r
    - On the synthetic F32 model, ATTN_QPOS reproduces the CPU to ~5e-6, and the ordinary Vulkan kernel is the one that differs (tests).
      Whether ATTN_QPOS also moves the real model's Vulkan path *towards* the CPU was not measured here.
 2. **Single pass vs per-run.**
-   - K/V are within the (b, 64) floor by a factor of 5 or more. The per-run arm's runs are 1–40-row forwards, in the GEMV and MMQ regimes.
+   - **K/V, per recomputed row** (non-selected rows are bit-identical in both caches, so the whole-cache means are diluted by 1/f):
+     - ≈ 0.8× of (b, 64) all-layer, ≈ 1.0× at the worst layer, wherever one side runs 17–127-row MMQ forwards. Those are the per-run
+       chunk_starts runs (~40 rows), and the single pass at 2K 5 % (102 rows).
+     - ≈ 0.03× elsewhere: per-run random (1–2-row forwards) vs a ≥ 128-row single pass, i.e. at the (b, 1) level.
+     - That is what the forward sizes predict, so it is a pass, but at the floor, not far below it.
+   - **8K:** 0.07–0.17× of (b, 64), except chunk_starts 20 % at 0.78×.
    - **Logits outliers:** the 2 cells over the KL bound each come from one confident row that flips. The extreme one has KL 28.7 on 1 of
      32 rows, with masked NLL 0.086 vs 0.089. Against the full prefill it is the per-run arm that flipped (max row KL 9.3, single 0.40).
    - **Masked-call NLL:** the differences exceed G0's full-prefill (b) bound (0.15 nats) on 5, 2 and 4 of 28 random-selection tasks at
@@ -151,6 +209,8 @@ The two contexts ran in two processes. A reboot at ~13:29 UTC killed the first r
      vs 0.43 for full prefill), and G0's NLL bounds, measured on full prefills, are too tight for them.
 3. **CPU vs Vulkan on the recomputed state.**
    - K/V means sit at the (a) floor (1.09–1.12×), as for G1's naive caches. The p99 overshoot is in shallow layers 2–5 only.
+   - The mean KL (4.1e-3) is above the pooled (a) bound (3.5e-3), as G1 also saw on naive caches. With 10 tasks the pooled rule does not
+     formally apply, but it points the same way as the NLL.
    - The masked-call NLL differs by more than the (a) bound (0.23) on 3 of 10 tasks (max 1.48).
    - The E4 comparison below shows the same for **naive** caches (5 of 23 tasks over 0.23, max 1.8). So this is the stale state amplifying
      the backend difference, not the recompute. That was G1's hypothesis; it now holds on 23 tasks.
@@ -189,7 +249,8 @@ on the same 23 tasks and the **same selections** as E4 (E4's random seed formula
   - Worst layer 2.03× (layer 1, single-context bound 4×); layers ≥ 2 ≤ 1.66×.
   - Logits: KL 3.1e-4, top-1 0.994, \|Δ masked NLL\| ≤ 0.10. **Pass.**
 - **Single pass vs per-run** (same selections):
-  - K/V ≤ 0.2× of (b, 64) in every arm.
+  - K/V per recomputed row: 0.07–0.17× of (b, 64), except chunk_starts 20 % at 0.78× (whole-cache figures in `summary.md` are diluted by
+    the 80–95 % unrecomputed rows).
   - KL ≤ 8e-4 per task.
   - \|Δ masked NLL\| ≤ 0.32 (8K (b) bound 0.69). **Pass.**
 - **Quality vs Vulkan full prefill** (mean KL over the 5 tasks):
@@ -205,6 +266,11 @@ on the same 23 tasks and the **same selections** as E4 (E4's random seed formula
 
 ## Caveats
 
+- **Deviation from the plan's statistics rule:** the plan asks for "≥ 3 seeds with paired, cluster-bootstrapped intervals".
+  - G2 is seed 0 only: E4's selections on E4's contexts.
+  - It reports medians over contexts with [min, max], and no bootstrap intervals.
+  - The 18–28× kernel gaps and the losses at ≥ 10 % are far outside any plausible interval. The 2K 5 % (1.07×), 8K 5 % (0.96×)
+    and the estimated 16K 5 % (0.7–0.85×) cells are not: they are reported as ties or estimates.
 - **8K and 16K scope:** 8K has 2 contexts, and 16K is 1 context with 1 repeat at 5 % only, against 8 contexts at 2K.
 - **One model, one GPU, one driver:** Qwen3-4B Q4_K_M (Q4_K/Q6_K weights). The ATTN_QPOS cost is a property of the current shader, not of
   selective recompute. The verdict is "not with this kernel", and the control arm bounds what a better kernel could give.
@@ -219,10 +285,15 @@ on the same 23 tasks and the **same selections** as E4 (E4's random seed formula
   - The 8K timing run had one 84-s suspension (see Speed); one repeat was inflated and the median is unaffected.
 - **Reboot:** the box rebooted at ~13:29 UTC during the 8K timing run (second context). The completed first context was kept, and the second was rerun after the reboot.
 - **TDR (`TdrDelay` 10 s):**
-  - Submits were capped: 512 rows (~8 s) at 2K eval, 128 rows (≤ ~19 s) at 8K, 64 rows at 16K.
-  - At 16K a single 64-row ATTN_QPOS submit still took up to 68 s (the tail control); the single-pass batches averaged ~28 s.
-  - Single submits of 30 s (2K smoke), ~38–60 s (8K probe) and 68 s (16K) completed without a device reset. That is not a licence to rely
-    on it: a smaller cap, or a split inside the forward, is needed before going longer.
+  - Submits were capped: 512 rows (~8 s) at 2K eval, 128 rows (≤ ~19 s) at 8K, 64 rows (~20 s) at 16K.
+  - Single submits of 30 s (2K smoke), ~38–60 s (8K probe) and 68 s (the slow 16K run) completed without a device reset.
+- **Two unclean reboots, both while G2 ATTN_QPOS work was running** (Kernel-Power 41, "rebooted without cleanly shutting down"; no bugcheck or TDR event):
+  - **First:** the 8K timing run's last heartbeat was at 11:35 UTC (context 2, chunk_starts 10 % per-run, short forwards). The box came back
+    at 13:29.
+  - **Second:** the 16K rerun's last log line was at ~17:20 UTC, during its first 64-row single-pass batches. The box came back at 18:51.
+  - The cause is unknown. Other agents' jobs may also have been running, there is no bugcheck or TDR event, and neither freeze happened in
+    a long submit. Running G2-style ATTN_QPOS workloads on this box is nonetheless **not known to be safe**. No further runs were made
+    after the second freeze.
 - **8K probe** (`timing-8k-probe-cap256.csv`, 1 context, 256-row cap): the cap split its "tail_ordinary" control into one ATTN_QPOS batch
   and one tail batch (fixed in `b3fd24a6`). Use only its full / encode / assembly / single / per-run rows.
 - **Descriptor-set overflow:** `EncodeResident` of ~58 chunks per 8K context overflows the Vulkan model's `DescriptorSetCache` (request
@@ -257,7 +328,7 @@ on the same 23 tasks and the **same selections** as E4 (E4's random seed formula
     the ordinary flash/coopmat attention) or one row earlier `[L-k-1, L-1)` (ATTN_QPOS). Same forward shape and matmul regime; only the
     attention kernel differs. k = the largest budget, capped by `--max-rows`.
   - Before every recompute the naive cache is re-assembled by device copy (bit-exact each time, G1), outside the timed region.
-- **Repeats:** 3 per arm in the timing groups (repeat spread ≤ 3 %, see tables). Each timing group is its own process and never requests
+- **Repeats:** 3 per arm in the timing groups (repeat spread ≤ 1.16, one 8K repeat excepted; see Speed). Each timing group is its own process and never requests
   all-row logits (Vulkan's all-row limit is grow-only; once widened every short forward also runs the LM head). The eval groups' timings
   are not used.
 - **Eval groups** (`--eval 1`, 1 repeat): each task's E4 evaluation block (query prefix, then 32 continuation rows teacher-forced) on every
@@ -281,8 +352,13 @@ on the same 23 tasks and the **same selections** as E4 (E4's random seed formula
   per layer, counted with the model's counter), `Recompute_FirstAndLastPosition_Edge`, plus row-cap batching, refusals, and a model without
   the ATTN_QPOS shader). The ChunkReuse suite: 273 / 273 pass with the GPU.
   - Red phase: compile failure, `logs/red-build.log`.
-  - Mutants: 16 / 16 killed in `git archive` copies (`logs/mutants-t4.log`, `logs/mutants-t4-round2.log`, driver `logs/mutate4.py`). Round 1
-    killed 14; M9 (CPU backend accepts a Vulkan model) and M16 (no cache-length guard) survived and were killed after two new tests.
+  - Mutants: 17 of 18 killed in `git archive` copies (`logs/mutants-t4.log`, `logs/mutants-t4-round2.log`, `logs/mutants-t4-round3.log`;
+    driver `logs/mutate4.py`).
+    - Round 1 killed 14 of 16. M9 (CPU backend accepts a Vulkan model) and M16 (no cache-length guard) survived and were killed after two
+      new tests.
+    - Review round: M18 (descending batch order under the row cap) is killed.
+    - M17 (the guard only catches a total fallback, `ran == 0`) survives. It is equivalent under the current refusals: a partial-layer
+      fallback needs per-layer attention sinks or windowed layers, and the backend refuses both before any write.
 - **Measured on the synthetic model (tests):** ATTN_QPOS (plain F32) reproduces the **CPU** full prefill to ~5e-6, while the ordinary Vulkan
   prefill attention differs from both by ~3e-3 past layer 0. So on that model the Vulkan-vs-CPU gap past layer 0 (G0 Scope note) is the
   ordinary attention kernel, and an all-positions recompute through ATTN_QPOS is closer to the CPU than to the Vulkan full prefill.

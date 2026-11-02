@@ -1,0 +1,12 @@
+# fix round GPU job, Mon Nov  2 17:11:56 UTC 2026, dotLLM bac190ab, dirty 0
+[gpu-lock] acquired by 'chunk-vulkan-t4' (pid 22401): ChunkedkvCache G2 review fix round: 2 mutants + profiled 2K/16K control (~20 min)
+free RAM 99 GB
+Time Elapsed 00:00:21.70
+BASE:
+Passed!  - Failed:     0, Passed:   273, Skipped:     0, Total:   273, Duration: 26 s - DotLLM.Tests.Unit.dll (net10.0)
+M17-guard-only-catches-zero: SURVIVED ['Passed!  - Failed:     0, Passed:   273, Skipped:     0, Total:   273, Duration: 7 s - DotLLM.Tests.Unit.dll (net10.0)'] []
+M18-descending-batches: KILLED ['Failed!  - Failed:     1, Passed:   272, Skipped:     0, Total:   273, Duration: 7 s - DotLLM.Tests.Unit.dll (net10.0)'] ['Recompute_RowCap_SplitsIntoAscendingBatches']
+2k-profile exit 0
+16k-profile exit 0
+done Mon Nov  2 17:17:17 UTC 2026
+[gpu-lock] released by 'chunk-vulkan-t4'

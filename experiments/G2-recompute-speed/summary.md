@@ -8,8 +8,8 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 |---|---:|---|---:|---:|
 | full512 | 1.66 s | [1.64 s, 1.66 s] | 1.01 | 1,236 |
 | full2048 | 1.66 s | [1.65 s, 1.68 s] | 1.07 | 1,236 |
-| encode_host | 5.64 s | [5.13 s, 5.82 s] | 0.00 | 363 |
-| upload_resident | 916 ms | [771 ms, 1.21 s] | 0.00 | 2,235 |
+| encode_host | 5.64 s | [5.13 s, 5.82 s] | — | 363 |
+| upload_resident | 916 ms | [771 ms, 1.21 s] | — | 2,235 |
 | asm_host | 588 ms | [495 ms, 797 ms] | 1.06 | 3,485 |
 | asm_device | 76 ms | [64 ms, 108 ms] | 1.16 | 27,061 |
 
@@ -34,8 +34,8 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 |---|---:|---|---:|---:|
 | full512 | 1.65 s | [1.64 s, 1.66 s] | 1.01 | 1,236 |
 | full2048 | 1.66 s | [1.66 s, 1.66 s] | 1.02 | 1,228 |
-| encode_host | 5.46 s | [5.36 s, 5.56 s] | 0.00 | 374 |
-| upload_resident | 778 ms | [747 ms, 808 ms] | 0.00 | 2,626 |
+| encode_host | 5.46 s | [5.36 s, 5.56 s] | — | 374 |
+| upload_resident | 778 ms | [747 ms, 808 ms] | — | 2,626 |
 | asm_host | 525 ms | [511 ms, 538 ms] | 1.06 | 3,893 |
 | asm_device | 68 ms | [63 ms, 73 ms] | 1.18 | 30,050 |
 
@@ -48,6 +48,25 @@ Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row bloc
 | chunk_starts | 20 % | 408 | 10 | 6.62 s | 4 | 6.27 s | 0.9× | 6.69 s | 0.2× | 7.15 s | 0.2× | 12.60 s | 0.13× |
 | random | 20 % | 408 | 328 | 6.47 s | 4 | 11.12 s | 1.7× | 6.54 s | 0.3× | 6.99 s | 0.2× | 12.45 s | 0.13× |
 
+## Speed, 2k-profile (1 contexts, median L 2045, median 12 symbol chunks)
+
+Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
+
+| arm | median | [min, max] | rep | tok/s |
+|---|---:|---|---:|---:|
+| full512 | 1.63 s | [1.63 s, 1.63 s] | — | 1,251 |
+| encode_host | 5.57 s | [5.57 s, 5.57 s] | — | 367 |
+| upload_resident | 896 ms | [896 ms, 896 ms] | — | 2,282 |
+| asm_host | 557 ms | [557 ms, 557 ms] | — | 3,669 |
+| asm_device | 75 ms | [75 ms, 75 ms] | — | 27,209 |
+
+**Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 183 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 3.28 s: 17.9×. ATTN_QPOS total 12.9 µs per (row × visible key) over 36 layers; the ordinary tail 1.4 ms per row.
+
+Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 1.63 s.
+
+| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+
 ## Speed, 8k (2 contexts, median L 8190, median 62 symbol chunks)
 
 Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
@@ -56,8 +75,8 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 |---|---:|---|---:|---:|
 | full512 | 19.18 s | [19.04 s, 19.32 s] | 1.01 | 427 |
 | full2048 | 19.12 s | [19.08 s, 19.17 s] | 1.00 | 428 |
-| encode_host | 22.70 s | [22.00 s, 23.40 s] | 0.00 | 361 |
-| upload_resident | 3.88 s | [3.48 s, 4.29 s] | 0.00 | 2,109 |
+| encode_host | 22.70 s | [22.00 s, 23.40 s] | — | 361 |
+| upload_resident | 3.88 s | [3.48 s, 4.29 s] | — | 2,109 |
 | asm_host | 2.53 s | [2.25 s, 2.80 s] | 1.04 | 3,241 |
 | asm_device | 309 ms | [301 ms, 317 ms] | 1.08 | 26,507 |
 
@@ -74,17 +93,17 @@ Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row bloc
 | random | 10 % | 819 | 735 | 60.68 s | 7 | 63.12 s | 1.0× | 60.99 s | 0.3× | 63.21 s | 0.3× | 85.91 s | 0.22× |
 | random | 20 % | 1638 | 1304 | 113.93 s | 13 | 118.66 s | 1.0× | 114.24 s | 0.2× | 116.46 s | 0.2× | 139.16 s | 0.14× |
 
-## Speed, 16k (1 contexts, median L 16384, median 91 symbol chunks)
+## Speed, 16k-first (1 contexts, median L 16384, median 91 symbol chunks)
 
 Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
 
 | arm | median | [min, max] | rep | tok/s |
 |---|---:|---|---:|---:|
-| full512 | 68.63 s | [68.63 s, 68.63 s] | 0.00 | 239 |
-| encode_host | 59.94 s | [59.94 s, 59.94 s] | 0.00 | 273 |
-| upload_resident | 9.96 s | [9.96 s, 9.96 s] | 0.00 | 1,644 |
-| asm_host | 4.83 s | [4.83 s, 4.83 s] | 0.00 | 3,391 |
-| asm_device | 641 ms | [641 ms, 641 ms] | 0.00 | 25,548 |
+| full512 | 68.63 s | [68.63 s, 68.63 s] | — | 239 |
+| encode_host | 59.94 s | [59.94 s, 59.94 s] | — | 273 |
+| upload_resident | 9.96 s | [9.96 s, 9.96 s] | — | 1,644 |
+| asm_host | 4.83 s | [4.83 s, 4.83 s] | — | 3,391 |
+| asm_device | 641 ms | [641 ms, 641 ms] | — | 25,548 |
 
 **Attention-kernel control** (64 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 876 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 68.44 s: 78.1×. ATTN_QPOS total 65.4 µs per (row × visible key) over 36 layers; the ordinary tail 13.7 ms per row.
 
@@ -94,17 +113,55 @@ Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row bloc
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | chunk_starts | 5 % | 819 | 86 | 364.06 s | 13 | 284.55 s | 0.8× | 364.70 s | 0.2× | 368.89 s | 0.2× | 428.83 s | 0.16× |
 
+## Speed, 16k-rerun-partial (1 contexts, median L 16384, median 91 symbol chunks)
+
+Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
+
+| arm | median | [min, max] | rep | tok/s |
+|---|---:|---|---:|---:|
+| full512 | 68.46 s | [68.46 s, 68.46 s] | — | 239 |
+| encode_host | 47.71 s | [47.71 s, 47.71 s] | — | 343 |
+| upload_resident | 6.37 s | [6.37 s, 6.37 s] | — | 2,570 |
+| asm_host | 4.24 s | [4.24 s, 4.24 s] | — | 3,860 |
+| asm_device | 505 ms | [505 ms, 505 ms] | — | 32,429 |
+
+**Attention-kernel control** (64 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 687 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 19.62 s: 28.5×. ATTN_QPOS total 18.7 µs per (row × visible key) over 36 layers; the ordinary tail 10.7 ms per row.
+
+Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 68.46 s.
+
+| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+
+## Speed, 16k-profile (1 contexts, median L 16384, median 91 symbol chunks)
+
+Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
+
+| arm | median | [min, max] | rep | tok/s |
+|---|---:|---|---:|---:|
+| full512 | 68.70 s | [68.70 s, 68.70 s] | — | 238 |
+| encode_host | 52.62 s | [52.62 s, 52.62 s] | — | 311 |
+| upload_resident | 6.48 s | [6.48 s, 6.48 s] | — | 2,530 |
+| asm_host | 10.02 s | [10.02 s, 10.02 s] | — | 1,635 |
+| asm_device | 626 ms | [626 ms, 626 ms] | — | 26,159 |
+
+**Attention-kernel control** (64 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 712 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 19.72 s: 27.7×. ATTN_QPOS total 18.8 µs per (row × visible key) over 36 layers; the ordinary tail 11.1 ms per row.
+
+Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 68.70 s.
+
+| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+
 ## Speed, 8k-probe-cap256 (1 contexts, median L 8188, median 58 symbol chunks)
 
 Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
 
 | arm | median | [min, max] | rep | tok/s |
 |---|---:|---|---:|---:|
-| full512 | 19.30 s | [19.30 s, 19.30 s] | 0.00 | 424 |
-| encode_host | 21.94 s | [21.94 s, 21.94 s] | 0.00 | 373 |
-| upload_resident | 3.38 s | [3.38 s, 3.38 s] | 0.00 | 2,424 |
-| asm_host | 2.21 s | [2.21 s, 2.21 s] | 0.00 | 3,705 |
-| asm_device | 289 ms | [289 ms, 289 ms] | 0.00 | 28,366 |
+| full512 | 19.30 s | [19.30 s, 19.30 s] | — | 424 |
+| encode_host | 21.94 s | [21.94 s, 21.94 s] | — | 373 |
+| upload_resident | 3.38 s | [3.38 s, 3.38 s] | — | 2,424 |
+| asm_host | 2.21 s | [2.21 s, 2.21 s] | — | 3,705 |
+| asm_device | 289 ms | [289 ms, 289 ms] | — | 28,366 |
 
 **Attention-kernel control** (409 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 38.30 s; one row earlier [L-k-1, L-1) (ATTN_QPOS) 60.74 s: 1.6×. ATTN_QPOS total 18.6 µs per (row × visible key) over 36 layers; the ordinary tail 93.6 ms per row.
 

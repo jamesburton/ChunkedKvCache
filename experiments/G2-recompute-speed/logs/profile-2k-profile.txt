@@ -1,0 +1,532 @@
+[prefill-profile] seqLen=512 layers=36 total_ms=295.2
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=512      93.3 ms  ( 31.6 %)  splits=72
+[prefill-profile]   attention             69.5 ms  ( 23.5 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=512      28.8 ms  (  9.8 %)  splits=18
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=512      25.6 ms  (  8.7 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=512      23.8 ms  (  8.1 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=512      19.3 ms  (  6.5 %)  splits=36
+[prefill-profile]   ffn_act               11.1 ms  (  3.8 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=512      10.0 ms  (  3.4 %)  splits=54
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=512       3.7 ms  (  1.2 %)  splits=18
+[prefill-profile]   norm_resid             3.1 ms  (  1.0 %)  splits=72
+[prefill-profile]   qkv_proj               2.6 ms  (  0.9 %)  splits=36
+[prefill-profile]   rope                   1.7 ms  (  0.6 %)  splits=36
+[prefill-profile]   lm_head                1.6 ms  (  0.5 %)  splits=1
+[prefill-profile]   embed                  0.6 ms  (  0.2 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.2 ms  (  0.1 %)  splits=36
+[prefill-profile]   o_proj                 0.2 ms  (  0.1 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=512 k=512 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=512 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=512 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=512 x36
+[prefill-profile]   dispatch attn_flash_cm m=512 k=512 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=512 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=512 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=512 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=512 x18
+[prefill-profile] seqLen=512 layers=36 total_ms=292.3
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=512      92.7 ms  ( 31.7 %)  splits=72
+[prefill-profile]   attention             68.9 ms  ( 23.6 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=512      28.0 ms  (  9.6 %)  splits=18
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=512      25.4 ms  (  8.7 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=512      23.5 ms  (  8.0 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=512      19.2 ms  (  6.6 %)  splits=36
+[prefill-profile]   ffn_act               11.1 ms  (  3.8 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=512       9.9 ms  (  3.4 %)  splits=54
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=512       3.6 ms  (  1.2 %)  splits=18
+[prefill-profile]   qkv_proj               3.0 ms  (  1.0 %)  splits=36
+[prefill-profile]   norm_resid             3.0 ms  (  1.0 %)  splits=72
+[prefill-profile]   rope                   1.6 ms  (  0.6 %)  splits=36
+[prefill-profile]   lm_head                1.5 ms  (  0.5 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.2 ms  (  0.1 %)  splits=36
+[prefill-profile]   embed                  0.2 ms  (  0.1 %)  splits=1
+[prefill-profile]   o_proj                 0.2 ms  (  0.1 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=512 k=512 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=512 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=512 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=512 x36
+[prefill-profile]   dispatch attn_flash_cm m=512 k=512 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=512 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=512 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=512 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=512 x18
+[prefill-profile] seqLen=512 layers=36 total_ms=370.5
+[prefill-profile]   attention            163.7 ms  ( 44.2 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=512      84.2 ms  ( 22.7 %)  splits=72
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=512      27.3 ms  (  7.4 %)  splits=18
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=512      23.0 ms  (  6.2 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=512      21.6 ms  (  5.8 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=512      17.7 ms  (  4.8 %)  splits=36
+[prefill-profile]   ffn_act               10.9 ms  (  2.9 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=512       9.3 ms  (  2.5 %)  splits=54
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=512       3.2 ms  (  0.9 %)  splits=18
+[prefill-profile]   qkv_proj               2.9 ms  (  0.8 %)  splits=36
+[prefill-profile]   norm_resid             2.7 ms  (  0.7 %)  splits=72
+[prefill-profile]   rope                   1.5 ms  (  0.4 %)  splits=36
+[prefill-profile]   lm_head                1.5 ms  (  0.4 %)  splits=1
+[prefill-profile]   embed                  0.6 ms  (  0.2 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.2 ms  (  0.1 %)  splits=36
+[prefill-profile]   o_proj                 0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=512 k=1024 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=512 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=512 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=512 x36
+[prefill-profile]   dispatch attn_flash_cm m=512 k=1024 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=512 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=512 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=512 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=512 x18
+[prefill-profile] seqLen=512 layers=36 total_ms=428.2
+[prefill-profile]   attention            236.5 ms  ( 55.2 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=512      77.3 ms  ( 18.1 %)  splits=72
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=512      24.6 ms  (  5.7 %)  splits=18
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=512      21.1 ms  (  4.9 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=512      19.6 ms  (  4.6 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=512      17.7 ms  (  4.1 %)  splits=36
+[prefill-profile]   ffn_act               10.9 ms  (  2.5 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=512       8.4 ms  (  2.0 %)  splits=54
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=512       2.9 ms  (  0.7 %)  splits=18
+[prefill-profile]   norm_resid             2.4 ms  (  0.6 %)  splits=72
+[prefill-profile]   qkv_proj               2.4 ms  (  0.6 %)  splits=36
+[prefill-profile]   rope                   2.1 ms  (  0.5 %)  splits=36
+[prefill-profile]   lm_head                1.5 ms  (  0.3 %)  splits=1
+[prefill-profile]   embed                  0.6 ms  (  0.1 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.2 ms  (  0.0 %)  splits=36
+[prefill-profile]   o_proj                 0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=512 k=1536 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=512 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=512 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=512 x36
+[prefill-profile]   dispatch attn_flash_cm m=512 k=1536 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=512 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=512 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=512 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=512 x18
+[prefill-profile] seqLen=509 layers=36 total_ms=525.5
+[prefill-profile]   attention            331.8 ms  ( 63.1 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=509      77.6 ms  ( 14.8 %)  splits=72
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=509      24.8 ms  (  4.7 %)  splits=18
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=509      21.2 ms  (  4.0 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=509      20.3 ms  (  3.9 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=509      19.4 ms  (  3.7 %)  splits=36
+[prefill-profile]   ffn_act               10.2 ms  (  1.9 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=509       8.3 ms  (  1.6 %)  splits=54
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=509       3.0 ms  (  0.6 %)  splits=18
+[prefill-profile]   qkv_proj               2.8 ms  (  0.5 %)  splits=36
+[prefill-profile]   norm_resid             2.3 ms  (  0.4 %)  splits=72
+[prefill-profile]   rope                   1.5 ms  (  0.3 %)  splits=36
+[prefill-profile]   lm_head                1.5 ms  (  0.3 %)  splits=1
+[prefill-profile]   embed                  0.6 ms  (  0.1 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.2 ms  (  0.0 %)  splits=36
+[prefill-profile]   o_proj                 0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=509 k=2045 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=509 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=509 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=509 x36
+[prefill-profile]   dispatch attn_flash_cm m=509 k=2045 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=509 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=509 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=509 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=509 x18
+[prefill-profile] seqLen=220 layers=36 total_ms=102.7
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=220      37.7 ms  ( 36.7 %)  splits=72
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=220      12.2 ms  ( 11.9 %)  splits=18
+[prefill-profile]   attention             11.7 ms  ( 11.4 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=220      10.3 ms  ( 10.1 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=220       8.9 ms  (  8.6 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=220       8.0 ms  (  7.8 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=220       4.2 ms  (  4.1 %)  splits=54
+[prefill-profile]   ffn_act                2.8 ms  (  2.7 %)  splits=36
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=220       2.0 ms  (  2.0 %)  splits=18
+[prefill-profile]   norm_resid             1.7 ms  (  1.7 %)  splits=72
+[prefill-profile]   lm_head                1.5 ms  (  1.4 %)  splits=1
+[prefill-profile]   rope                   0.7 ms  (  0.7 %)  splits=36
+[prefill-profile]   qkv_proj               0.7 ms  (  0.7 %)  splits=36
+[prefill-profile]   embed                  0.1 ms  (  0.1 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   kv_update              0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   o_proj                 0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=220 k=220 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=220 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=220 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=220 x36
+[prefill-profile]   dispatch attn_flash_cm m=220 k=220 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=220 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=220 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=220 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=220 x18
+[prefill-profile] seqLen=263 layers=36 total_ms=156.3
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=263      54.7 ms  ( 35.0 %)  splits=72
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=263      20.8 ms  ( 13.3 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=263      18.9 ms  ( 12.1 %)  splits=18
+[prefill-profile]   attention             16.4 ms  ( 10.5 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=263      13.8 ms  (  8.8 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=263      13.4 ms  (  8.6 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=263       6.9 ms  (  4.4 %)  splits=54
+[prefill-profile]   ffn_act                4.2 ms  (  2.7 %)  splits=36
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=263       2.6 ms  (  1.6 %)  splits=18
+[prefill-profile]   lm_head                1.4 ms  (  0.9 %)  splits=1
+[prefill-profile]   norm_resid             1.1 ms  (  0.7 %)  splits=72
+[prefill-profile]   rope                   0.9 ms  (  0.6 %)  splits=36
+[prefill-profile]   qkv_proj               0.8 ms  (  0.5 %)  splits=36
+[prefill-profile]   embed                  0.1 ms  (  0.1 %)  splits=1
+[prefill-profile]   o_proj                 0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_gate_up            0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=263 k=263 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=263 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=263 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=263 x36
+[prefill-profile]   dispatch attn_flash_cm m=263 k=263 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=263 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=263 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=263 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=263 x18
+[prefill-profile] seqLen=119 layers=36 total_ms=88.6
+[prefill-profile]     q4_k_mmq m=9728 k=2560 n=119      36.6 ms  ( 41.3 %)  splits=72
+[prefill-profile]     q6_k_mmq m=2560 k=9728 n=119      12.3 ms  ( 13.9 %)  splits=18
+[prefill-profile]     q4_k_mmq m=4096 k=2560 n=119       9.8 ms  ( 11.1 %)  splits=36
+[prefill-profile]     q4_k_mmq m=2560 k=9728 n=119       8.9 ms  ( 10.1 %)  splits=18
+[prefill-profile]     q4_k_mmq m=2560 k=4096 n=119       7.1 ms  (  8.0 %)  splits=36
+[prefill-profile]   attention              4.7 ms  (  5.3 %)  splits=36
+[prefill-profile]     q6_k_mmq m=1024 k=2560 n=119       3.2 ms  (  3.6 %)  splits=18
+[prefill-profile]     q4_k_mmq m=1024 k=2560 n=119       1.9 ms  (  2.1 %)  splits=54
+[prefill-profile]   lm_head                1.5 ms  (  1.7 %)  splits=1
+[prefill-profile]   ffn_act                1.1 ms  (  1.2 %)  splits=36
+[prefill-profile]   norm_resid             0.5 ms  (  0.5 %)  splits=72
+[prefill-profile]   qkv_proj               0.5 ms  (  0.5 %)  splits=36
+[prefill-profile]   rope                   0.4 ms  (  0.4 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   o_proj                 0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   embed                  0.1 ms  (  0.1 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]     attn_flash_cm m=119 k=119 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_mmq m=9728 k=2560 n=119 x72
+[prefill-profile]   dispatch q4_k_mmq m=1024 k=2560 n=119 x54
+[prefill-profile]   dispatch q4_k_mmq m=4096 k=2560 n=119 x36
+[prefill-profile]   dispatch attn_flash_cm m=119 k=119 n=32 x36
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=4096 n=119 x36
+[prefill-profile]   dispatch q6_k_mmq m=1024 k=2560 n=119 x18
+[prefill-profile]   dispatch q6_k_mmq m=2560 k=9728 n=119 x18
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=9728 n=119 x18
+[prefill-profile] seqLen=92 layers=36 total_ms=78.5
+[prefill-profile]     q4_k_mmq m=9728 k=2560 n=92      33.7 ms  ( 42.9 %)  splits=72
+[prefill-profile]     q6_k_mmq m=2560 k=9728 n=92      10.8 ms  ( 13.8 %)  splits=18
+[prefill-profile]     q4_k_mmq m=4096 k=2560 n=92       9.4 ms  ( 12.0 %)  splits=36
+[prefill-profile]     q4_k_mmq m=2560 k=9728 n=92       7.6 ms  (  9.7 %)  splits=18
+[prefill-profile]     q4_k_mmq m=2560 k=4096 n=92       6.1 ms  (  7.7 %)  splits=36
+[prefill-profile]   attention              3.3 ms  (  4.2 %)  splits=36
+[prefill-profile]     q6_k_mmq m=1024 k=2560 n=92       2.5 ms  (  3.2 %)  splits=18
+[prefill-profile]     q4_k_mmq m=1024 k=2560 n=92       1.5 ms  (  1.9 %)  splits=54
+[prefill-profile]   lm_head                1.4 ms  (  1.8 %)  splits=1
+[prefill-profile]   ffn_act                0.8 ms  (  1.1 %)  splits=36
+[prefill-profile]   qkv_proj               0.4 ms  (  0.5 %)  splits=36
+[prefill-profile]   norm_resid             0.4 ms  (  0.5 %)  splits=72
+[prefill-profile]   rope                   0.3 ms  (  0.4 %)  splits=36
+[prefill-profile]   o_proj                 0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   embed                  0.0 ms  (  0.1 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=92 k=92 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_mmq m=9728 k=2560 n=92 x72
+[prefill-profile]   dispatch q4_k_mmq m=1024 k=2560 n=92 x54
+[prefill-profile]   dispatch q4_k_mmq m=4096 k=2560 n=92 x36
+[prefill-profile]   dispatch attn_flash_cm m=92 k=92 n=32 x36
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=4096 n=92 x36
+[prefill-profile]   dispatch q6_k_mmq m=1024 k=2560 n=92 x18
+[prefill-profile]   dispatch q6_k_mmq m=2560 k=9728 n=92 x18
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=9728 n=92 x18
+[prefill-profile] seqLen=24 layers=36 total_ms=50.9
+[prefill-profile]     q4_k_mmq m=9728 k=2560 n=24      18.5 ms  ( 36.2 %)  splits=72
+[prefill-profile]     q6_k_mmq m=2560 k=9728 n=24       8.9 ms  ( 17.6 %)  splits=18
+[prefill-profile]     q4_k_mmq m=2560 k=9728 n=24       6.2 ms  ( 12.2 %)  splits=18
+[prefill-profile]     q4_k_mmq m=4096 k=2560 n=24       5.5 ms  ( 10.8 %)  splits=36
+[prefill-profile]     q4_k_mmq m=2560 k=4096 n=24       4.8 ms  (  9.5 %)  splits=36
+[prefill-profile]     q6_k_mmq m=1024 k=2560 n=24       2.3 ms  (  4.5 %)  splits=18
+[prefill-profile]   lm_head                1.4 ms  (  2.8 %)  splits=1
+[prefill-profile]     q4_k_mmq m=1024 k=2560 n=24       1.4 ms  (  2.8 %)  splits=54
+[prefill-profile]   attention              0.7 ms  (  1.4 %)  splits=36
+[prefill-profile]   norm_resid             0.5 ms  (  1.0 %)  splits=72
+[prefill-profile]   ffn_act                0.3 ms  (  0.5 %)  splits=36
+[prefill-profile]   qkv_proj               0.2 ms  (  0.3 %)  splits=36
+[prefill-profile]   rope                   0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   kv_update              0.0 ms  (  0.1 %)  splits=36
+[prefill-profile]   ffn_gate_up            0.0 ms  (  0.1 %)  splits=36
+[prefill-profile]   ffn_down               0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   o_proj                 0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   embed                  0.0 ms  (  0.0 %)  splits=1
+[prefill-profile]     attn_flash_cm m=24 k=24 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_mmq m=9728 k=2560 n=24 x72
+[prefill-profile]   dispatch q4_k_mmq m=1024 k=2560 n=24 x54
+[prefill-profile]   dispatch q4_k_mmq m=4096 k=2560 n=24 x36
+[prefill-profile]   dispatch attn_flash_cm m=24 k=24 n=32 x36
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=4096 n=24 x36
+[prefill-profile]   dispatch q6_k_mmq m=1024 k=2560 n=24 x18
+[prefill-profile]   dispatch q6_k_mmq m=2560 k=9728 n=24 x18
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=9728 n=24 x18
+[prefill-profile] seqLen=368 layers=36 total_ms=184.3
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=368      57.6 ms  ( 31.3 %)  splits=72
+[prefill-profile]   attention             28.8 ms  ( 15.6 %)  splits=36
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=368      21.9 ms  ( 11.9 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=368      19.6 ms  ( 10.7 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=368      17.5 ms  (  9.5 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=368      14.9 ms  (  8.1 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=368       7.9 ms  (  4.3 %)  splits=54
+[prefill-profile]   ffn_act                6.9 ms  (  3.7 %)  splits=36
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=368       2.6 ms  (  1.4 %)  splits=18
+[prefill-profile]   norm_resid             2.1 ms  (  1.1 %)  splits=72
+[prefill-profile]   qkv_proj               1.5 ms  (  0.8 %)  splits=36
+[prefill-profile]   lm_head                1.5 ms  (  0.8 %)  splits=1
+[prefill-profile]   rope                   1.2 ms  (  0.6 %)  splits=36
+[prefill-profile]   embed                  0.1 ms  (  0.1 %)  splits=1
+[prefill-profile]   o_proj                 0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_gate_up            0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=368 k=368 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=368 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=368 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=368 x36
+[prefill-profile]   dispatch attn_flash_cm m=368 k=368 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=368 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=368 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=368 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=368 x18
+[prefill-profile] seqLen=99 layers=36 total_ms=82.5
+[prefill-profile]     q4_k_mmq m=9728 k=2560 n=99      33.9 ms  ( 41.1 %)  splits=72
+[prefill-profile]     q6_k_mmq m=2560 k=9728 n=99      11.1 ms  ( 13.4 %)  splits=18
+[prefill-profile]     q4_k_mmq m=4096 k=2560 n=99      10.0 ms  ( 12.1 %)  splits=36
+[prefill-profile]     q4_k_mmq m=2560 k=9728 n=99       8.1 ms  (  9.8 %)  splits=18
+[prefill-profile]     q4_k_mmq m=2560 k=4096 n=99       6.3 ms  (  7.6 %)  splits=36
+[prefill-profile]   attention              4.2 ms  (  5.1 %)  splits=36
+[prefill-profile]     q6_k_mmq m=1024 k=2560 n=99       3.1 ms  (  3.7 %)  splits=18
+[prefill-profile]     q4_k_mmq m=1024 k=2560 n=99       1.7 ms  (  2.1 %)  splits=54
+[prefill-profile]   lm_head                1.5 ms  (  1.8 %)  splits=1
+[prefill-profile]   ffn_act                1.0 ms  (  1.2 %)  splits=36
+[prefill-profile]   norm_resid             0.7 ms  (  0.9 %)  splits=72
+[prefill-profile]   qkv_proj               0.4 ms  (  0.5 %)  splits=36
+[prefill-profile]   rope                   0.3 ms  (  0.4 %)  splits=36
+[prefill-profile]   o_proj                 0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   embed                  0.0 ms  (  0.1 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=99 k=99 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_mmq m=9728 k=2560 n=99 x72
+[prefill-profile]   dispatch q4_k_mmq m=1024 k=2560 n=99 x54
+[prefill-profile]   dispatch q4_k_mmq m=4096 k=2560 n=99 x36
+[prefill-profile]   dispatch attn_flash_cm m=99 k=99 n=32 x36
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=4096 n=99 x36
+[prefill-profile]   dispatch q6_k_mmq m=1024 k=2560 n=99 x18
+[prefill-profile]   dispatch q6_k_mmq m=2560 k=9728 n=99 x18
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=9728 n=99 x18
+[prefill-profile] seqLen=421 layers=36 total_ms=219.1
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=421      75.1 ms  ( 34.3 %)  splits=72
+[prefill-profile]   attention             39.4 ms  ( 18.0 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=421      21.4 ms  (  9.8 %)  splits=18
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=421      21.0 ms  (  9.6 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=421      18.6 ms  (  8.5 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=421      15.3 ms  (  7.0 %)  splits=36
+[prefill-profile]   ffn_act                8.5 ms  (  3.9 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=421       8.1 ms  (  3.7 %)  splits=54
+[prefill-profile]   qkv_proj               3.1 ms  (  1.4 %)  splits=36
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=421       2.7 ms  (  1.2 %)  splits=18
+[prefill-profile]   norm_resid             2.6 ms  (  1.2 %)  splits=72
+[prefill-profile]   lm_head                1.4 ms  (  0.7 %)  splits=1
+[prefill-profile]   rope                   1.3 ms  (  0.6 %)  splits=36
+[prefill-profile]   embed                  0.1 ms  (  0.1 %)  splits=1
+[prefill-profile]   o_proj                 0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_gate_up            0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=421 k=421 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=421 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=421 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=421 x36
+[prefill-profile]   dispatch attn_flash_cm m=421 k=421 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=421 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=421 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=421 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=421 x18
+[prefill-profile] seqLen=161 layers=36 total_ms=96.4
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=161      37.3 ms  ( 38.7 %)  splits=72
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=161      11.7 ms  ( 12.2 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=161      10.1 ms  ( 10.4 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=161       9.7 ms  ( 10.0 %)  splits=36
+[prefill-profile]   attention              8.0 ms  (  8.2 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=161       7.9 ms  (  8.2 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=161       4.1 ms  (  4.3 %)  splits=54
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=161       2.3 ms  (  2.4 %)  splits=18
+[prefill-profile]   lm_head                1.4 ms  (  1.5 %)  splits=1
+[prefill-profile]   ffn_act                1.4 ms  (  1.5 %)  splits=36
+[prefill-profile]   norm_resid             1.1 ms  (  1.2 %)  splits=72
+[prefill-profile]   qkv_proj               0.6 ms  (  0.6 %)  splits=36
+[prefill-profile]   rope                   0.6 ms  (  0.6 %)  splits=36
+[prefill-profile]   ffn_gate_up            0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   embed                  0.1 ms  (  0.1 %)  splits=1
+[prefill-profile]   kv_update              0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   o_proj                 0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=161 k=161 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=161 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=161 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=161 x36
+[prefill-profile]   dispatch attn_flash_cm m=161 k=161 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=161 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=161 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=161 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=161 x18
+[prefill-profile] seqLen=108 layers=36 total_ms=84.4
+[prefill-profile]     q4_k_mmq m=9728 k=2560 n=108      34.8 ms  ( 41.2 %)  splits=72
+[prefill-profile]     q6_k_mmq m=2560 k=9728 n=108      11.6 ms  ( 13.7 %)  splits=18
+[prefill-profile]     q4_k_mmq m=4096 k=2560 n=108       9.7 ms  ( 11.5 %)  splits=36
+[prefill-profile]     q4_k_mmq m=2560 k=9728 n=108       8.5 ms  ( 10.1 %)  splits=18
+[prefill-profile]     q4_k_mmq m=2560 k=4096 n=108       6.5 ms  (  7.7 %)  splits=36
+[prefill-profile]   attention              3.9 ms  (  4.6 %)  splits=36
+[prefill-profile]     q6_k_mmq m=1024 k=2560 n=108       2.8 ms  (  3.4 %)  splits=18
+[prefill-profile]     q4_k_mmq m=1024 k=2560 n=108       1.8 ms  (  2.1 %)  splits=54
+[prefill-profile]   lm_head                1.5 ms  (  1.8 %)  splits=1
+[prefill-profile]   ffn_act                1.4 ms  (  1.7 %)  splits=36
+[prefill-profile]   norm_resid             0.8 ms  (  1.0 %)  splits=72
+[prefill-profile]   qkv_proj               0.4 ms  (  0.5 %)  splits=36
+[prefill-profile]   rope                   0.4 ms  (  0.5 %)  splits=36
+[prefill-profile]   o_proj                 0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   embed                  0.1 ms  (  0.1 %)  splits=1
+[prefill-profile]   kv_update              0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   ffn_gate_up            0.0 ms  (  0.1 %)  splits=36
+[prefill-profile]     attn_flash_cm m=108 k=108 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_mmq m=9728 k=2560 n=108 x72
+[prefill-profile]   dispatch q4_k_mmq m=1024 k=2560 n=108 x54
+[prefill-profile]   dispatch q4_k_mmq m=4096 k=2560 n=108 x36
+[prefill-profile]   dispatch attn_flash_cm m=108 k=108 n=32 x36
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=4096 n=108 x36
+[prefill-profile]   dispatch q6_k_mmq m=1024 k=2560 n=108 x18
+[prefill-profile]   dispatch q6_k_mmq m=2560 k=9728 n=108 x18
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=9728 n=108 x18
+[prefill-profile] seqLen=98 layers=36 total_ms=80.1
+[prefill-profile]     q4_k_mmq m=9728 k=2560 n=98      33.9 ms  ( 42.3 %)  splits=72
+[prefill-profile]     q6_k_mmq m=2560 k=9728 n=98      11.0 ms  ( 13.7 %)  splits=18
+[prefill-profile]     q4_k_mmq m=4096 k=2560 n=98       9.1 ms  ( 11.3 %)  splits=36
+[prefill-profile]     q4_k_mmq m=2560 k=9728 n=98       8.0 ms  ( 10.0 %)  splits=18
+[prefill-profile]     q4_k_mmq m=2560 k=4096 n=98       6.1 ms  (  7.6 %)  splits=36
+[prefill-profile]   attention              3.7 ms  (  4.6 %)  splits=36
+[prefill-profile]     q6_k_mmq m=1024 k=2560 n=98       3.0 ms  (  3.7 %)  splits=18
+[prefill-profile]     q4_k_mmq m=1024 k=2560 n=98       1.7 ms  (  2.1 %)  splits=54
+[prefill-profile]   lm_head                1.4 ms  (  1.8 %)  splits=1
+[prefill-profile]   ffn_act                0.8 ms  (  1.0 %)  splits=36
+[prefill-profile]   qkv_proj               0.4 ms  (  0.5 %)  splits=36
+[prefill-profile]   norm_resid             0.4 ms  (  0.5 %)  splits=72
+[prefill-profile]   rope                   0.3 ms  (  0.4 %)  splits=36
+[prefill-profile]   ffn_down               0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   o_proj                 0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   embed                  0.0 ms  (  0.1 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=98 k=98 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_mmq m=9728 k=2560 n=98 x72
+[prefill-profile]   dispatch q4_k_mmq m=1024 k=2560 n=98 x54
+[prefill-profile]   dispatch q4_k_mmq m=4096 k=2560 n=98 x36
+[prefill-profile]   dispatch attn_flash_cm m=98 k=98 n=32 x36
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=4096 n=98 x36
+[prefill-profile]   dispatch q6_k_mmq m=1024 k=2560 n=98 x18
+[prefill-profile]   dispatch q6_k_mmq m=2560 k=9728 n=98 x18
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=9728 n=98 x18
+[prefill-profile] seqLen=72 layers=36 total_ms=74.5
+[prefill-profile]     q4_k_mmq m=9728 k=2560 n=72      32.7 ms  ( 43.8 %)  splits=72
+[prefill-profile]     q6_k_mmq m=2560 k=9728 n=72      10.4 ms  ( 14.0 %)  splits=18
+[prefill-profile]     q4_k_mmq m=4096 k=2560 n=72       8.9 ms  ( 11.9 %)  splits=36
+[prefill-profile]     q4_k_mmq m=2560 k=9728 n=72       6.8 ms  (  9.1 %)  splits=18
+[prefill-profile]     q4_k_mmq m=2560 k=4096 n=72       6.0 ms  (  8.0 %)  splits=36
+[prefill-profile]   attention              2.3 ms  (  3.1 %)  splits=36
+[prefill-profile]     q6_k_mmq m=1024 k=2560 n=72       2.2 ms  (  3.0 %)  splits=18
+[prefill-profile]   ffn_act                1.5 ms  (  2.0 %)  splits=36
+[prefill-profile]   lm_head                1.5 ms  (  1.9 %)  splits=1
+[prefill-profile]     q4_k_mmq m=1024 k=2560 n=72       1.3 ms  (  1.7 %)  splits=54
+[prefill-profile]   qkv_proj               0.3 ms  (  0.4 %)  splits=36
+[prefill-profile]   norm_resid             0.3 ms  (  0.4 %)  splits=72
+[prefill-profile]   rope                   0.3 ms  (  0.4 %)  splits=36
+[prefill-profile]   kv_update              0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   o_proj                 0.0 ms  (  0.1 %)  splits=36
+[prefill-profile]   ffn_down               0.0 ms  (  0.1 %)  splits=36
+[prefill-profile]   embed                  0.0 ms  (  0.1 %)  splits=1
+[prefill-profile]   ffn_gate_up            0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=72 k=72 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_mmq m=9728 k=2560 n=72 x72
+[prefill-profile]   dispatch q4_k_mmq m=1024 k=2560 n=72 x54
+[prefill-profile]   dispatch q4_k_mmq m=4096 k=2560 n=72 x36
+[prefill-profile]   dispatch attn_flash_cm m=72 k=72 n=32 x36
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=4096 n=72 x36
+[prefill-profile]   dispatch q6_k_mmq m=1024 k=2560 n=72 x18
+[prefill-profile]   dispatch q6_k_mmq m=2560 k=9728 n=72 x18
+[prefill-profile]   dispatch q4_k_mmq m=2560 k=9728 n=72 x18
+[prefill-profile] seqLen=128 layers=36 total_ms=178.2
+[prefill-profile]   attention            121.7 ms  ( 68.3 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=128      20.2 ms  ( 11.3 %)  splits=72
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=128       7.7 ms  (  4.3 %)  splits=36
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=128       7.0 ms  (  4.0 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=128       6.4 ms  (  3.6 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=128       5.7 ms  (  3.2 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=128       3.4 ms  (  1.9 %)  splits=54
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=128       1.6 ms  (  0.9 %)  splits=18
+[prefill-profile]   lm_head                1.5 ms  (  0.8 %)  splits=1
+[prefill-profile]   ffn_act                1.0 ms  (  0.6 %)  splits=36
+[prefill-profile]   norm_resid             0.8 ms  (  0.4 %)  splits=72
+[prefill-profile]   rope                   0.6 ms  (  0.3 %)  splits=36
+[prefill-profile]   qkv_proj               0.5 ms  (  0.3 %)  splits=36
+[prefill-profile]   ffn_gate_up            0.1 ms  (  0.1 %)  splits=36
+[prefill-profile]   embed                  0.1 ms  (  0.0 %)  splits=1
+[prefill-profile]   kv_update              0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   o_proj                 0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_flash_cm m=128 k=2045 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=128 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=128 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=128 x36
+[prefill-profile]   dispatch attn_flash_cm m=128 k=2045 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=128 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=128 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=128 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=128 x18
+[prefill-profile] seqLen=128 layers=36 total_ms=3273.4
+[prefill-profile]   attention           3187.1 ms  ( 97.4 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=4096 k=2560 n=128      29.5 ms  (  0.9 %)  splits=36
+[prefill-profile]     q4_k_coopmat m=9728 k=2560 n=128      23.2 ms  (  0.7 %)  splits=72
+[prefill-profile]     q4_k_coopmat m=2560 k=4096 n=128       8.9 ms  (  0.3 %)  splits=36
+[prefill-profile]     q6_k_coopmat m=2560 k=9728 n=128       7.7 ms  (  0.2 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=2560 k=9728 n=128       6.0 ms  (  0.2 %)  splits=18
+[prefill-profile]     q4_k_coopmat m=1024 k=2560 n=128       5.3 ms  (  0.2 %)  splits=54
+[prefill-profile]   lm_head                1.5 ms  (  0.0 %)  splits=1
+[prefill-profile]     q6_k_coopmat m=1024 k=2560 n=128       1.3 ms  (  0.0 %)  splits=18
+[prefill-profile]   ffn_act                1.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   norm_resid             0.8 ms  (  0.0 %)  splits=72
+[prefill-profile]   qkv_proj               0.5 ms  (  0.0 %)  splits=36
+[prefill-profile]   rope                   0.4 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_gate_up            0.1 ms  (  0.0 %)  splits=36
+[prefill-profile]   embed                  0.1 ms  (  0.0 %)  splits=1
+[prefill-profile]   kv_update              0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   o_proj                 0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   ffn_down               0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]     attn_qpos m=128 k=2045 n=32       0.0 ms  (  0.0 %)  splits=36
+[prefill-profile]   dispatch q4_k_coopmat m=9728 k=2560 n=128 x72
+[prefill-profile]   dispatch q4_k_coopmat m=1024 k=2560 n=128 x54
+[prefill-profile]   dispatch q4_k_coopmat m=4096 k=2560 n=128 x36
+[prefill-profile]   dispatch attn_qpos m=128 k=2045 n=32 x36
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=4096 n=128 x36
+[prefill-profile]   dispatch q6_k_coopmat m=1024 k=2560 n=128 x18
+[prefill-profile]   dispatch q6_k_coopmat m=2560 k=9728 n=128 x18
+[prefill-profile]   dispatch q4_k_coopmat m=2560 k=9728 n=128 x18

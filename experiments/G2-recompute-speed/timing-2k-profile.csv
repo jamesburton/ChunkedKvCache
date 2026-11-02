@@ -1,0 +1,8 @@
+size,corpus,plan,context_id,context_tokens,chunks,eval_run,arm,selector,budget_pct,rows,runs,rep,ms,forward_calls,qpos_layers
+2k-profile,afclaude,0,afclaude/symbol/s0/kept/p0,2045,12,0,full512,,100,2045,4,0,1634.57,4,0
+2k-profile,afclaude,0,afclaude/symbol/s0/kept/p0,2045,12,0,encode_host,,0,2045,12,0,5569.62,12,0
+2k-profile,afclaude,0,afclaude/symbol/s0/kept/p0,2045,12,0,upload_resident,,0,2045,12,0,895.95,0,0
+2k-profile,afclaude,0,afclaude/symbol/s0/kept/p0,2045,12,0,asm_device,,0,2045,12,0,75.16,0,0
+2k-profile,afclaude,0,afclaude/symbol/s0/kept/p0,2045,12,0,asm_host,,0,2045,12,0,557.40,0,0
+2k-profile,afclaude,0,afclaude/symbol/s0/kept/p0,2045,12,0,tail_ordinary,,10,128,1,0,182.63,1,0
+2k-profile,afclaude,0,afclaude/symbol/s0/kept/p0,2045,12,0,tail_qpos,,10,128,1,0,3276.57,1,36

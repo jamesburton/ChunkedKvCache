@@ -1,0 +1,27 @@
+# provenance
+utc: 2026-11-02 17:17:48
+group: 16k-point
+command: ChunkKvLab recompute --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --names afclaude,docagent,codesharp --corpus-dirs C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 --hashes 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938,5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7,bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb --contexts 0,0,1 --kept-dir C:\Development\ChunkedkvCache\experiments\corpus --mode unfiltered --context 16384 --max-rows 64 --label 16k --out-dir C:\Development\ChunkedkvCache\experiments\G2-recompute-speed --repeats 1 --eval 0 --budgets 5 --selectors chunk_starts --full-blocks 512
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX
+gpu: AMD Radeon(TM) 8060S Graphics, Windows driver 32.0.32015.7029; vulkaninfo: apiVersion=1.4.359; deviceName=AMD Radeon(TM) 8060S Graphics; driverName=AMD proprietary driver; driverInfo=26.10.1 (LLPC)
+gpu lock: HELD name='chunk-vulkan-t4' pid=23083 age=1s reason='ChunkedkvCache G2 recompute 16k-point (Phase G Task 4), Qwen3-4B'
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-vulkan @ bac190ab4517a28281e4e183a783db886c15793e (branch feature/chunk-reuse-vulkan); dirty files: 0
+corpus afclaude: t8-corpus-AFClaude-b3f29c30-20261101111141 = git archive b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c of C:\Development\AFClaude; expected chunk-id sha256 (symbol-512) 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+corpus docagent: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 of C:\Development\CSharpDocAgentFrameworkMCP; expected chunk-id sha256 (symbol-512) 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+corpus codesharp: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 of C:\Development\codesharp; expected chunk-id sha256 (symbol-512) bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+power requests held: ExecutionRequired, SystemRequired, DisplayRequired
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on vulkan in 2.6 s; engine 0.3.0-dev.3656.19+bac190ab4517a28281e4e183a783db886c15793e
+vulkan device: AMD Radeon(TM) 8060S Graphics; eval off (timing run: all-row logits never widened); single-pass row cap 64
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), symbol-512: 7586 chunks, 1535738 tokens (chunk tokens median 157, max 512); Decode(Encode(file)) == file for 1390/1390; 8.4 s
+chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+plans: 1 contexts, 4 tasks (unfiltered, seed 0, 8.4 s); mean context 16384 tokens, 91.0 chunks
+[recompute codesharp/symbol/s0/unfiltered/p0 L 16384 chunks 91 +1 s] full prefill block 512 rep 0
+[recompute codesharp/symbol/s0/unfiltered/p0 L 16384 chunks 91 +70 s] encode (host entries: forward + readback)
+[recompute codesharp/symbol/s0/unfiltered/p0 L 16384 chunks 91 +118 s] upload host entries into resident caches
+[recompute codesharp/symbol/s0/unfiltered/p0 L 16384 chunks 91 +131 s] control tail_ordinary: 64 rows at 16320.. rep 0
+[recompute codesharp/symbol/s0/unfiltered/p0 L 16384 chunks 91 +134 s] control tail_qpos: 64 rows at 16319.. rep 0
+[recompute codesharp/symbol/s0/unfiltered/p0 L 16384 chunks 91 +155 s] chunk_starts 5 % (819 rows, 86 runs) SinglePass rep 0

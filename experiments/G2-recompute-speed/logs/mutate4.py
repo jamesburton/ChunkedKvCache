@@ -27,6 +27,10 @@ MUTANTS = [
     ('M15-per-run-merges-runs', R, 'while (end < selectedIndices.Length && selectedIndices[end] == selectedIndices[end - 1] + 1) end++;',
      'end = selectedIndices.Length;', None),
     ('M16-no-length-guard', R, 'if (cache.CurrentLength != length)', 'if (false)', None),
+    # Review fix round (Task 4): a guard that only catches a total fallback, and descending batch order under the row cap.
+    ('M17-guard-only-catches-zero', R, 'if (!tight && ran != vulkan.Config.NumLayers)', 'if (!tight && ran == 0)', None),
+    ('M18-descending-batches', R, 'for (int start = 0; start < selectedIndices.Length; start += maxRowsPerForward)',
+     'for (int start = (selectedIndices.Length - 1) / maxRowsPerForward * maxRowsPerForward; start >= 0; start -= maxRowsPerForward)', None),
 ]
 FILTER = 'FullyQualifiedName~ChunkReuse'
 

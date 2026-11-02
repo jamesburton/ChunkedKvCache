@@ -1,0 +1,5 @@
+Time Elapsed 00:00:21.70
+BASE:
+Passed!  - Failed:     0, Passed:   273, Skipped:     0, Total:   273, Duration: 26 s - DotLLM.Tests.Unit.dll (net10.0)
+M17-guard-only-catches-zero: SURVIVED ['Passed!  - Failed:     0, Passed:   273, Skipped:     0, Total:   273, Duration: 7 s - DotLLM.Tests.Unit.dll (net10.0)'] []
+M18-descending-batches: KILLED ['Failed!  - Failed:     1, Passed:   272, Skipped:     0, Total:   273, Duration: 7 s - DotLLM.Tests.Unit.dll (net10.0)'] ['Recompute_RowCap_SplitsIntoAscendingBatches']
