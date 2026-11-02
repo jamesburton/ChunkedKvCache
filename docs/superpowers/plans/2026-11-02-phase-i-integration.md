@@ -298,7 +298,10 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   registry treated as authoritative for orphans.
 - [ ] **Step 5:** Commit; write the issue draft.
 
-### Task 5: Wire-eligible chunking (L6) [CPU; may run beside Tasks 2–4]
+### Task 5: Wire-eligible chunking (L6) [CPU; may run beside Tasks 2–4] — DONE
+
+**Status:** Tasks 5 and 5b done on `feature/chunk-wire` `4bf908b7`, merged into `feature/chunk-cache` (`9c99ed6a`);
+review `.superpowers/sdd/2026-11-01-phase-s/review-phase-i-task5-report.md`. The steps are kept as the record.
 
 **Files:**
 - Create (dotLLM): `src/DotLLM.ChunkReuse/Corpus/WireChunking.cs`
@@ -320,11 +323,14 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
       public static IReadOnlySet<string> PendingE4c { get; }        // {"lines-512"}; moves to Eligible in Task 19 (after 5b)
       public static bool IsWireChunker(string chunkerName);         // Eligible.Contains
       public static string Hash(string text);                       // "sha256:" + lowercase hex of UTF-8
-      public static RoundTripReport VerifyRoundTrip(IReadOnlyList<Chunk> chunks, ITokenizer tokenizer);
+      public static RoundTripReport VerifyRoundTrip(IReadOnlyList<Chunk> chunks, Func<Chunk, string> textOf,
+                                                    ITokenizer tokenizer);   // textOf = the file-range text the wire carries
   }
   public sealed record RoundTripReport(int Checked, int Failed, IReadOnlyList<string> FailedIds);
   ```
-  `VerifyRoundTrip` checks `ChunkTokenization.Encode(text) == ids` per chunk (Task 5b); failures are marked not wire-eligible by `build` (Task 17).
+  `VerifyRoundTrip` checks `ChunkTokenization.Encode(textOf(chunk)) == ids` per chunk (Task 5b): ids, not lengths, and over
+  the file-range text, not decoded ids. `FixedSizeChunker` chunks are always `WireEligible = false`. Failures are marked
+  not wire-eligible by `build` (Task 17).
 
 - [ ] **Step 1: Write failing tests:** `SymbolChunker_OverlongLineSlices_NotWireEligible`; `SymbolChunker_NormalChunks_WireEligible`;
   `VerifyRoundTrip_IdSlicedFixedChunk_FailsAtMultibyteCut` (`FixedSizeChunker` on a fixture whose cut falls inside `é`);
@@ -337,7 +343,11 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 4:** Rerun; PASS; mutants: slices left eligible; hash over UTF-16; round trip compares lengths only.
 - [ ] **Step 5:** Merge into `feature/chunk-cache` if run in `chunk-wire`; rerun the ChunkReuse suite; commit.
 
-### Task 5b: Chunk encoding matches the chat path (ruling 21) [CPU]
+### Task 5b: Chunk encoding matches the chat path (ruling 21) [CPU] — DONE (see Task 5 status)
+
+Hash pins outside dotLLM (`experiments/{E3,E4,E4b,E7}/run.ps1` codesharp `--expect-hash`, `README` prose) are being
+updated in this repo by the Task 5 implementer: post-5b values, or a "pre-5b dotLLM only" note where a script must stay
+on old code (review should-fix 4).
 
 Task 9 found that `EncodeRaw` **parses** special-token spellings (F9) while the chat path does not (F7: the template
 inserts U+FDD0 into each special spelling in caller text, #1339, and `ControlTokenGuard` strips the mark at **encode** time,
@@ -633,6 +643,13 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
   Task 12; output equals the unannotated request); `ShortChunk_IgnoredTooShortWarning` (`min_chunk_tokens` 32, counted with
   the server tokenizer).
 - [ ] **Step 2:** Run; expected FAIL.
+- **Token-level verification (Task 5 review):** equal text is not equal tokens at a span's edges. Templates can render
+  assistant spans containing `<think>` / `</think>` differently, a SentencePiece tokenizer adds a leading-space piece, and
+  BPE can merge a span's first or last characters with template text. So `shadow` (and later I5) counts a span as
+  reusable only after checking that `ChunkTokenization.Encode(span)` equals the ids of the rendered prompt's whole-prompt
+  tokenisation over the span's located range (Task 11 offsets mapped to token positions); otherwise
+  `chunk_template_altered`. Test: `Span_TokenIdsDifferAtBoundary_NotCountedReusable` (a span glued to template text with no
+  newline) and `AssistantSpanWithThinkTag_VerifiedByIds`.
 - [ ] **Step 3:** Implement; `exact` and `shadow` tokenise the whole rendered prompt exactly as a plain request (§5.3 item 7);
   shadow keys come from `ChunkTokenization.Encode(span text)` (Task 5b), and spans come from Task 10's engine mapping.
 - [ ] **Step 4:** Rerun; PASS; mutants: shadow uses segmented tokenisation; report omitted from the stream; misses counted
@@ -770,6 +787,10 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
   registry-name validation. **This task adds:** `--server URL`; the API key from `CHUNKCACHE_API_KEY` only (never a command
   line argument, ruling 18); `--model` optional when `--server` is given (the server's model identity names the index,
   Task 4b), required with `--offline`.
+- **From the Task 5 review:** `build`'s wire-eligibility count must require all three: an allow-listed chunker
+  (`WireChunking.IsWireChunker`), a non-slice chunk (`WireEligible`), and `VerifyRoundTrip` OK (today `BuildCommand` checks
+  only the round trip). This task also owns `compare`'s query encoding, which must use `ChunkTokenization.Encode`
+  (mutant B-M14).
 - **Known divergences to resolve here (Task 7 review):** (a) `build` encodes everything by default while the MCP tool's
   `encode` defaults to `false`: the CLI keeps its default, and the MCP wrapper always passes the index-only flag unless
   `encode: true`, plus the budget; (b) `--max-chunks` counts chunks while `max_encode_tokens` counts tokens: add
@@ -784,7 +805,10 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
   `tests/.../Fixtures/v1/schemas/`); `Build_DeniedFiles_CountedNotChunked`; `Build_ChunkerNotInEligible_RefusedWithoutLab` (`fixed-512`; `lines-512` once Task 19 has run);
   `Build_Encode_CallsPrewarm_NeverPut`; `Evict_WithoutServerOrOffline_Exit2`; `Offline_SecondWriter_ExitsNonZeroWithinTimeout`
   (Review Focus); `Select_HashEqualsWireHash`; `Json_Error_IsObjectOnStdout_NonZeroExit`; `ApiKey_FromEnvOnly`;
-  `ServerBacked_IndexNamedByServerModel`; `MaxEncodeTokens_CountsTokens`; `Evict_OldModeName_RejectedWithHint`.
+  `ServerBacked_IndexNamedByServerModel`; `MaxEncodeTokens_CountsTokens`; `Evict_OldModeName_RejectedWithHint`;
+  `Build_ControlTokenSpellingTree_EligibilityUsesChunkTokenization` and `Compare_QueryWithThinkTag_UsesChunkTokenization`
+  (a CLI fixture tree whose source contains `<think>`; the synthetic GGUF gets a type-3 special token so the spelling
+  parses under bare `EncodeRaw`; kills B-M13 and B-M14); `Build_EligibilityRequiresAllowListSliceAndRoundTrip`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: build `--encode` writes locally; deny-list skipped; JSON field renamed.
@@ -833,21 +857,20 @@ E4c review (`.superpowers/sdd/2026-11-01-phase-s/review-e4c-report.md`): wire el
 stays `[]` and validation is Phase I5's (§5.11). The chunker is renamed `LinesChunker` / `lines-512` in Task 5.
 
 **Files:**
-- Modify (dotLLM): `Corpus/LinesChunker.cs` (size probes), `Corpus/WireChunking.cs`, server `ChunkCacheEndpoint.cs`
+- Modify (dotLLM): `Corpus/WireChunking.cs` (allow-list), server `ChunkCacheEndpoint.cs`
   capabilities (`wire_chunkers`), CLI and MCP chunker enums
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/LinesChunkerTests.cs` (the renamed `TextFirstFixedChunkerTests`),
   `WireChunkingTests`, `ChunkCacheEndpointTests`
 
-- [ ] **Step 1: Write failing tests:** `SizeProbes_UseChunkTokenization` (a piece whose raw `EncodeRaw` count fits but whose
-  `ChunkTokenization.Encode` count does not is cut earlier); `NearLimit_SpecialSpelling_StaysWithinLimitAndRoundTrips` (a
-  `<think>` spelling straddling the 512-token boundary); `Codesharp_CompactionSummaryValidation57_ThinkTag_RoundTrips` (the
-  file text from the frozen corpus as a fixture); `Lines512_IsWireEligible`; `Capabilities_ListLines512`;
-  `AutoValidated_StaysEmpty`.
-- [ ] **Step 2:** Run; expected FAIL.
-- [ ] **Step 3:** Switch every size probe in `LinesChunker` to `ChunkTokenization.Encode` (Task 5b); move `lines-512` from
-  `PendingE4c` to `Eligible`; add the enum values.
-- [ ] **Step 4:** Rerun; PASS; mutants: probes on bare `EncodeRaw`; list not updated in capabilities; `auto_validated`
-  populated.
+- **Already done in Task 5b** (not repeated): every `LinesChunker` size probe uses `ChunkTokenization.Encode`, with the
+  near-limit special-spelling and CRLF back-off tests; the red evidence is Task 5b's mutants B-M7 to B-M10. Those tests
+  pass on arrival, so this task has no "expected FAIL" step for them.
+- [ ] **Step 1: Write failing tests:** `Lines512_IsWireEligible`; `Capabilities_ListLines512`; `CliAndMcpEnums_IncludeLines512`;
+  `AutoValidated_StaysEmpty`; `Codesharp_CompactionSummaryValidation57_ThinkTag_RoundTrips` (frozen-corpus file as a
+  fixture; may also pass on arrival, it is kept as a regression pin).
+- [ ] **Step 2:** Run; expected FAIL for the allow-list, capabilities and enum tests.
+- [ ] **Step 3:** Move `lines-512` from `PendingE4c` to `Eligible`; add the enum values.
+- [ ] **Step 4:** Rerun; PASS; mutants: list not updated in capabilities; enum missing; `auto_validated` populated.
 - [ ] **Step 5:** Rerun the round-trip census (`ChunkKvLab roundtrip`, three frozen corpora, `lines-512` and `symbol-512`)
   under the new tokenisation; record counts and chunk-id hashes beside Task 5b's re-pin in `experiments/corpus.md`
   (expected 0 failures); commit; write the issue draft; report to the user.
@@ -1003,6 +1026,7 @@ model parts are Task 4b); recurrent models (Phase T); the E7 quality half.
 
 ## Self-review notes
 
+- 2026-11-02 rev 7: Task 5/5b done (`4bf908b7`, merged `9c99ed6a`); Task 19 trimmed; Task 17 and 13 additions from the Task 5 review.
 - 2026-11-02 rev 6: Task 2 review: namespace validity rule, namespace in index/lock names, server-assigned namespace, auth hardening, per-namespace figures and budgets.
 - 2026-11-02 rev 5: E4c review: Task 19 after 5b (eligibility granted, size probes, census); validation to I5.
 - 2026-11-02 rev 4: Task 7 review: Task 4b (L9 adopted), 5b re-pin and file list, Task 17/18 divergences, L3 note.
