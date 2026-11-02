@@ -1,0 +1,2 @@
+T11-encode-cpu-device-id: SURVIVED ['Passed!  - Failed:     0, Passed:    20, Skipped:     0, Total:    20, Duration: 18 s - DotLLM.Tests.Unit.dll (net10.0)'] []
+T12-resident-skips-source-gate: KILLED ['Failed!  - Failed:     1, Passed:    19, Skipped:     0, Total:    20, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)'] ['VulkanAssemble_RejectsCpuTaggedEntry']

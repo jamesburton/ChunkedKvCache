@@ -1,0 +1,10 @@
+Method,Seed,ContextTokens,MatchedChunks,ContinuationIsSuccessor,BuildMs,FirstTokenMs,KlMax,KlMedian,KlFirst16,KlLast16,EncodeMsPerChunk,GreedyText
+full,0,16384,16,1,72184.3,62.4,0,0,0,0,,"    private void RunFinalNormAndLmHead(int seqLen, int hidden"
+naive_concat,0,16384,16,1,1774.0,58.1,7.04944,0.246394,0.488359,0.760268,1337.8,"    /// <param name='seqLen'>The sequence length of the current sequence"
+prefix_reuse,0,16384,16,1,52859.0,58.8,0,0,0,0,,"    private void RunFinalNormAndLmHead(int seqLen, int hidden"
+full,1,16384,16,1,72145.7,58.8,0,0,0,0,," codebooks, and creates the kernel.</summary>\n    public static Iq3"
+naive_concat,1,16384,16,1,1769.1,55.9,10.7566,0.213893,1.28164,0.729792,1365.7," kernel, and returns a new <see cref='IQuantizedKvCache"
+prefix_reuse,1,16384,16,1,52759.2,58.4,0,0,0,0,," codebooks, and creates the kernel.</summary>\n    public static Iq3"
+full,2,16384,16,1,72180.9,58.4,0,0,0,0,,", // 405\n        0x08, 0"
+naive_concat,2,16384,16,1,1787.0,57.5,1.44887,0.00192965,0.0583555,0.0648717,1361.3,", // 405\n        0x19, 0"
+prefix_reuse,2,16384,16,1,52882.4,58.3,0,0,0,0,,", // 405\n        0x08, 0"

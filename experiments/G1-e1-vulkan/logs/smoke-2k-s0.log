@@ -1,0 +1,21 @@
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on vulkan in 3.8 s; engine 0.3.0-dev.3644.11+5d7ac6efe31e7b323fe201319867247fed6b55f5
+backend vulkan, device AMD Radeon(TM) 8060S Graphics
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on cpu in 0.4 s; engine 0.3.0-dev.3644.11+5d7ac6efe31e7b323fe201319867247fed6b55f5
+corpus C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/e2-corpus-4a781829-20261031161333/src (*.cs): 1086 documents, 7257 chunks of 512 tokens, tokenised once in 7.5 s; chunk-id sha256 b02b1e6e44ebbf82169f29a42d7847d7ba69203fc52f9d07bef60335c90dc800
+KV F32 bytes/token 294912; fingerprint 8753dcb215b54145…
+warm-up encode 1375 ms
+[seed 0 ctx 2048] request 5270 5931 4051 5574; base 5270 5931 5574 4051; matched 2 chunks; continuation document successor
+[seed 0 ctx 2048 +0 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 1659 ms (build 1635 + first 25)  prefill 2048  reusedKV 0 MiB
+[seed 0 ctx 2048 +3 s] encode chunks
+[seed 0 ctx 2048 +8 s] assemble (host write)
+  naive_concat  top1 0.859  KL 0.144 (max 1.53)  EM 0.625  TTFT 240 ms (build 219 + first 21)  prefill 0  reusedKV 576 MiB
+[seed 0 ctx 2048 +11 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 1034 ms (build 1015 + first 20)  prefill 1024  reusedKV 288 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 2048 +15 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 2048 +24 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.002534 (max 0.0175)  top1 0.969  bit-identical False
+[seed 0 ctx 2048 +41 s] done at 0.9 min; 4 chunks encoded, 1320 ms/chunk
+E1 finished in 0.9 min -> C:/Users/james/AppData/Local/Temp/claude/C--Development-ChunkedkvCache/e3a311cd-21c5-4c45-8a8a-705944ca30fb/scratchpad/t3/smoke/results.csv (+ -details, -timing, -kv, -xcheck)

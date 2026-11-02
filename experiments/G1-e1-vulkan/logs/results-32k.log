@@ -1,0 +1,62 @@
+# provenance
+utc: 2026-11-02 02:43:51
+command: ChunkKvLab e1 --backend vulkan --cross-check cpu --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e2-corpus-4a781829-20261031161333\src --expect-hash b02b1e6e44ebbf82169f29a42d7847d7ba69203fc52f9d07bef60335c90dc800 --sizes 32768 --seeds 3 --out C:\Development\ChunkedkvCache\experiments\G1-e1-vulkan\results-32k.csv
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX
+gpu: AMD Radeon(TM) 8060S Graphics, Windows driver 32.0.32015.7029; vulkaninfo: apiVersion=1.4.359; deviceName=AMD Radeon(TM) 8060S Graphics; driverName=AMD proprietary driver; driverInfo=26.10.1 (LLPC)
+gpu lock: HELD name='chunk-vulkan-t3' pid=104452 age=1s reason='ChunkedkvCache G1 E1 on Vulkan 32k (Phase G Task 3), Qwen3-4B'
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-vulkan @ c93fd1bf12bff6b5e372b6947bbe3675f01d9862 (branch feature/chunk-reuse-vulkan); dirty files: 0
+corpus: C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e2-corpus-4a781829-20261031161333\src = git archive 4a7818290766b69a3bae0999874154185c7fa587 src of C:\Development\dotLLM (frozen snapshot); expected chunk-id sha256 b02b1e6e44ebbf82169f29a42d7847d7ba69203fc52f9d07bef60335c90dc800
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on vulkan in 2.5 s; engine 0.3.0-dev.3644.12+c93fd1bf12bff6b5e372b6947bbe3675f01d9862
+backend vulkan, device AMD Radeon(TM) 8060S Graphics
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on cpu in 0.4 s; engine 0.3.0-dev.3644.12+c93fd1bf12bff6b5e372b6947bbe3675f01d9862
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e2-corpus-4a781829-20261031161333\src (*.cs): 1086 documents, 7257 chunks of 512 tokens, tokenised once in 3.2 s; chunk-id sha256 b02b1e6e44ebbf82169f29a42d7847d7ba69203fc52f9d07bef60335c90dc800
+KV F32 bytes/token 294912; fingerprint 94381e1dea215153…
+warm-up encode 1367 ms
+[seed 0 ctx 32768] request 5270 5931 5574 4051 1498 4058 6575 3212 7094 1992 2125 3397 4595 3414 7127 234 6260 7223 4920 2296 1 6157 7198 259 5086 3831 6779 4998 3980 615 1382 3306 2787 5230 1644 5207 2515 3005 3568 4517 1632 3685 7174 6949 5999 4951 4557 6511 2477 5776 6379 2015 2179 4676 6504 6236 3343 5545 6586 1106 255 1457 900 5351; base 5270 5931 5574 4051 1498 4058 6575 3212 7094 1992 2125 3397 4595 3414 7127 234 6260 7223 4920 2296 1 6157 7198 259 5086 3831 6779 4998 3980 615 1382 3306 2179 7174 4676 5545 255 2787 2515 6949 3685 5207 900 2015 6586 5776 2477 3343 1106 1644 3005 5230 4517 3568 1457 6379 5999 5351 6236 4951 4557 1632 6504 6511; matched 32 chunks; continuation document successor
+[seed 0 ctx 32768 +1 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 274506 ms (build 274400 + first 106)  prefill 32768  reusedKV 0 MiB
+[seed 0 ctx 32768 +279 s] encode chunks
+[seed 0 ctx 32768 +366 s] assemble (host write)
+  naive_concat  top1 0.531  KL 1.518 (max 10.1)  EM 0.000  TTFT 3738 ms (build 3636 + first 102)  prefill 0  reusedKV 9216 MiB
+[seed 0 ctx 32768 +375 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 200885 ms (build 200780 + first 105)  prefill 16384  reusedKV 4608 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 32768 +589 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 32768 +752 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.00838 (max 0.0495)  top1 0.953  bit-identical False
+[seed 0 ctx 32768 +1037 s] done at 17.4 min; 64 chunks encoded, 1335 ms/chunk
+[seed 1 ctx 32768] request 1804 804 3390 5600 4772 3143 2573 6850 742 4665 217 1808 2331 7182 4954 4757 2063 4472 5116 5098 6893 696 1186 2786 5795 1250 5765 2248 5977 6436 4050 5210 3830 3751 669 1810 3456 4658 7198 5858 2900 7212 1173 931 5028 131 398 6895 4916 3176 488 2596 7067 5084 1271 2832 6236 5035 3842 3571 2008 4930 2549 1608; base 1804 804 3390 5600 4772 3143 2573 6850 742 4665 217 1808 2331 7182 4954 4757 2063 4472 5116 5098 6893 696 1186 2786 5795 1250 5765 2248 5977 6436 4050 5210 5084 131 7198 5858 6236 488 3751 3830 2008 7212 5028 2832 3176 4916 4930 3456 1810 2596 3842 1271 2549 5035 2900 1173 6895 669 7067 3571 4658 398 931 1608; matched 32 chunks; continuation document successor
+[seed 1 ctx 32768 +1 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 4723481 ms (build 4723380 + first 101)  prefill 32768  reusedKV 0 MiB
+[seed 1 ctx 32768 +4728 s] encode chunks
+[seed 1 ctx 32768 +4820 s] assemble (host write)
+  naive_concat  top1 0.594  KL 1.227 (max 8.95)  EM 0.438  TTFT 3336 ms (build 3167 + first 169)  prefill 0  reusedKV 9216 MiB
+[seed 1 ctx 32768 +4831 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 202166 ms (build 202065 + first 100)  prefill 16384  reusedKV 4608 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 1 ctx 32768 +5049 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 1 ctx 32768 +5228 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.006116 (max 0.025)  top1 0.938  bit-identical False
+[seed 1 ctx 32768 +5502 s] done at 109.1 min; 64 chunks encoded, 1354 ms/chunk
+[seed 2 ctx 32768] request 5595 2933 1206 7148 794 2229 5822 3237 1638 90 5556 219 66 3707 2781 2038 5107 1720 5312 663 618 2472 2408 5313 6504 5902 4751 6728 745 5029 6718 7113 1941 590 4997 312 6171 6979 6359 5408 3569 710 2192 4519 6503 3168 2553 3549 4342 580 332 764 4760 4055 3648 3186 2001 2515 3898 172 699 4680 4987 2497; base 5595 2933 1206 7148 794 2229 5822 3237 1638 90 5556 219 66 3707 2781 2038 5107 1720 5312 663 618 2472 2408 5313 6504 5902 4751 6728 745 5029 6718 7113 764 312 2497 6171 4997 5408 4987 710 332 2001 1941 3648 6979 4055 172 3569 2515 3549 4680 4519 580 6503 4342 3168 590 3186 699 2192 4760 6359 2553 3898; matched 32 chunks; continuation document successor
+[seed 2 ctx 32768 +2 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 273744 ms (build 273643 + first 102)  prefill 32768  reusedKV 0 MiB
+[seed 2 ctx 32768 +279 s] encode chunks
+[seed 2 ctx 32768 +367 s] assemble (host write)
+  naive_concat  top1 0.625  KL 0.7799 (max 5.68)  EM 0.062  TTFT 3497 ms (build 3362 + first 135)  prefill 0  reusedKV 9216 MiB
+[seed 2 ctx 32768 +378 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 200416 ms (build 200318 + first 98)  prefill 16384  reusedKV 4608 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 2 ctx 32768 +591 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 2 ctx 32768 +770 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.004504 (max 0.0403)  top1 0.969  bit-identical False
+[seed 2 ctx 32768 +1046 s] done at 126.6 min; 64 chunks encoded, 1356 ms/chunk
+E1 finished in 126.6 min -> C:\Development\ChunkedkvCache\experiments\G1-e1-vulkan\results-32k.csv (+ -details, -timing, -kv, -xcheck)
+# exit code 0 after 126.7 min
