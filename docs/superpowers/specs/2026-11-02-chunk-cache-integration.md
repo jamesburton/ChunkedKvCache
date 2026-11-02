@@ -221,6 +221,8 @@ Request level (`chunk_cache`):
 | `report` | `summary` | `none` / `summary` (counts). `per_chunk` only for an authenticated caller within its own namespace (§10) |
 | `namespace` | per API key | the store partition, salted into `ChunkKey` (§10) |
 
+Fields at their default values may be omitted, and the reference client omits them (`policy: exact`, `on_miss: prefill`, `report: summary`, `strict: false`, `recompute` with neither selector nor budget); a server must treat an omitted field exactly as its default.
+
 ### 5.3 Identity, hashing, tokenisation
 
 1. **The hash covers the UTF-8 encoding of the decoded JSON string value**, with no normalisation. JSON escapes such as
@@ -345,6 +347,7 @@ Other rules:
 |---|---|
 | a server without the convention (older dotLLM, llama.cpp, Ollama) | unknown fields are ignored (dotLLM **[verified]**; llama.cpp observed behaviour **[reported]**). Plain text |
 | hosted APIs | OpenAI 400s "Unrecognized request argument"; Anthropic 400s "Extra inputs are not permitted" **[reported by review; consistent with my recollection]**. The client must strip annotations unless the capability probe (§5.9) succeeded |
+| a server that advertises the convention but refuses a non-strict manifest with a `chunk_*` error (non-conforming) | the reference client resends the request once without `chunk_cache` and treats the server as not capable for the probe failure period (30 s), so a server that keeps refusing costs one extra request per period. Strict requests get the error |
 | hash mismatch, bad span, template-altered span, special tokens | that annotation is ignored; warning |
 | store unavailable, busy or full | misses (store failures are misses, Task 3 **[verified]**); `chunk_store_unavailable` warning |
 | unsupported model or backend | `exact`, with a reason |
@@ -877,7 +880,7 @@ Facts are from codesharp-d1 (`codesharp-answers.md`, `codesharp-review-answers.m
   - `ToolOutputGuardChatClient` replaces whole results with a receipt-style spill. It **cannot cut at span boundaries
     without a new API**, so the annotation is lost.
   - `PostToolUseHookFunction` can rewrite a result (`updatedToolOutput`) and **appends `additionalContext` to the same
-    text**. An appended suffix keeps manifest spans valid (offsets are unchanged); whole-part spans break.
+    text**. An appended suffix keeps manifest spans valid: offsets are unchanged, and the reference client ends a span registered "to the end of the part" where the registered text ends, sending an explicit `end`, so the suffix is never inside a span. A span is lost only if its own bytes change.
   - `ImageToolResultRewriting` affects images only.
   - `MemoryIndexDedupe`: B3.
 - **Invalidation.** PostToolUse on edit and write tools feeds `IInvalidationSignal`. Whether `HookContext` carries the
