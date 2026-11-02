@@ -1,0 +1,50 @@
+# G2b fix round GPU job Mon Nov  2 22:35:11 UTC 2026; ResourceLock Strix:GPU acquired 22:35:05 UTC (expires 23:35:05), dotLLM 7bef8f38 dirty 1
+[gpu-lock] acquired by 'chunk-vulkan-t4b' (pid 33138): G2b fix round: edge test + mutants (~40 min)
+== edge tiled
+ all positions via ATTN_QPOS: K/V max |d| vs Vulkan full 2.568E-003, vs CPU full 1.765E-003; last logits 2.719E-003 / 1.433E-003
+ edge (tiled True): row 0 vs full prefill 1.311E-006, row 0 single vs per-run 0.000E+000, row L-1 single vs per-run 7.890E-004
+Total tests: 2
+     Passed: 2
+== edge ref
+ all positions via ATTN_QPOS: K/V max |d| vs Vulkan full 3.446E-003, vs CPU full 5.245E-006; last logits 2.168E-003 / 3.815E-006
+ edge (tiled False): row 0 vs full prefill 1.192E-006, row 0 single vs per-run 0.000E+000, row L-1 single vs per-run 1.192E-006
+Total tests: 2
+     Passed: 2
+
+== real-model integration tests (VulkanSelectiveRecomputeTests: #1534 96-row subset test + #1540 2K tiled test), Mon Nov  2 22:42:16 UTC 2026
+-- tiled
+  Passed DotLLM.Tests.Integration.Vulkan.VulkanSelectiveRecomputeTests.Qwen3_4B_2K_ScatteredRecompute_TiledKernel_WithinNumericsFloor [1 m 2 s]
+ [1531 step3] layers=36 subset (non-contiguous, qpos kernel x36): K 4.86E-002 V 9.05E-002, untouched 0.00E+000
+ [1531 step3] control (contiguous tail run, old kernels x0): K 3.84E-002 V 4.89E-002, untouched 0.00E+000
+ [1531 step3] per-layer worst K  layer: subset / control: 0:2.6E-003/3.7E-003 5:1.1E-002/1.6E-002 10:1.1E-002/8.7E-003 15:4.9E-002/2.3E-002 20:2.4E-002/2.7E-002 25:2.0E-002/1.9E-002 30:1.4E-002/1.2E-002 35:1.1E-002/8.0E-003
+ [1540] N=2048 rows=64 tiled layers=36
+ [1540] worst-row K/V vs prefill: tiled 4.86E-002/9.05E-002  ref 3.95E-002/8.17E-002  ctl 3.84E-002/4.89E-002
+ [1540] mean-over-selected-rows K/V vs prefill: tiled 8.71E-003/1.65E-002  ref 8.59E-003/1.63E-002  ctl 9.16E-003/1.64E-002
+  Passed DotLLM.Tests.Integration.Vulkan.VulkanSelectiveRecomputeTests.Qwen3_4B_NonContiguousSubsetRecompute_ReproducesFullPrefillRows [4 s]
+ [1531 step3] layers=36 subset (non-contiguous, qpos kernel x36): K 2.29E-002 V 3.90E-002, untouched 0.00E+000
+ [1531 step3] control (contiguous tail run, old kernels x0): K 2.01E-002 V 3.31E-002, untouched 0.00E+000
+ [1531 step3] per-layer worst K  layer: subset / control: 0:2.0E-003/1.9E-003 5:9.7E-003/1.0E-002 10:1.2E-002/7.4E-003 15:2.3E-002/1.5E-002 20:1.7E-002/1.4E-002 25:1.2E-002/9.8E-003 30:1.1E-002/9.7E-003 35:7.7E-003/5.5E-003
+ [1540] N=96 rows=8 tiled layers=36
+ [1540] worst-row K/V vs prefill: tiled 2.29E-002/3.90E-002  ref 2.29E-002/3.91E-002  ctl 2.01E-002/3.31E-002
+ [1540] mean-over-selected-rows K/V vs prefill: tiled 9.20E-003/1.73E-002  ref 9.21E-003/1.73E-002  ctl 8.86E-003/1.62E-002
+Total tests: 2
+     Passed: 2
+-- ref
+  Passed DotLLM.Tests.Integration.Vulkan.VulkanSelectiveRecomputeTests.Qwen3_4B_2K_ScatteredRecompute_TiledKernel_WithinNumericsFloor [44 s]
+ [1531 step3] layers=36 subset (non-contiguous, qpos kernel x36): K 3.95E-002 V 8.17E-002, untouched 0.00E+000
+ [1531 step3] control (contiguous tail run, old kernels x0): K 3.84E-002 V 4.89E-002, untouched 0.00E+000
+ [1531 step3] per-layer worst K  layer: subset / control: 0:2.6E-003/3.7E-003 5:1.1E-002/1.6E-002 10:1.1E-002/8.7E-003 15:4.0E-002/2.3E-002 20:2.4E-002/2.7E-002 25:2.0E-002/1.9E-002 30:1.3E-002/1.2E-002 35:8.9E-003/8.0E-003
+ [1540] N=2048 rows=64 tiled layers=0
+ [1540] worst-row K/V vs prefill: tiled 3.95E-002/8.17E-002  ref 3.95E-002/8.17E-002  ctl 3.84E-002/4.89E-002
+ [1540] mean-over-selected-rows K/V vs prefill: tiled 8.59E-003/1.63E-002  ref 8.59E-003/1.63E-002  ctl 9.16E-003/1.64E-002
+  Passed DotLLM.Tests.Integration.Vulkan.VulkanSelectiveRecomputeTests.Qwen3_4B_NonContiguousSubsetRecompute_ReproducesFullPrefillRows [4 s]
+ [1531 step3] layers=36 subset (non-contiguous, qpos kernel x36): K 2.29E-002 V 3.91E-002, untouched 0.00E+000
+ [1531 step3] control (contiguous tail run, old kernels x0): K 2.01E-002 V 3.31E-002, untouched 0.00E+000
+ [1531 step3] per-layer worst K  layer: subset / control: 0:2.0E-003/1.9E-003 5:9.7E-003/1.0E-002 10:1.2E-002/7.4E-003 15:2.3E-002/1.5E-002 20:1.7E-002/1.4E-002 25:1.2E-002/9.8E-003 30:1.1E-002/9.7E-003 35:7.7E-003/5.5E-003
+ [1540] N=96 rows=8 tiled layers=0
+ [1540] worst-row K/V vs prefill: tiled 2.29E-002/3.91E-002  ref 2.29E-002/3.91E-002  ctl 2.01E-002/3.31E-002
+ [1540] mean-over-selected-rows K/V vs prefill: tiled 9.21E-003/1.73E-002  ref 9.21E-003/1.73E-002  ctl 8.86E-003/1.62E-002
+Total tests: 2
+     Passed: 2
+[gpu-lock] released by 'chunk-vulkan-t4b'
+done Mon Nov  2 22:44:16 UTC 2026

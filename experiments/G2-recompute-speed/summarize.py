@@ -239,6 +239,11 @@ for label in ['b-2k', 'b-2k-r2', 'b-2k-ref', 'b-8k', 'b-8k-r2', 'b-16k', 'b-32k'
     if label == 'b-2k':
         p('# Part 2: G2b (tiled ATTN_QPOS, dotLLM #1540 / PR #1541; 128-row cap)')
         p()
+        p('Ratios below are against the dotLLM ordinary-attention full prefill. A full prefill through the tiled kernel (`d_qpos_all`, eval '
+          'groups) is itself 1.22 s at 2K and 7.7 s at 8K (1.3x / 2.5x faster); see README "G2b" for the speedups against it. '
+          '`d_vk512_vs_qpos128` pairs: their large worst-layer ratios are layer 0 (a 512-vs-128-row shape change against a ~1e-6 floor). '
+          'Pair (d) heavy p99 tails come from contexts with a 120-127-row final batch (README).')
+        p()
     speed(label)
 for label, size in [('2k-eval', '2k'), ('8k-eval', '8k'), ('b-2k-eval', '2k'), ('b-2k-eval-ref', '2k'), ('b-8k-eval', '8k')]:
     if read(f'tasks-{label}.csv'):

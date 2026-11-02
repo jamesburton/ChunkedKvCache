@@ -31,6 +31,8 @@ MUTANTS = [
     ('M17-guard-only-catches-zero', R, 'if (!tight && ran != vulkan.Config.NumLayers)', 'if (!tight && ran == 0)', None),
     ('M18-descending-batches', R, 'for (int start = 0; start < selectedIndices.Length; start += maxRowsPerForward)',
      'for (int start = (selectedIndices.Length - 1) / maxRowsPerForward * maxRowsPerForward; start >= 0; start -= maxRowsPerForward)', None),
+    # G2b: the up-front refusal of a model without the per-query-position kernel (SupportsQueryPositionAttention, #1540).
+    ('M19-no-upfront-qpos-check', R, 'if (onVulkan && !vulkan!.SupportsQueryPositionAttention)', 'if (false)', None),
 ]
 FILTER = 'FullyQualifiedName~ChunkReuse'
 

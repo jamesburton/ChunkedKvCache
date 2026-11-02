@@ -1,108 +1,172 @@
 # G2: single-pass selective recompute on Vulkan, and does chunk reuse beat full prefill? (Phase G Task 4)
 
-## G2b: tiled ATTN_QPOS kernel (dotLLM #1540 / PR #1541) — reuse with recompute now beats full prefill
+## G2b: tiled ATTN_QPOS kernel (dotLLM #1540 / PR #1541): reuse with recompute now beats dotLLM's full prefill
 
-**Result in one line:** with the tiled per-query-position attention, chunk reuse with single-pass selective recompute beats full prefill
-**at every measured budget (5–20 %) and size (2K–32K) when the chunks are device-resident**:
-- Speedups grow with context: ~4–8× at 2K, ~9–20× at 8K, ~13–37× at 16K; 61–67× at 32K (5 %).
-- **Host-write entries** (the Phase S store's read path) still win: 1.5–1.8× at 2K, 3.7–4.8× at 8K, 6.7–10× at 16K.
-- **Cold reuse** (encode + readback before the request) loses at 2K / 8K (0.22× / 0.5×) and roughly breaks even from 16K (1.1–1.2×).
-- **Numerics are unchanged:**
-  - Tiled vs the old reference kernel, on the same contexts and forward shape: pair (d) K 9.4e-4 vs 8.9e-4, KL 2.73e-4 for both.
-  - Quality vs Vulkan full prefill and the comparison with E4 match G2 to within a task or two.
-- The old G2 sections below (Part 1) measured the reference kernel and stay as they were.
+**Result in one line:** with the tiled per-query-position attention, chunk reuse with single-pass selective recompute is faster than
+**dotLLM's current full prefill** at every measured budget (5–20 %) and size (2K–32K), with device-resident chunks. Two caveats size that
+claim.
+
+**Caveat 1: dotLLM's full prefill uses the ordinary attention kernel, which scales badly with context.** The tiled kernel itself makes a
+full prefill 1.3–2.5× faster.
+- `d_qpos_all` pushes every position through the tiled kernel in 128-row batches: 1.22 s against 1.56 s at 2K, and 7.7 s against 19.6 s at
+  8K. It was measured at 2K and 8K only.
+
+| baseline | 2K warm reuse, 5 / 10 / 20 % | 8K warm reuse, 5 / 10 / 20 % | 16K, 5 / 20 % | 32K, 5 % |
+|---|---|---|---|---|
+| dotLLM's ordinary full prefill | 7.8 / 5.9 / 4.1× | 19.7 / 14.9 / 9.4× | 36.6 / 14.2× | ~60× (61× against G1's 274 s; 67× against this run's 256-row 305 s) |
+| a tiled-kernel full prefill | 6.2 / 4.5 / 3.1× | 7.7 / 5.8 / 3.7× | not measured | not measured |
+
+- **"Speedups grow with context" is mostly the ordinary prefill attention scaling badly** (1,316 → 107 tok/s from 2K to 32K). Against a
+  tiled prefill the gain is roughly the inverse budget fraction, minus assembly: about 3–8× at 5–20 %.
+
+**Caveat 2: scope.**
+- "Warm" assumes the F32 KV of every candidate chunk stays on the GPU: ~0.29 MB per token, ~9.7 GB per 32K tokens of chunks.
+- Warm TTFT = device-copy assembly (incl. the RoPE shift) + single-pass recompute. It is a **sum of separately timed medians**, not one
+  timed pipeline, and leaves out the query forward (the same in both flows).
+- Selection cost is zero for these selectors (chunk_starts, random). A query-relevance probe (Task 5) will add its own cost.
+- Qwen3-4B Q4_K_M, F32 KV, one iGPU, 128-row cap, seed 0, no bootstrap intervals.
+- 8 / 2 / 1 / 1 contexts at 2K / 8K / 16K / 32K; 32K is 1 context, 1 repeat, chunk_starts 5 % only.
+
+**Other paths.**
+- **Host-write entries** (the Phase S store's read path), chunk_starts:
+  - Against the ordinary prefill: 1.5–1.8× at 2K, 3.8–4.8× at 8K, 7.0–10.0× at 16K, 21–24× at 32K.
+  - Against a tiled prefill: a near tie at 2K (1.1–1.3×) and 1.5–1.9× at 8K.
+- **Cold reuse** (encode + readback before the request): loses at 2K and 8K (0.22× and ~0.5× against the ordinary prefill), and roughly
+  breaks even from 16K (1.1–1.2×; 2.4–2.7× at 32K).
+
+**Numerics and quality.**
+- **Pair (d)** (Vulkan prefill vs all positions recomputed single-pass) at 128 rows fails the G0 rule as written, because of a short final
+  batch (see Numerics).
+- **Tiled vs the old reference kernel at the same shape:** within a few % on K/V, and the same KL (2.73e-4).
+- **Quality** matches G2 to within a task or two.
+
+The G2 sections below (Part 1) measured the reference kernel and stay as they were.
 
 **Build and kernel.**
-- Merge: dotLLM `feature/chunk-reuse-vulkan-tiled` = `feature/chunk-reuse-vulkan` (`bac190ab`) plus a merge of
-  `perf/vulkan-attn-qpos-tiled` @ `9ddf5f00` (PR #1541, before merge). The merge is `1421f319`.
-- Our commits on top:
-  - `9236e053`: the recomputer refuses a model without ATTN_QPOS up front (`SupportsQueryPositionAttention`); the tests know about the
-    tiled kernel; new tiled-vs-reference test.
+- **Merge:** dotLLM `feature/chunk-reuse-vulkan-tiled` = `feature/chunk-reuse-vulkan` (`bac190ab`) plus merge `1421f319` of
+  `perf/vulkan-attn-qpos-tiled` @ `9ddf5f00` (PR #1541, before its merge).
+- **Our commits on top:**
+  - `9236e053`: up-front refusal through `SupportsQueryPositionAttention`; tests aware of the tiled kernel; tiled-vs-reference test.
   - `7bef8f38`: the lab logs the kernel and a `qpos_tiled_layers` column.
+  - `c2f7a1b5` (review fix): the edge test is tight under both kernels again.
 - **Measured commit:** `9ddf5f00`'s kernel. The later `3ebc0959` (regenerated scalar GQA blobs; `*_qpos` blobs unchanged) and the dev merge
   of #1541 were not re-measured.
-- The `ref` arms set `DOTLLM_VULKAN_ATTN_QPOS=ref`, which loads the old #1534 kernel only.
-- Every timed recompute arm records `qpos_tiled_layers` = 36 × forwards (tiled) or 0 (ref), so the routing is verified per row of the CSVs.
-- **Every single-pass forward is capped at 128 rows**, so each GPU submit stays short (≤ ~0.3 s for recompute submits; full prefill uses
-  512-row blocks, 256 at 32K).
+- **`ref` arms** set `DOTLLM_VULKAN_ATTN_QPOS=ref`, which loads the old #1534 kernel only.
+- **Routing check:** every timed recompute row has `qpos_tiled_layers` = `qpos_layers` (tiled) or 0 (ref). A tail batch ending at the cache
+  length runs the ordinary kernel and counts in neither.
+- **Submits:** every single-pass forward is capped at 128 rows (≤ ~0.4 s per recompute submit). The full-prefill reference is the faster of
+  512- and 2048-row blocks (8K: 2048), and 256-row blocks at 32K.
 
-### Tests (synthetic model, `logs/g2b-unit-tests.log`)
+### Tests (synthetic model; `logs/g2b-unit-tests.log`, `logs/g2b-fixround.log`, `logs/mutants-t4b-tiled.log`)
 
-- ChunkReuse + query-position suite:
-  - Tiled: 307 / 308 pass, 1 skipped (their benchmark).
-  - `DOTLLM_VULKAN_ATTN_QPOS=ref`: 306 / 308 pass, 2 skipped (benchmark; our tiled-vs-ref test).
-- **Two of our tests had pinned the reference kernel's plain-F32 exactness.** They are now kernel-aware: tight when the reference kernel ran,
-  the cross-kernel 1e-2 when the tiled one did.
-  - All positions recomputed vs the CPU full prefill: 1e-4 (reference) or 1e-2 (tiled).
-  - Row 0 and single-vs-per-run at L-1 (the per-run tail row takes the ordinary kernel): same pattern.
-- **Tiled vs the CPU on the synthetic model:** 1.8e-3 (the reference kernel gave 5e-6). Tiled vs the Vulkan full prefill: 2.6e-3.
-- **New test:** tiled vs reference kernel on a scattered selection, within 1e-2, with the routing checked through
-  `AttentionQueryPositionsTiledCount`.
+- **ChunkReuse + query-position suite:** tiled 307 / 308 pass (1 skipped: their benchmark); `DOTLLM_VULKAN_ATTN_QPOS=ref` 306 / 308 pass
+  (2 skipped: benchmark, and our tiled-vs-ref test).
+- **Two tests had pinned the reference kernel's plain-F32 exactness.**
+  - The all-positions check against the CPU full prefill is 1e-4 under the reference kernel and 1e-2 under the tiled one. Observed: tiled
+    1.8e-3 vs the CPU and 2.6e-3 vs the Vulkan prefill.
+  - The edge test now asserts, under both kernels:
+    - untouched rows bit-identical between single pass and per-run;
+    - row 0 (attends only to itself) within 1e-4 (observed 1.3e-6 tiled, 1.2e-6 ref);
+    - row L−1, the only row that crosses kernels, within 4e-3 under the tiled kernel (5× the observed 7.9e-4; 1.2e-6 under ref).
+- **New test:** tiled vs reference on a scattered selection, within 1e-2, routing checked through `AttentionQueryPositionsTiledCount`.
+- **Mutants, re-run with the tiled kernel as default** (`logs/mutants-t4b-tiled.log`; git archive `c2f7a1b5`; GPU tests included): 16 of 19
+  killed.
+  - New mutant M19 (no up-front `SupportsQueryPositionAttention` check) is killed.
+  - The three survivors are M3 (no post-forward guard), M11 (a contiguous run counted as tight) and M17 (the guard catches only a total
+    fallback). They now survive because the up-front refusal stops a model without the kernel before any forward. The post-forward guard
+    stays as defence in depth for partial fallbacks, which the current refusals (sinks, windowed caches) make unreachable.
+  - Under the reference kernel (G2) the same set was 17 of 18.
+- **Real-model integration tests** (`tests/DotLLM.Tests.Integration/Vulkan/VulkanSelectiveRecomputeTests.cs`: the #1534 96-row subset test and
+  #1540's 2K scattered-recompute tiled test) pass 2 / 2 under the tiled kernel and 2 / 2 under `ref`.
+  - On #1540's 2K test, the mean over selected rows is K 8.71e-3 tiled vs 8.59e-3 ref (control 9.16e-3), and the worst row 4.9e-2 vs
+    4.0e-2.
+  - Log: `logs/g2b-fixround.log`.
 
-### Speed (timing groups, 3 repeats, median over contexts of the per-context median; every arm `qpos_tiled_layers` > 0)
+### Speed (timing groups, 3 repeats, median over contexts of the per-context median)
 
-Warm TTFT = device-copy assembly (incl. RoPE shift) + single-pass recompute, chunk_starts selection; ratio = full prefill / TTFT.
+Ratio = the faster ordinary full prefill / warm TTFT; chunk_starts selection; warm = device-copy assembly + single pass. The tiled-prefill
+column uses `d_qpos_all` from the eval groups: one repeat, the median of per-context ratios on the same contexts.
 
-| ctx (contexts) | full prefill | 5 % | 10 % | 20 % | host-write entries (5–20 %) | cold: encode + host write (5–20 %) |
-|---|---:|---|---|---|---|---|
-| 2K (8) | 1.56 s | 0.20 s (**7.8×**) | 0.27 s (**5.9×**) | 0.38 s (**4.1×**) | 1.5–1.8× | 0.22× |
-| 8K (2) | 19.7 s | 1.00 s (**19.7×**) | 1.33 s (**14.9×**) | 2.10 s (**9.4×**) | 3.8–4.8× | 0.48–0.50× |
-| 16K (1) | 71.0 s | 1.94 s (**36.6×**) | not run | 5.01 s (**14.2×**) | 7.0–10.0× | 1.13–1.19× |
-| 32K (1, 1 repeat) | 305 s (256-row blocks; G1's 512-row prefill of another 32K context: 274 s) | 4.5 s (**67×**; 61× against 274 s) | not run | not run | 21–24× (5 %) | 2.4–2.7× (5 %) |
+| ctx (contexts) | full prefill (ordinary) | tiled-kernel prefill | 5 % | 10 % | 20 % | host-write entries (5–20 %) | cold (5–20 %) |
+|---|---:|---:|---|---|---|---|---|
+| 2K (8) | 1.56 s | 1.22 s | 0.20 s (**7.8×**; 6.2× vs tiled) | 0.27 s (**5.9×**; 4.5×) | 0.38 s (**4.1×**; 3.1×) | 1.5–1.8× (1.1–1.3× vs tiled) | 0.22× |
+| 8K (2) | 19.7 s | 7.7 s | 1.00 s (**19.7×**; 7.7×) | 1.33 s (**14.9×**; 5.8×) | 2.10 s (**9.4×**; 3.7×) | 3.8–4.8× (1.5–1.9×) | 0.48–0.50× |
+| 16K (1) | 71.0 s | not measured | 1.94 s (**36.6×**) | not run | 5.01 s (**14.2×**) | 7.0–10.0× | 1.13–1.19× |
+| 32K (1, 1 repeat) | 274 s (G1, 512-row blocks, another 32K context); 305 s here (256-row blocks) | not measured | 4.5 s (**~60×**: 61× vs 274 s, 67× vs 305 s) | not run | not run | 21–24× | 2.4–2.7× |
 
-**Repeat runs (the 2K and 8K timing groups were rerun because of the disclosed GPU overlap; `timing-b-{2k,8k}-r2.csv`):**
-- The **reuse side reproduces.** Warm TTFT at 2K: 0.25 / 0.33 / 0.46 s at 5 / 10 / 20 %, against 0.20 / 0.27 / 0.38 s. At 8K: 0.98 / 1.32 / 2.12 s,
-  against 1.00 / 1.33 / 2.10 s.
-- The reruns were noisier: from 21:59 UTC another session's full Debug unit-test run (`chunk-cache` worktree, `testhost` PID 9368) ran
-  alongside, holding neither lock.
-  - At 8K it inflated one context's full prefill to 31 s, against 19 s.
-  - Its speedups (2K 4.0–7.4×, 8K 11.7–25.7×) are therefore not used. The first-run figures above are the primary ones.
-- The first run had dotllm-97's ~60 short unit tests at an unknown time, but its repeat spreads were ≤ 1.16 on every recompute and
-  full-prefill arm. The exceptions were a few assembly repeats (up to 4.3×, one repeat each; the medians absorb them).
+**Repeat runs.** The 2K and 8K timing groups were rerun because of a GPU overlap disclosed by dotllm-97 (`timing-b-{2k,8k}-r2.csv`).
+- **The ratios reproduce:** 2K 7.35 / 5.61 / 4.03×. Absolute 2K times were 20–25 % slower (0.25 / 0.33 / 0.46 s). 8K warm TTFT was
+  0.98 / 1.32 / 2.12 s.
+- **The reruns overlapped another run:** from 21:59 UTC another session's full Debug unit-test run (`chunk-cache` worktree, `testhost` PID
+  9368) ran alongside, holding neither lock. At 8K it inflated one context's full prefill to 31 s (vs 19 s), so the r2 8K ratios (11.7–25.7×)
+  are not used. The first run is primary.
+- **First-run repeat spread:** every full-prefill and recompute arm is ≤ 1.16 except six cells at 1.19–1.36. Each of those has one spiked
+  repeat, which the median of 3 absorbs:
+  - 2K: per-run cs 5 %, single cs 10 %, single random 20 %.
+  - 8K: single random 10 %, per-run random 10 %, per-run cs 10 %.
+- **Assembly spikes:** a few assembly repeats spiked up to 4.3×, one repeat each.
+- **The 16K / 32K window (21:18–21:50)** was not cleared against dotllm-97's 16K / 32K agent. The 16K repeat spread is 1.05; 32K has one
+  repeat and cannot be checked.
 
+**Kernel behaviour.**
 - **The attention-kernel control flips.** The same 128 rows recomputed one row inside the cache (ATTN_QPOS) are now **faster** than as the
   tail through the ordinary kernel:
 
   | ctx | tiled ATTN_QPOS | ordinary flash-coopmat tail |
   |---|---:|---:|
-  | 2K | 74 ms | 177 ms |
-  | 8K | 145 ms | 655 ms |
-  | 16K | 226 ms | 1.25 s |
+  | 2K | 74 ms | 177 ms (2.4×) |
+  | 8K | 145 ms | 655 ms (4.5×) |
+  | 16K | 226 ms | 1.25 s (5.5×) |
+  | 32K | 391 ms | 2.48 s (6.3×) |
 
-  The old reference kernel took 3.3 s (2K) to 18.5 s (8K) for the same rows.
-- **Same-build A/B (`ref` arm, 2K, afclaude, chunk_starts 5 %):**
-  - Single pass: 1.34 s (ref) vs 0.11 s (tiled), 12× faster.
-  - 102-row control: 2.53 s vs ~0.07 s.
-- **Random selections cost the same as chunk_starts in the single pass** (within ~10 %).
-- **Per-run is now the slow mode:** 2.5–5× slower than the single pass for chunk_starts, and 17–34× for random selections, which need one
-  forward per ~1.25 rows. Only the single pass makes reuse pay.
+  The old reference kernel took 3.3 s (2K) and 18.5 s (8K) for the same rows. dotLLM's ordinary prefill attention is now the slower kernel
+  (told to dotllm-97 in the report).
+- **Same-build A/B** (2K, afclaude, chunk_starts 5 %): single pass 1.34 s (ref) vs 0.11 s (tiled), 12× faster. The 102-row control took
+  2.53 s under ref; tiled was only run at 128 rows (77 ms on that context).
+- **Random vs chunk_starts in the single pass:** within ~16 % (8K 10 %: 946 vs 814 ms).
+- **Per-run vs single pass:** per-run is 2.1–6.3× slower for chunk_starts, and 17–34× slower for random selections (one forward per ~1.25
+  rows). Only the single pass makes reuse pay.
 - **Where the time goes at 20 %:**
-  - The recompute is ~75 % of TTFT at 2K and 8K (0.29 / 0.38 s; 1.59 / 2.10 s); assembly is the rest.
-  - At 2K, host-write assembly (0.77 s) is now the largest cost when entries are not device-resident.
-  - Encode + readback (6 s at 2K, 36 s at 8K, 52 s at 16K) is what keeps cold reuse from winning. G1's `ReadRows` request still matters
-    for the store's write path.
+  - The recompute is ~75 % of warm TTFT at 2K and 8K; assembly is the rest.
+  - At 2K, host-write assembly (0.77 s) is the largest cost when entries are not device-resident.
+  - Encode + readback (6 s at 2K, 36 s at 8K, 52 s at 16K) is what keeps cold reuse from winning. G1's `ReadRows` request still matters.
 
-### Break-even (with the tiled kernel)
+### Break-even
 
-Reuse is not near any break-even with warm entries: 20 % recompute at 2K costs 0.29 s of a 1.48 s budget (full prefill − assembly).
-- **Highest budget that still breaks even at 2K:** the recompute is ~linear in rows at ~0.7 ms per row (0.11 s / 102 rows → 0.29 s /
-  410 rows). It would take ~2,000 rows, essentially the whole context, so at 2K reuse with recompute wins for any budget up to ~100 %.
-  This is an extrapolation.
-- **With host-write assembly at 2K:** break-even near ~95 % (0.77 s assembly + 0.7 ms per row against 1.56 s). Also an extrapolation.
+- **Against dotLLM's ordinary full prefill,** warm reuse is far from break-even at the measured budgets. At 2K, 20 % costs 0.29 s of a
+  1.48 s budget (full prefill − assembly).
+- **Against a tiled-kernel prefill,** a 100 % recompute *is* that prefill (`d_qpos_all`). Warm reuse at budget f costs about f × the tiled
+  prefill plus assembly, so it wins whenever f is clearly below 1:
+  - 3.1× at 20 % (2K), against 4.1× at 20 % against the ordinary prefill.
+  - With host-write assembly at 2K: 1.1–1.3×, near break-even already at 20 %.
 
-### Numerics (2K eval, 20 contexts / 28 tasks, and 8K eval, 2 contexts; 128-row batches)
+### Numerics (2K eval, 20 contexts / 28 tasks; 8K eval, 2 contexts; 128-row batches)
 
 | pair | 2K tiled | 2K ref (5 contexts, same shape) | 8K tiled | floor |
 |---|---|---|---|---|
-| (d) Vulkan prefill in 128-row blocks vs all positions single-pass in 128-row batches over a cache one row longer | K 7.9e-4 / V 1.5e-3 (20 contexts); same 5 contexts: 9.4e-4 / 1.8e-3; KL 2.65e-4, top-1 0.997, \|Δ NLL\| ≤ 0.031, EM 28/28 | K 8.9e-4 / V 1.7e-3; KL 2.73e-4 | K 6.3e-4 / V 1.2e-3; KL 2.7e-4 | G2 (d) at 512 rows: 5.0e-4 / 9.5e-4, KL 2.6e-4 |
-| per-run vs single pass, per recomputed row | ≤ 0.80× (b, 64) all-layer, ≤ 1.03× worst layer | — | ≤ 0.2× (b, 64) whole cache | (b, 64) |
+| (d) Vulkan prefill in 128-row blocks vs all positions single-pass in 128-row batches over a cache one row longer | K 7.9e-4 / V 1.5e-3 (20 contexts); the same 5 contexts: 9.4e-4 / 1.8e-3; KL 2.65e-4, top-1 0.997, \|Δ NLL\| ≤ 0.031, EM 28 / 28 | K 8.9e-4 / V 1.7e-3; KL 2.73e-4 | K 6.3e-4 / V 1.2e-3; KL 2.7e-4 | G2 (d) at 512 rows: 5.0e-4 / 9.5e-4 (5.1e-4 / 9.6e-4 on the same 5 contexts), KL 2.6e-4 |
+| per-run vs single pass, per recomputed row | ≤ 0.80× (b, 64) all-layer, ≤ 1.03× worst layer | — | 0.78× (b, 64) at chunk_starts 20 %; 0.08–0.17× otherwise | (b, 64) |
 | CPU per-run vs Vulkan single pass (random 10 %, 6 contexts / 10 tasks) | K/V 1.12× / 1.09× of (a); KL 4.0e-3 | — | — | (a) |
 
-- **Pair (d) at 128 rows sits ~1.6–2.4× the (b, 2048) floor on means, with heavy p99 tails (up to ~20×).** The reference kernel shows the
-  same at this shape on the same contexts (K 8.9e-4 vs 9.4e-4; p99 ratio 20.8 vs 20.3). So the tail belongs to the 128-row pair, not to
-  the tiled kernel. Logits are unaffected: KL 2.7e-4 either way, the same as G2's 512-row (d).
-- **The tiled kernel adds nothing measurable to the recompute numerics:** every K/V and logits figure is within a few % of the reference
-  kernel at the same shape.
+- **Pair (d) at 128 rows fails the G0 rule as written.**
+  - Pooled over 20 contexts, the worst-layer mean is 2.44 / 2.42× (b, 2048), against the 2× rule. The pooled p99 is 18.1 / 18.6×, against
+    1.5×.
+  - The reference kernel at the same shape gives the same (pooled p99 18.5× on its 5 contexts). The tiled kernel is ≤ 1.06× the reference
+    kernel on means, and that comparison is the real pass for the kernel.
+  - The reference-kernel figure is a floor found after the fact, not one set in advance.
+- **Cause: the short final batch** (confirmed from the per-context CSV; the mechanism is a hypothesis).
+  - **The 10 contexts with L = 2048** (no short batch): K 4.8e-4 / V 9.2e-4, the same as G2's 512-row (d). Worst layer 1.56× and median
+    per-context p99 1.4×: they **pass**.
+  - **The 10 contexts with L = 2040–2047:** their final batch is 120–127 rows, inside the 17–127-row dp4a MMQ regime. They give
+    1.1e-3 / 2.1e-3, worst layer 3.3×, p99 ~20×.
+  - The reference kernel splits the same way (2 / 3 contexts).
+  - At 8K the context without a remainder (L = 8192) is clean (p99 9.2e-3, against 2.3e-2 for L = 8188 with a 124-row remainder).
+  - Both sides of the pair run the same short batch. The likely mechanism is that MMQ quantises activations to int8, which amplifies the
+    small attention-kernel difference on those rows.
+  - **Consequence:** 2K 5 % (102 rows) runs entirely in that regime, so budgets of 17–127 rows should be judged against (b, 64) or the
+    remainder figure. The G0 table should key the ATTN_QPOS floor by forward size.
+- **`d_vk512_vs_qpos128` in `summary.md`** (worst-layer ratios 22–34×, p99 up to ~1,100×) is layer 0. There, a 512-vs-128-row matmul
+  shape change (2.9e-5 / 1.9e-4 absolute) is set against a coopmat-vs-coopmat floor of ~1e-6. The reference kernel gives the same.
 
 ### Quality (2K, 28 tasks, single pass, tiled; vs Vulkan full prefill)
 
@@ -112,27 +176,33 @@ Reuse is not near any break-even with warm entries: 20 % recompute at 2K costs 0
 | chunk_starts 5 / 10 / 20 % | 0.112 / 0.116 / 0.068 | 0.93 / 0.94 / 0.96 | 1.79 / 1.92 / 0.99 | 18 / 17 / 24 |
 | random 5 / 10 / 20 % | 0.337 / 0.326 / 0.281 | 0.84 / 0.84 / 0.85 | 4.27 / 4.11 / 3.42 | 8 / 6 / 11 |
 
-- Same tasks and selections as E4 (CPU): arm means within 0.04 nats, except random 20 % (−0.11). EM within 1 task, except random 20 %
-  (+3).
-- The kernel does not change quality. What limits reuse now is quality, not speed:
-  - Even at 20 %, chunk_starts gets 24 of 28 masked calls (full prefill: 28), and random 11.
-  - Better selectors (query relevance, hybrid; Task 5 probe) are the next lever. At 8K the KL to full is 0.19–0.37 for chunk_starts
-    (5 unvalidated tasks).
+- **Against E4 (CPU), same tasks and selections:**
+  - Arm means are within 0.06 nats (naive +0.057), except random 20 % (−0.11). EM is within 1 task, except random 20 % (+3).
+  - Per task, the mean \|Δ\| is 0.09–0.22 nats, and 2–7 of 23 tasks per arm exceed the G0 (a) bound of 0.23. That is the stale-state
+    amplification found in G2.
+- **The kernel does not change quality.** Even at 20 %, chunk_starts gets 24 of 28 masked calls and random 11. Better selectors (query
+  relevance, hybrid; Task 5 probe) are the next lever.
+- **At 8K** the KL to full is 0.19–0.37 for chunk_starts (5 unvalidated tasks).
 
 ### Verdict
 
-**Yes: with the tiled kernel, reuse with single-pass recompute beats full prefill on this iGPU** at every measured budget (5–20 %) and size
-(2K–32K), when the chunks are device-resident (4–37×). With host-written entries it also wins (1.5–10×). Only cold reuse loses at 2K / 8K.
-The remaining gap to full-prefill quality (EM 24 / 28 at 20 % with the best structural selector) is now the binding constraint, not speed.
+**With the tiled kernel, reuse with single-pass recompute is faster than dotLLM's current full prefill on this iGPU at every measured
+budget and size,** when all chunk KV is resident on the GPU:
+- About 4–8× at 2K and 9–20× at 8K, rising to ~60× at 32K.
+- A large part of that is the ordinary prefill attention scaling badly. Against a tiled-kernel prefill the gain is 3–6× at 2K and 4–8× at
+  8K, set mainly by the budget fraction.
+- With host-written entries the gain against a tiled prefill is a near tie at 2K (1.1–1.3×) and 1.5–1.9× at 8K.
+- Cold reuse loses at 2K and 8K.
 
-Caveats:
-- Seed 0; 8 / 2 / 1 / 1 contexts; medians without bootstrap intervals.
-- 16K and 32K are one context each (32K: one repeat).
-- The tiled kernel was measured at `9ddf5f00` before its merge.
-- **Overlap (disclosed by dotllm-97):** their #1540 agent ran ~60 short GPU unit tests during the first G2b timing groups, without the lock.
-  Rerunning 2K and 8K reproduced the reuse timings. The reruns were themselves overlapped by another session's unit-test run, and their
-  full-prefill times are inflated, so the first run stays primary.
-- No machine misbehaviour during G2b (no heartbeat gaps, no resets).
+Scope: TTFT is a sum of separately timed medians; selection cost is zero; Qwen3-4B, seed 0, few contexts (32K: 1 context, 1 repeat).
+**Quality, not speed, is now the binding constraint:** EM 24 / 28 at 20 % with the best structural selector.
+
+Other caveats:
+- The tiled kernel was measured at `9ddf5f00`, before its merge.
+- **Overlaps:**
+  - dotllm-97's #1540 agent ran ~60 short GPU unit tests during the first G2b timing groups, without the lock.
+  - The reruns (21:50–22:25) overlapped another session's Debug test run; they reproduce the ratios but not every absolute time.
+- No machine misbehaviour during G2b: no heartbeat gaps, no resets.
 
 ---
 

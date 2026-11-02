@@ -175,6 +175,8 @@ Full prefill reference for the TTFT ratios: the fastest full-prefill block size 
 
 # Part 2: G2b (tiled ATTN_QPOS, dotLLM #1540 / PR #1541; 128-row cap)
 
+Ratios below are against the dotLLM ordinary-attention full prefill. A full prefill through the tiled kernel (`d_qpos_all`, eval groups) is itself 1.22 s at 2K and 7.7 s at 8K (1.3x / 2.5x faster); see README "G2b" for the speedups against it. `d_vk512_vs_qpos128` pairs: their large worst-layer ratios are layer 0 (a 512-vs-128-row shape change against a ~1e-6 floor). Pair (d) heavy p99 tails come from contexts with a 120-127-row final batch (README).
+
 ## Speed, b-2k (8 contexts, median L 2048, median 15 symbol chunks)
 
 Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
