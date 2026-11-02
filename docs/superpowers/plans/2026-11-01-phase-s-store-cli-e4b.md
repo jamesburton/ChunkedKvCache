@@ -103,7 +103,7 @@
 - Produces: `SolutionScanner.LoadAsync(string slnOrProjectPath, CancellationToken) -> ScanResult(IReadOnlyList<SourceFile> Files, IReadOnlyList<SkippedProject> Skipped)`; the reference graph can be built with real project references instead of BCL-only (`RoslynGraphBuilder` accepts a compilation per project).
 
 - [ ] **Step 1: Write failing tests:** `Scan_FixtureSolution_ReturnsAllCSharpFiles`; `Scan_ProjectFailsToLoad_IsReportedInSkipped`; `Scan_GeneratedFiles_AreFlagged`; `Graph_WithProjectReferences_ResolvesCrossProjectCall` (a call that BCL-only resolution cannot resolve).
-- [ ] **Step 2:** Run; expected FAIL. **Step 3:** Implement with `MSBuildLocator`. **Step 4:** Rerun; PASS with mutants.
+- [ ] **Step 2:** Run; expected FAIL. **Step 3:** Implement with `MSBuildWorkspace` (Workspaces.MSBuild 5.x runs design-time builds in its out-of-process BuildHost, which locates the SDK itself; `MSBuildLocator` is not needed — deviation recorded in `experiments/solution-scan/README.md`), in its own assembly `DotLLM.ChunkReuse.Solution`. **Step 4:** Rerun; PASS with mutants.
 - [ ] **Step 5:** Run on dotLLM itself; report files, projects, skipped, and resolved-call share versus BCL-only; commit.
 
 ### Task 6: Selection tools

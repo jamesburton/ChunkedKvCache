@@ -110,3 +110,96 @@ The details and caveats are in `experiments/solution-scan/README.md`.
    `DotLLM.ChunkReuse.csproj`, `DotLLM.Tests.Unit.csproj`, `RoslynGraphBuilder.cs` and ChunkKvLab `Program.cs`. These are
    one-line or small additions; a merge with the chunk-index branch may need a trivial conflict resolution in the csproj or
    props files.
+
+## Fix round (review `review-task5-report.md`)
+
+**Status: DONE.** No blockers were open; every should-fix is addressed. Two mutants survive and are documented: F11 needs
+targeting packs that are not in the offline cache, and F15 is a redundant check.
+
+### dotLLM commits (`feature/chunk-scan`)
+
+- `1eff5dfa`: the review fixes, S1–S9 and the nits.
+- `5d5333ad`: `CallSite.Length`. Nested invocations share a start offset, which crashed the first rerun of the site
+  comparison.
+
+### Fixes
+
+- **S8: the scanner has its own assembly.**
+  - `src/DotLLM.ChunkReuse.Solution` (namespace `DotLLM.ChunkReuse.SolutionScan`) holds Workspaces.MSBuild,
+    CSharp.Workspaces and an explicit `Microsoft.VisualStudio.SolutionPersistence` 1.0.52 reference, all with central
+    versions.
+  - `DotLLM.ChunkReuse` is back to only `Microsoft.CodeAnalysis.CSharp`.
+  - The test project and ChunkKvLab reference the new assembly, and `dotLLM.slnx` lists it.
+- **S1: generated-file detection is syntax-based** (`GeneratedFiles.IsGenerated(path, tree)`).
+  - A marker counts only in the comments before the first token, and the attribute only as real attribute syntax.
+  - `SymbolChunker.cs` and `CorpusTests.cs` are now authored.
+  - The 3rd file the old text check flagged is identified:
+    `~/.nuget/packages/microsoft.net.test.sdk/17.13.0/build/netcoreapp3.1/Microsoft.NET.Test.Sdk.Program.cs`. It is a
+    Test.Sdk compile item outside the solution directory, so it gets a `../` path.
+  - `SymbolChunker.IsGenerated` is unchanged, because frozen corpus hashes depend on it.
+  - Tests: 12 theory cases, plus fixture files `Heuristics.cs` (authored, with the markers in literals) and `Tooling.cs` (a
+    real `[GeneratedCode]` attribute).
+- **S2: scope rows in the README and scan-info.**
+
+  | scope | bind (per-project / BCL-only) | to an authored file (per-project / BCL-only) |
+  |---|---:|---:|
+  | all 28 projects | 99.97 % / 84.37 % | 54.51 % / 54.26 % |
+  | without tests | 99.92 % / 96.80 % | 60.96 % / 61.10 % |
+  | `Corpus.FromDirectory` scope | 99.92 % / 96.66 % | 62.25 % / 62.41 % |
+
+- **S3: the Cli reverse case was a denominator effect.** Per project has 441 more Cli sites, from `#if` regions. Site by
+  site, 0 sites bind to an authored file under BCL-only but not under per-project, and 0 bind to a different declaration.
+  The README now says there is no evidence that BCL-only binds wrongly.
+- **S4: diagnostics are attributed by the quoted project path.**
+  - The path is taken from `processing the file '<path>'`, or from a single quoted project path, normalised and compared
+    case-insensitively on Windows.
+  - Unattributed failures go to `ScanResult.Diagnostics` and onto every scanned project.
+  - Fixture: `UsesBroken` references `Broken`. The loader repeats Broken's failure with an empty path (`''`); that repeat is
+    flagged on every project, and `UsesBroken` is scanned.
+  - A unit test with synthetic messages covers case, separators, unquoted paths, non-project paths, two paths, an unknown
+    path and an empty path.
+- **S5: one file under different spellings.**
+  - Paths take their on-disk casing on Windows.
+  - `RoslynGraphBuilder.PathComparer` is used for the ownership guard and for location mapping.
+  - Fixture: on Windows, App links `..\shared\buildinfo.cs` in lower case. There is a test for the Lib → BuildInfo edge
+    across spellings, and a test that the builder rejects the same file claimed twice under two spellings.
+- **S6: multi-targeted projects.**
+  - The scanned target is chosen deterministically: highest .NET 5+, then .NET Core, .NET Standard, .NET Framework,
+    platform-neutral first, then by name. This is documented and unit-tested.
+  - `SkippedProject.Files` lists the files that only the other targets compile (fixture: `Lib/Polyfill.cs`), and the
+    message names them.
+  - `ExtraTargetFramework` is documented as informational.
+- **S7:** the fixture now has a `Greeter.Greet(1)` overload failure. It counts as an unresolved invocation and gives no
+  edge, which kills C3. `CallResolution.Sites` gives the target of each site; delegate `Invoke` binding is documented.
+- **S9:** a caveat table in the README (`global.json` and several SDKs, no SDK, .NET Framework projects, missing
+  `<Import>`, unmatched project references, non-Windows, offline CI). Plan Task 5 Step 3 is edited (the MSBuildLocator
+  deviation, and the separate assembly).
+- **Nits:**
+  - `ScannedProject.ProjectReferences` and `TargetFramework`.
+  - Cached `AuthoredFiles` and `Compilations`.
+  - A cancellation test.
+  - A shared file is owned by the project whose directory holds it (fixture: `Lib/LibInfo.cs`).
+  - A `.shproj` message.
+  - The usage typo.
+  - README wording: "99.67 % or more in every project, 99.97 % overall", and Imports labelled "not measured".
+
+### Tests and mutants
+
+- 23 scanner tests (counting theory cases); all 289 ChunkReuse tests pass.
+- Mutants, fix round: 17 run, 15 killed (table in the README).
+  - F11 (TFM picked by ordinal name at the call site) survives: the fixture's targets cannot tell the two orders apart
+    offline. The comparer itself is unit-tested.
+  - F15 (no early cancellation check) survives: the check is redundant, because `OpenSolutionAsync` observes the token.
+
+### Rerun on dotLLM (`5d5333ad`, dirty=0)
+
+- 28 projects, 0 skipped.
+- 2,586 files: 85 generated (84 under `obj/` + 1 Test.Sdk `Program.cs`) and 2,501 authored.
+- Graph edges: 370,209 per project against 368,483 BCL-only (+0.47 %).
+- Scan time 20–27 s.
+
+### Process note
+
+One full ChunkReuse test run failed once, while my own background `run.ps1` (ChunkKvLab) held locks on the DLLs that the
+build copies. I stopped that task through its task ID (TaskStop), not by process name. After a clean rebuild the test passed
+in three runs in a row.

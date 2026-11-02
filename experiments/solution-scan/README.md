@@ -3,137 +3,230 @@
 dotLLM branch `feature/chunk-scan` (worktree `C:\Development\dotLLM\.claude\worktrees\chunk-scan`, from `feature/chunk-store`
 `63cebfbd`, not pushed). The code:
 
-- `src/DotLLM.ChunkReuse/Corpus/SolutionScanner.cs`
+- `src/DotLLM.ChunkReuse.Solution/SolutionScanner.cs`, a separate assembly (namespace `DotLLM.ChunkReuse.SolutionScan`).
+  It holds the MSBuild workspace packages, so `DotLLM.ChunkReuse` keeps only `Microsoft.CodeAnalysis.CSharp`.
 - `src/DotLLM.ChunkReuse/Graph/{ProjectCompilation,CallResolution}.cs`
 - `RoslynGraphBuilder.Build(IReadOnlyList<ProjectCompilation>, chunks)`
 
 Tests are in `tests/DotLLM.Tests.Unit/ChunkReuse/SolutionScannerTests.cs`, with a fixture solution in
-`tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution`. The lab command is `ChunkKvLab scan-info`. Run it with
-`run.ps1`. The raw logs are `dotllm-symbol.log` and `dotllm-fixed.log`, and each starts with a provenance block.
+`tests/DotLLM.Tests.Unit/ChunkReuse/Fixtures/MiniSolution`. The lab command is `ChunkKvLab scan-info`; run it with `run.ps1`.
+The raw logs are `dotllm-symbol.log` and `dotllm-fixed.log`, and each starts with a provenance block. The numbers below come
+from the fix-round run at `5d5333ad`.
 
 ## What the scanner does
 
-- **Loading.** `SolutionScanner.LoadAsync(sln|slnx|csproj)` opens the solution or project with Roslyn's `MSBuildWorkspace` 5.9.0.
-  Design-time builds run in Roslyn's out-of-process BuildHost, which finds the .NET SDK by itself. Because of that,
-  **`Microsoft.Build.Locator` is not used**: the plan said to use it, but it is only needed when MSBuild is loaded inside the
-  scanner's own process.
+- **Loading.** `SolutionScanner.LoadAsync(sln|slnx|csproj, ct)` opens the solution with Roslyn's `MSBuildWorkspace` 5.9.0.
+  Design-time builds run in Roslyn's out-of-process BuildHost, which finds MSBuild and the SDK by itself.
+- **Deviation from the plan: no `Microsoft.Build.Locator`.** The plan called for it, but it is only needed when MSBuild is
+  loaded inside the scanner's own process. Plan Task 5 Step 3 has been updated to match.
 - **What it returns.** `ScanResult(Files, Skipped)`, plus:
-  - `Projects`: one compilation per project, with that project's defines, parse options and references.
-  - `Generated` / `IsGenerated(path)`: files under `bin`/`obj`, or files that `SymbolChunker.IsGenerated` flags.
-  - `AuthoredFiles`: the files that are not generated.
+  - `Projects`: one per scanned project, with its compilation, `TargetFramework` and `ProjectReferences` (the project
+    dependency graph).
+  - `Generated` / `IsGenerated` and `AuthoredFiles`.
   - `Diagnostics`: loader messages that name no project.
-- **File texts.** Texts are converted from CRLF to LF, and the workspace documents get the LF text before any compilation is
-  built. Tree offsets therefore equal chunk offsets.
-- **Shared files.** A file compiled by several projects (linked files) appears once. It belongs to the first project by path.
-- **Skipped projects.** Each `SkippedProject` gets a reason:
-  - `load-failed`: the workspace reported a Failure for the project, or the solution lists it but it was not loaded. The
-    workspace still adds a project whose SDK is missing; the scanner reports it and does not scan it.
-  - `unsupported-language`: for example a `.vbproj`.
-  - `extra-target-framework`: a multi-targeted project is scanned from one target (its first Roslyn project by name); the
-    other targets get this reason.
-- **Unrestored projects.** If a project loads without a core library (it was not restored), the scanner adds a warning to that
-  project's diagnostics.
-- **Known gap: a missing `<Import>` passes silently.** A project that imports a missing `.targets` file loads with no
-  diagnostic, because the workspace ignores missing imports. It is scanned like a normal project. I found this while building
-  the fixture.
+  - `AuthoredFiles` and `Compilations` are computed once and cached.
+- **File texts.** Texts are converted from CRLF to LF before any compilation is built, so tree offsets equal chunk offsets.
+- **Paths.**
+  - Paths are relative to the solution directory with `/`.
+  - On Windows they take their on-disk casing. Two spellings of one linked file are one file, and the graph builder compares
+    paths with `RoslynGraphBuilder.PathComparer` (case-insensitive on Windows).
+  - Files outside the solution directory get `../` paths; a file on another drive gets an absolute path. On dotLLM there is
+    1 such file, from the NuGet cache (see Generated files below).
+- **Shared files.** A file compiled by several projects appears once. It belongs to the project whose directory holds it;
+  if none does, it belongs to the first project by path.
+- **Generated files** (`GeneratedFiles.IsGenerated(path, tree)`). A file is generated if it has any of:
+  - a `bin` or `obj` directory segment (this also catches a real source folder named `bin` or `obj`);
+  - a `.g.cs`, `.g.i.cs`, `.designer.cs` or `.generated.cs` name;
+  - an `<auto-generated` or `<autogenerated` marker in the comments before the first token;
+  - a real `[GeneratedCode]` attribute.
 
-## dotLLM itself (worktree `b2acb3b6`, dirty=0, SDK 10.0.401, 2026-11-02)
+  Marker strings in literals, in later comments or in a regex no longer count. The older `SymbolChunker.IsGenerated` is
+  unchanged, because the frozen corpus hashes of earlier experiments depend on it.
+- **Diagnostics.**
+  - Loader diagnostics are attributed by the project path quoted in them: the path in `processing the file '<path>'`, or
+    else a single quoted path that is a project path. Paths are normalised before comparing.
+  - A path that merely appears in the text (unquoted, or as part of a longer path) does not attribute the message.
+  - A project with an attributed **Failure** is skipped as `load-failed`. The workspace keeps such a project, with whatever
+    items it got.
+  - **An unattributed Failure is never dropped.** It goes into `ScanResult.Diagnostics` and is also added to *every* scanned
+    project's diagnostics. Example: when a project references a broken project, the loader repeats the broken project's
+    failure with an empty path, `processing the file ''`. The fixture covers this case with `UsesBroken`.
+- **Skipped projects.** `SkippedProject` reasons are:
+  - `load-failed`: an attributed Failure, or the solution lists the project but it was not loaded.
+  - `unsupported-language`: VB, F#, other project types, and `.shproj`. A shared project's files are still scanned through
+    the projects that import it, and the message says so.
+  - `extra-target-framework`: informational, so filter on `Reason`. A multi-targeted project is scanned from the target
+    framework it prefers: the highest .NET 5+ version, then .NET Core, .NET Standard, then .NET Framework, with
+    platform-neutral targets first. `SkippedProject.Files` lists the files that only the other targets compile, which are not
+    scanned.
+- **Unrestored projects.** A project that loads without a core library gets a warning in its diagnostics.
+
+### Caveats: situations not tested
+
+| situation | expected behaviour (unverified) |
+|---|---|
+| Several SDKs and a `global.json` in the scanned solution | The BuildHost should follow the scanned solution's `global.json`. dotLLM pins 10.0.100 with `latestMajor`, which is permissive, so this run does not show it. |
+| The test fixture's SDK | The fixture is copied to `%TEMP%`, outside any `global.json`, so it uses the newest installed SDK (10.0.401 here). |
+| No SDK, or a runtime only | BuildHost-netcore cannot start. I expect an exception from `LoadAsync`, or Failures that the attribution rules above report. |
+| Old-style (.NET Framework) projects | These need BuildHost-net472 and Visual Studio MSBuild. I expect `load-failed` without them. |
+| A project with a missing `<Import>` | It loads with **no** diagnostic, because the workspace ignores missing imports, and is scanned. I found this while building the fixture. |
+| A project reference that does not become a compilation reference (`ReferenceOutputAssembly=false`, TFM mismatch, skipped project) | It gives no edges into that project. Roslyn's warning `Found project reference without a matching metadata reference: <path>` does not quote the path or name the referencing project, so it stays unattributed, in `ScanResult.Diagnostics`. |
+| Linux or macOS | Not run. The tests use the Windows-only case-variant link only on Windows. |
+| Offline CI | The fixture restore needs `NETStandard.Library` 2.0.3 from a feed or the NuGet cache, and the tests start a BuildHost process. |
+
+## dotLLM itself (worktree `5d5333ad`, dirty=0, SDK 10.0.401, 2026-11-02)
 
 Tokenizer: Qwen3-4B-Instruct-2507 Q4_K_M @ `ae44f08e`. No weights are run.
 
 | item | value |
 |---|---|
-| projects in `dotLLM.slnx` scanned | **27** |
+| projects in `dotLLM.slnx` scanned | **28** (27 + the new `DotLLM.ChunkReuse.Solution`) |
 | skipped | **0** (every project loads on this box, including Cuda, Hip and Vulkan; no workspace diagnostics) |
-| C# files | **2,583**: 84 generated (3 per project under `obj/`) and **2,499 authored**, 29.2 M chars |
-| tokens (authored) | 7.91 M with symbol-512 (39,078 chunks), 7.88 M with fixed-512 (16,610 chunks) |
-| scan time | 27–31 s: workspace load, LF texts and 27 compilations; the solution was restored first |
-| graph build | 35–36 s, about the same for both chunkers; the BCL-only build takes 35–38 s |
+| C# files | **2,586**: **85 generated** and **2,501 authored**, 29.3 M chars |
+| generated, by rule | 84 under `obj/` (3 per project: `AssemblyInfo`, `GlobalUsings.g`, `AssemblyAttributes`) and 1 by its header |
+| tokens (authored) | 7.93 M with symbol-512 (39,193 chunks), 7.90 M with fixed-512 (16,652 chunks) |
+| scan time | 20–27 s: workspace load, LF texts and 28 compilations, after `dotnet restore` |
+| graph build | 23–32 s per set-up |
 
-The test projects are included, because the solution includes them: `DotLLM.Tests.Unit` has 1,118 authored files. The older
-`Corpus.FromDirectory` excludes test directories. The MiniSolution fixture is not compiled into the test project
-(`Compile Remove`), and the solution does not list it.
+The generated file found by its header is
+`../../../../../Users/james/.nuget/packages/microsoft.net.test.sdk/17.13.0/build/netcoreapp3.1/Microsoft.NET.Test.Sdk.Program.cs`.
+Test.Sdk adds this compile item to each test project, and it is listed once. **This corrects the first version of this
+README.** That version reported "84 generated (3 per project)", which was wrong: 81 were under `obj/`, and the text heuristic
+flagged 3 more. Two of those 3 were real authored files:
 
-### Per-project compilations versus BCL-only, same 2,499 authored files
+- `src/DotLLM.ChunkReuse/Corpus/SymbolChunker.cs`
+- `tests/DotLLM.Tests.Unit/ChunkReuse/CorpusTests.cs`
 
-The graph edges are the same for both chunkers, as in `graph-build.md`.
+Both held the marker strings in literals. With the syntax-based check they are authored now.
 
-| | per-project | BCL-only |
-|---|---:|---:|
-| invocation sites | 153,743 | 153,301 (no defines, so different `#if` regions are compiled) |
-| **bind to a method** | **153,693 (100.0 %)** | **129,472 (84.5 %)** |
-| bind to an authored file (possible Call edge) | 84,058 (54.7 %) | 83,450 (54.4 %) |
-| graph edges | 369,017 | 367,354 |
-| Call edges | 89,944 | 89,310 (all 89,310 are also in per-project) |
-| Use edges | 272,073 | 271,062 (271,054 shared) |
-| Import edges | 6,918 | 6,900 (only 2,525 shared, see below) |
-| Definition edges | 82 | 82 |
-| edges in one set only | 6,046 | 4,383 |
+The test projects are included because the solution lists them; the older `Corpus.FromDirectory` excludes test directories.
+The scope rows below separate them out. The MiniSolution fixture is not compiled into the test project (`Compile Remove`),
+and the solution does not list it.
 
-- **Resolved-call share: 100.0 % per project against 84.5 % BCL-only.** I did not break the roughly 24 K sites that
-  BCL-only misses down by target. The per-project pattern below suggests they are calls into packages and frameworks (xUnit
-  `Assert`, Spectre.Console, ASP.NET Core, OpenTelemetry, WinForms in Tray), but this is inferred, not measured. The projects
-  where the BCL-only share is lowest are:
+### Per-project compilations versus BCL-only, same 2,501 authored files
+
+Each set-up counts its own invocation sites. Per project sees `#if` regions under each project's defines, so it has 442
+more sites, almost all in Cli (2,145 against 1,704).
+
+| scope | sites (per-project / BCL-only) | **bind to a method** | **bind to an authored file** (possible Call edge) |
+|---|---:|---:|---:|
+| all 28 projects | 154,603 / 154,161 | **99.97 % / 84.37 %** | **54.51 % / 54.26 %** (84,268 / 83,646) |
+| without the 3 test projects | 57,245 / 56,803 | 99.92 % / 96.80 % | 60.96 % / 61.10 % (34,895 / 34,705) |
+| without tests and benchmarks (the `Corpus.FromDirectory` scope, 22 projects) | 54,161 / 53,719 | 99.92 % / 96.66 % | 62.25 % / 62.41 % (33,714 / 33,526) |
+
+- **The 84 % headline is a test-project effect.** The three test projects hold 63 % of the sites. Tests.Unit alone binds
+  only 77.6 % BCL-only: test frameworks and packages are missing from BCL-only. In the scope the earlier corpora used
+  (without tests and benchmarks), the gap is **96.7 % against 99.9 %**.
+- **What matters for the graph barely moves.** Sites that bind to an authored file are 54.5 % against 54.3 % over all
+  projects, and 62.3 % against 62.4 % in the narrow scope. The narrow-scope share is slightly *lower* per project, but only
+  because the denominator is larger (442 more `#if` sites); the count is higher, 33,714 against 33,526.
+- **Per-project binds 99.67 % or more in every project, 99.97 % overall.** The lowest are Cpu 99.67 %, Vulkan 99.90 % and
+  Cuda 99.96 %. The lowest BCL-only shares are:
   - Tray.Tests 46.6 %
   - Tray 58.5 %
   - Cli 63.6 %
-  - Tests.Integration 75.0 %
-  - Tests.Unit 77.7 %
+  - DotLLM.ChunkReuse.Solution 64.6 % (the MSBuild workspace API)
+  - Tests.Integration 75.2 %
+  - Tests.Unit 77.6 %
   - Server 85.0 %
-- **Effect on the graph is small: +608 sites bind to an authored file, +634 Call edges and about +1.0 K Use edges (+0.45 %
-  edges in total).** The graph only keeps edges whose definition is in the corpus. Package APIs cannot become edges either way,
-  and calls inside the solution mostly resolved already in one big BCL-only compilation. The edges that per-project adds come
-  from symbols that BCL-only cannot see: names behind `#if` defines (as in the fixture test), and members reached through
-  package-typed expressions.
-- **Imports differ by construction (2,525 shared).** The definition end of an Import edge is the namespace's declaration in its
-  ordinal-first declaring file. A per-project compilation only sees declarations from its own project and the projects it
-  references. A merged BCL-only compilation sees every declaration in the solution. So per-project imports point at the first
-  declaration the importing project can actually see. I count that as more correct, not as noise.
-- **Per-project binding should also be more correct, not only more complete.** This is reasoning, not measured: a single
-  merged compilation joins types of the same name from different projects and ignores per-project defines, and the
-  per-project set-up has neither problem. I did not count how many BCL-only edges point at a wrong declaration.
-- **Recommendation for Task 6/7 (`chunkcache build`).** Use the scanner and the per-project graph by default, and keep
-  BCL-only for directory corpora that have no solution. The load cost is 27–31 s for this 7.9 M-token solution, about the cost
-  of the graph build itself.
+
+  I did not break the missing sites down by target. The pattern suggests package and framework APIs, but that is inferred.
+- **The Cli "reverse case" was a denominator effect.** In the first run, Cli bound fewer sites to its own files per project
+  (11.6 % against 13.7 %), which looked as if BCL-only were binding wrongly or per-project were losing sites. The
+  site-by-site comparison in the fix round settles it:
+  - Of the 154,161 sites present in both set-ups, **none** binds to an authored file under BCL-only but not under
+    per-project.
+  - **No site** binds to a *different* authored declaration under the two set-ups.
+  - The cross table is: File/File 83,646; Elsewhere/Elsewhere 46,421; Elsewhere/Unresolved 23,463; File/Unresolved 581;
+    Unresolved/Unresolved 50.
+
+  Cli's per-project share was lower only because per-project has 441 more Cli sites (`#if` regions). Per project, Cli
+  binds 564 sites to authored files against 522 BCL-only.
+- **There is no evidence that BCL-only binds wrongly.** The first README claimed, without measuring, that per-project binding
+  is "more correct, not only more complete". On dotLLM that is not supported: wherever both set-ups bind a site to an
+  authored file, they bind it to the same declaration. Per-project is more *complete*: 581 sites bind to an authored file
+  that BCL-only cannot bind, plus 442 sites inside `#if` regions.
+
+### Graph edges
+
+The edges are the same for both chunkers.
+
+| | per-project | BCL-only |
+|---|---:|---:|
+| graph edges | 370,209 | 368,483 (+0.47 % per project) |
+| Call | 90,258 | 89,613 (all 89,613 are also per-project) |
+| Use | 272,941 | 271,878 (271,870 shared) |
+| Import | 6,928 | 6,910 (only 2,529 shared) |
+| Definition | 82 | 82 |
+| edges in one set only | 6,115 | 4,389 |
+
+- **The graph effect is small: +645 Call edges and about +1.06 K Use edges.** The graph only keeps edges whose definition is
+  in the corpus. Package APIs cannot become edges either way, and calls inside the solution mostly resolved already in one big
+  BCL-only compilation. The extra edges come from symbols BCL-only cannot see: names behind `#if` defines (as in the fixture
+  test), and members reached through package-typed expressions.
+- **Import edges differ by construction (2,529 shared); which set-up is better is not measured.** The definition end of an
+  Import edge is the namespace's declaration in its ordinal-first declaring file. A per-project compilation sees only the
+  declarations in its own project and the projects it references. A merged compilation sees every project's declarations.
+  I have not checked which choice serves a context better.
+- **Recommendation for Task 6/7 (`chunkcache build`).** Use the scanner and the per-project graph by default (more complete;
+  the load costs 20–27 s for 7.9 M tokens). Keep BCL-only for directory corpora that have no solution. Decide whether to
+  exclude test projects; the binding gap is mostly there.
 
 ## Tests and mutation evidence
 
-There are 7 tests in `SolutionScannerTests`, and all 273 ChunkReuse unit tests pass. The fixture is copied to a temp
-directory and `App` is restored there (about 3 s). It contains:
+There are 23 tests in `SolutionScannerTests`, counting theory cases, and all 289 ChunkReuse unit tests pass. The fixture is
+copied to a temp directory, `App` is restored there (about 3 s), and `Lib/Greeter.cs` is rewritten to CRLF. On Windows, App's
+link to `Shared/BuildInfo.cs` is rewritten in lower case. The fixture contains:
 
-- `Lib`: multi-targeted `net10.0;netstandard2.0`. `Greet` is declared only under the `MINI_GREETING` define.
-- `App`: references `Lib`, calls `Greeter.Greet`, and has a hand-written `Generated/Stamp.g.cs`.
-- `Shared/BuildInfo.cs`: linked into both projects.
+- `Lib`: multi-targeted `netstandard2.0;net10.0`. `Greet` is declared only under `MINI_GREETING`. It uses `BuildInfo`
+  and `LibInfo`, and `Polyfill.cs` is compiled for netstandard2.0 only.
+- `App`: references `Lib`. It calls `Greet` once correctly and once with a wrong argument type (overload-resolution
+  failure). It also has:
+  - `Generated/Stamp.g.cs`;
+  - `Tooling.cs` with a real `[GeneratedCode]` attribute;
+  - `Heuristics.cs`: authored, with the marker strings in literals and in a later comment;
+  - links to `Shared/BuildInfo.cs` and `Lib/LibInfo.cs`.
 - `Broken`: its SDK is missing.
+- `UsesBroken`: references `Broken`.
 - `Missing`: listed in the solution, but no file exists.
-- `Tool`: a Visual Basic project.
-- `Lib/Greeter.cs` is rewritten to CRLF in the temp copy.
+- `Tool`: a VB project.
 
-Each mutant below was applied in the worktree, built, tested and restored byte for byte; the restore was verified with a hash
-and with `git status`. 14 of the 15 mutants were killed:
+Mutants were applied in the worktree, built, tested and restored byte for byte (verified with a hash and `git status`). The
+review noted that the Global Constraints ask for a `git archive` scratch copy; I was alone in this worktree.
+
+**First round: 14 of 15 mutants killed.** The survivor ("candidate symbols counted as bound") is now killed by the
+overload-failure call (C3 below).
+
+**Fix round: 17 mutants, 15 killed.**
 
 | mutant | killed by |
 |---|---|
-| a Failure diagnostic no longer skips the project | FixtureSolution, SingleProject, ProjectFailsToLoad |
-| a listed project that did not load is not reported | ProjectFailsToLoad |
-| `obj/`/`bin/` paths not flagged as generated | GeneratedFiles |
-| `SymbolChunker.IsGenerated` not used | GeneratedFiles |
-| trees keep CRLF (no `WithDocumentText`) | Graph_WithProjectReferences |
-| shared file not deduplicated | 4 tests |
-| last target framework scanned instead of the first | FixtureSolution, RejectsAFileOwnedTwice |
-| language check removed | all (the scan fails on the VB project) |
-| tree path not mapped to corpus path (old behaviour) | Graph_WithProjectReferences |
-| duplicate file ownership accepted | RejectsAFileOwnedTwice (after a fix: the first version of the test passed for another reason) |
-| tree-in-compilation check removed | RejectsAFileOwnedTwice (same fix) |
-| every file bound in the first project's compilation | Graph_WithProjectReferences |
-| `CallResolution`: "to file" ignores the measured set | CallResolution test |
-| `CallResolution`: path filter ignored | CallResolution test |
-| `CallResolution`: candidate symbols counted as bound | **survived** |
+| F1 header marker searched in all trivia | GeneratedFiles theory, GeneratedFiles_AreFlagged |
+| F2 `[GeneratedCode(` matched as raw text | GeneratedFiles theory, GeneratedFiles_AreFlagged |
+| F3 several quoted project paths attribute | AttributeDiagnostics |
+| F4 an unknown "processing the file" path attributes | AttributeDiagnostics |
+| F5 unattributed failures not flagged on projects | ProjectFailsToLoad |
+| F6 case-sensitive attribution | AttributeDiagnostics |
+| F7 no on-disk casing | LinkedFileWithOtherCasing, FixtureSolution, GeneratedFiles |
+| F8 case-sensitive ownership guard in the builder | RejectsAFileOwnedTwice |
+| F9 case-sensitive location mapping in the builder | LinkedFileWithOtherCasing (the Lib → BuildInfo edge) |
+| F10 .NET 5+ ranked like .NET Framework | TargetFramework test and 4 scan tests |
+| F11 TFM picked by ordinal name at the call site | **survived** |
+| F12 files only the other targets compile not listed | ProjectFailsToLoad |
+| F13 shared file always owned by the first project | FixtureSolution (Lib/LibInfo.cs) |
+| F14 `AuthoredFiles` not cached | FixtureSolution |
+| F15 no early cancellation check | **survived** |
+| F16 project references not exposed | FixtureSolution |
+| C3 candidate symbols counted as bound | CallResolution test |
 
-The surviving mutant shows that the fixture has no ambiguous or overload-failure call. The metric counts only
-`GetSymbolInfo().Symbol`, as `RoslynGraphBuilder` does.
+Why the two survivors survive:
+
+- **F11.** The fixture's targets (netstandard2.0, net10.0) sort the same either way. A discriminating pair such as net8.0 /
+  net9.0 needs targeting packs that are not in the offline cache. The comparer itself is unit-tested
+  (`TargetFramework_HighestDotNetPreferred_NotOrdinal`).
+- **F15.** `OpenSolutionAsync` observes the token anyway, so the early check is redundant.
 
 ## Reproduce
 
 `pwsh experiments/solution-scan/run.ps1` restores `dotLLM.slnx`, builds ChunkKvLab in Release, and runs
-`scan-info --chunker symbol|fixed --chunk 512`. It is CPU only and peaks at about 4 minutes per chunker.
+`scan-info --chunker symbol|fixed --chunk 512`. It is CPU only and takes about 2.5 minutes per chunker.
