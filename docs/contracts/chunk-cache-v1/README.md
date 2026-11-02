@@ -72,3 +72,16 @@ warnings from the requests and compares them with `expected.json`, and checks th
 20. Span location in the rendered prompt compares against the marked span text or strips U+FDD0 from both sides (dotLLM marks untrusted special-token strings with U+FDD0, #1339). Spans altered by the template (Llama-3.1 trims user/assistant/system and JSON-encodes tool content) are ignored with the existing `chunk_template_altered` warning: on Llama-3.1, tool-result spans are never reusable in v1; Qwen3 is fine.
 21. Tokenisation of chunk text for the store AND for the wire path is `EncodeRaw(MarkUntrustedSpecials(text))`, which matches the chat path exactly; chunks are encoded the same way by the CLI/prewarm. Chunks whose text contains special-token strings therefore hash to the same chunk but encode as plain text, consistently on both sides.
 22. Not our scope but to tell the maintainer: the OpenAI 400 for array content has an empty body instead of the usual error JSON.
+
+## Rulings from the Task 10 server parser (controller, 2026-11-02)
+
+23. Structurally malformed annotations (wrong JSON types, missing required fields, unknown `at` shape) use the new code `chunk_annotation_malformed` (400 `invalid_request_error` in strict mode, warning otherwise). Add it to the §5.8 code table in the next spec revision.
+24. One defect is recorded per span: the first in this check order: structure, version, id, range/boundary, hash, overlap/conflict. `check.py`'s reference parser follows the same order.
+25. `chunk_too_many`: the first N spans (document order) are kept; a request-level error wins over span defects in strict mode.
+26. `chunk_not_wire_eligible` drops the span (warning; 400 in strict mode).
+27. `id` length counts Unicode scalar values (not UTF-16 units); documented.
+28. An unknown policy name maps to `chunk_policy_unavailable` (non-strict: served as `exact` with the warning; strict: 400).
+29. Anthropic strict chunk errors carry the code inside the error object as `error.code` (an extension field: clients ignore it) in addition to the message; OpenAI errors use the existing `code`.
+30. Annotating text inside an Anthropic `tool_result` content array is inline-only in v1 (the manifest `at` has no inner index); an optional `at.inner` may be added in a later contract version.
+31. Engine message indices in the parsed model are counted BEFORE a profile system prompt is prepended; Task 11 adds the offset when a profile is active.
+32. `chunk_namespace_ignored` (ruling from the Task 2 review): a body `namespace` differing from the caller's own is ignored with this warning (400 in strict mode); fixtures for it are to be added (controller TODO).
