@@ -6,7 +6,8 @@ real contexts. There is no chunk reuse anywhere in it: it only measures how far 
 drift apart because of backend, batching, or rerun.
 
 **Setup.** Qwen3-4B-Instruct-2507 Q4_K_M, F32 KV, dotLLM CPU and Vulkan (Radeon 8060S iGPU).
-- 2K: 20 contexts, all E4 contexts (symbol chunker, seed 0, kept tasks), 28 tasks, 40,915 context rows.
+- 2K: 20 contexts (symbol chunker, seed 0, kept tasks), 28 tasks, 40,915 context rows. 18 contexts are E4's own (6 per
+  corpus); their 23 tasks are every E4 symbol/seed-0 kept instance. The other 2 are extra kept-mode contexts.
 - 8K: 5 contexts, unfiltered generator plans, 14 tasks, 40,886 context rows.
 
 Comparison pairs (reference first):
@@ -51,7 +52,9 @@ all contexts. "All-layer" is the mean of the 36 per-layer means. Intervals are 9
    - Only the MMQ regime quantises activations to int8, so the effect dotLLM reported ("8 rows vs 96 rows, about 2e-2
      relative L2 on K") is the MMQ regime against the GEMV/coopmat regimes. We measure 0.011 all-layer mean and
      0.016–0.017 at the worst layer.
-   - Within a regime, the result does not depend on the batch size.
+   - Within the MMQ regime, the result does not depend on the batch size (64 = 96 exactly). Every other block pairing
+     differs by about 5e-4, including 512 vs 2048, which are both coopmat. That ~5e-4 is the non-MMQ baseline, so (b, 2048)
+     is a non-zero floor.
 3. **CPU vs Vulkan is about 2× the worst Vulkan batching effect:** K 0.023, V 0.045 all-layer mean.
    - It grows with depth: K 1.7e-3 at layer 0, 5.6e-3 at layer 1, 0.027–0.028 in layers 12–35, peaking at layer 33.
    - The CPU path quantises activations to Q8_K for its dot products, so even layer 0 differs.
@@ -69,13 +72,17 @@ all contexts. "All-layer" is the mean of the 36 per-layer means. Intervals are 9
 
 | what is compared | matching pair |
 |---|---|
-| Vulkan vs Vulkan, same row counts, same process (rerun, host-write vs device-copy assembly, `ReadRows` round-trip) | (c) |
+| Vulkan vs Vulkan, same row counts, same process (rerun, host-write vs device-copy assembly, `ReadRows` round-trip). Also expected (not measured): a chunk at position 0 encoded alone in one forward with the same tokens and row count as the reference's first block | (c) |
 | Vulkan result produced by forwards of 1 row | (b, 1) |
 | … of 2–16 rows | (b, 8) |
 | … of 17–127 rows | (b, 64) |
 | … of ≥ 128 rows | (b, 2048) |
 | mixed or unknown row counts (selective recompute with variable run lengths; chunk encodes whose lengths straddle 17–127, e.g. symbol chunks, median 107 tokens) | (b, 64), the worst Vulkan regime |
 | Vulkan vs CPU (cross-checks, G1/G3 against the CPU E1/E4 tables) | (a) |
+
+**Scope:** these floors are for lab runs on the real Qwen3-4B Q4_K_M. GPU-gated unit tests on the synthetic F32 model
+(`SyntheticDenseGguf`) are **not** covered: no Q4_K dispatch regimes exist there, and CPU vs Vulkan agrees to about 1e-6
+(Task 1: shift 5.96e-7, round-trips bit-exact). Expect ≤ 1e-5 there and use Task 1's numbers.
 
 The size is the context size of the test (2K or 8K table). For 16K and 32K, use the 8K floor, with p99s × 1.5, until it is
 measured. RoPE shifts on top of rows add at most the Task 1 shift error (max |Δ| 2.4e-7 at small deltas, 2.4e-4 at a
