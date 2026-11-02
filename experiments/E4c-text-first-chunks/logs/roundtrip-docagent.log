@@ -1,0 +1,10 @@
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), fixed-512: 176 chunks, 75636 tokens (chunk tokens median 512, max 512); Decode(Encode(file)) == file for 55/55; 0.8 s
+chunk-id sha256 8d083a63d5c1db7514596aec9bdabf880695ded868a45459f6c8be21a354f2b4
+roundtrip docagent fixed-512: 176 chunks; decoded-text round trip fails 2 (1.1 %; 1/55 files; U+FFFD in decoded text 2; mismatch confined to the first/last 3 ids 2); file-range text round trip fails 3 (1.7 %)
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 0.7 s
+chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+roundtrip docagent symbol-512: 478 chunks; decoded-text round trip fails 0 (0.0 %; 0/55 files; U+FFFD in decoded text 0; mismatch confined to the first/last 3 ids 0); file-range text round trip fails 0 (0.0 %)
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), fixed-text-512: 176 chunks, 75636 tokens (chunk tokens median 504, max 512); Decode(Encode(file)) == file for 55/55; 1.0 s
+chunk-id sha256 bb49fec66b3a0743b110b6476ddb5e8352df5f5305856b71431e26da6b164d91
+roundtrip docagent fixed-text-512: 176 chunks; decoded-text round trip fails 0 (0.0 %; 0/55 files; U+FFFD in decoded text 0; mismatch confined to the first/last 3 ids 0); file-range text round trip fails 0 (0.0 %)
+text-first invariants: OK

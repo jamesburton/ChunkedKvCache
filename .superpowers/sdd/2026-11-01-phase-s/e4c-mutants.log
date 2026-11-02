@@ -1,0 +1,26 @@
+# E4c TextFirstFixedChunker mutants, round 1 (git archive scratch copy of dotLLM 8560d36a; mutate_e4c.py)
+# T11 hung (infinite loop: no step past a surrogate pair at the search floor); the test host was stopped by PID after > 5 min, so its "Passed 8" line is a partial run: killed by non-termination
+# T6 did not compile (CS0162, constant-false loop); rewritten for round 2
+baseline: ('Passed!', '0', '18') SURVIVED
+T1 name of the id-slice chunker: ('Failed!', '1', '17') killed: Name_And_Limit
+T2 no line-end preference: ('Failed!', '2', '16') killed: Cuts_AtTheLastLineEndThatFits_Greedily, LineEnd_IsPreferredOverAFullerCharacterCut
+T3 strict limit (< n): ('Failed!', '6', '12') killed: LineEnd_IsPreferredOverAFullerCharacterCut, MultiByteCharacters_AreNeverSplit, OverlongLine_IsCutAtTheLastCharacterThatFits
+T4 limit overrun (<= n + 1): ('Failed!', '9', '9') killed: Chunks_ConcatenateToFile_EachPieceAloneAtMostN_AndIdsAreThePieceTokenisedAlone, Crlf_IsPreserved_AndNeverSplit, LineEnd_IsPreferredOverAFullerCharacterCut, MultiByteCharacters_AreNeverSplit, OverlongLine_IsCutAtTheLastCharacterThatFits
+T5 surrogate pairs may be split: ('Failed!', '3', '15') killed: ACharacterLongerThanTheLimit_Throws, MultiByteCharacters_AreNeverSplit
+T6 CRLF may be split: BUILD ERROR: CS0162: Unreachable code detected 
+T7 rest-fits shortcut strict: ('Passed!', '0', '18') SURVIVED
+T8 first line end instead of the last: ('Failed!', '1', '17') killed: Cuts_AtTheLastLineEndThatFits_Greedily
+T9 EndLine off by one: ('Failed!', '11', '7') killed: Chunks_ConcatenateToFile_EachPieceAloneAtMostN_AndIdsAreThePieceTokenisedAlone, Crlf_IsPreserved_AndNeverSplit, Cuts_AtTheLastLineEndThatFits_Greedily, LineEnd_IsPreferredOverAFullerCharacterCut, MultiByteCharacters_AreNeverSplit
+T10 no throw: one char taken: ('Failed!', '1', '17') killed: ACharacterLongerThanTheLimit_Throws
+T11 pair at lo: no step past it: ('Passed!', '0', '8') SURVIVED
+T12 CRLF normalised: ('Failed!', '1', '17') killed: Crlf_IsPreserved_AndNeverSplit
+T13 ids of the char cut from the probe one past: ('Failed!', '7', '11') killed: Chunks_ConcatenateToFile_EachPieceAloneAtMostN_AndIdsAreThePieceTokenisedAlone, Crlf_IsPreserved_AndNeverSplit, MultiByteCharacters_AreNeverSplit, OverlongLine_IsCutAtTheLastCharacterThatFits
+T14 line-end fallback ignores fit: ('Passed!', '0', '18') SURVIVED
+T15 binary search upper bound one short: ('Passed!', '0', '18') SURVIVED
+
+# round 2 (tests of c4579f55 copied into the scratch copy)
+baseline: ('Passed!', '0', '21') SURVIVED
+T6 CRLF may be split: ('Failed!', '1', '20') killed: Crlf_IsPreserved_AndNeverSplit
+T7 rest-fits shortcut strict: ('Failed!', '1', '20') killed: ARestOfExactlyNTokens_IsOneChunk
+T14 line-end fallback ignores fit: ('Failed!', '1', '20') killed: NonMonotoneTokenCounts_ALineEndWhosePieceIsOverTheLimit_IsNotUsed
+T15 binary search upper bound one short: ('Failed!', '1', '20') killed: ARestOfNPlusOneTokens_IsCutAfterN

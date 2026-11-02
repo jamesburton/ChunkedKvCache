@@ -1,0 +1,10 @@
+name,chunker,seed,mode,contexts,maxminutes,arms,budgets,lightarms,lightbudgets
+docagent,fixed-text,0,kept,4,22,drop_required;chunk_starts;query;graph;hybrid_query;random,5;10;15;20,graph;hybrid_query;random,10;20
+afclaude,fixed-text,0,kept,4,22,drop_required;chunk_starts;query;graph;hybrid_query;random,5;10;15;20,graph;hybrid_query;random,10;20
+codesharp,fixed-text,0,kept,4,22,drop_required;chunk_starts;query;graph;hybrid_query;random,5;10;15;20,graph;hybrid_query;random,10;20
+docagent,fixed-text,1,kept,2,11,drop_required;chunk_starts;query;graph;hybrid_query;random,5;10;15;20,graph;hybrid_query;random,10;20
+afclaude,fixed-text,1,kept,2,11,drop_required;chunk_starts;query;graph;hybrid_query;random,5;10;15;20,graph;hybrid_query;random,10;20
+codesharp,fixed-text,1,kept,2,11,drop_required;chunk_starts;query;graph;hybrid_query;random,5;10;15;20,graph;hybrid_query;random,10;20
+docagent,fixed-text,2,kept,2,11,drop_required;chunk_starts;query;graph;hybrid_query;random,5;10;15;20,graph;hybrid_query;random,10;20
+afclaude,fixed-text,2,kept,2,11,drop_required;chunk_starts;query;graph;hybrid_query;random,5;10;15;20,graph;hybrid_query;random,10;20
+codesharp,fixed-text,2,kept,2,11,drop_required;chunk_starts;query;graph;hybrid_query;random,5;10;15;20,graph;hybrid_query;random,10;20

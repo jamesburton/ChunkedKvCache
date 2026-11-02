@@ -1,0 +1,12 @@
+[0.0 min] 2026-11-02 19:40:00Z start docagent-fixed-text-s0-kept
+[0.0 min] 2026-11-02 19:40:00Z start afclaude-fixed-text-s0-kept
+2026-11-02 19:51:07Z queue stopped (2 x 4 threads gave ~0.74x the throughput of 1 x 8: full prefill 81 s vs 30 s); docagent s0 p0 in progress lost; restarting 1 x 8 threads, caps 22 / 11 min
+[0.0 min] 2026-11-02 19:51:14Z resume docagent-fixed-text-s0-kept
+[35.9 min] 2026-11-02 20:27:08Z resume afclaude-fixed-text-s0-kept
+[56.8 min] 2026-11-02 20:48:00Z start codesharp-fixed-text-s0-kept
+[82.0 min] 2026-11-02 21:13:13Z start docagent-fixed-text-s1-kept
+[93.7 min] 2026-11-02 21:24:54Z start afclaude-fixed-text-s1-kept
+[116.6 min] 2026-11-02 21:47:52Z start codesharp-fixed-text-s1-kept
+[129.7 min] 2026-11-02 22:00:54Z start docagent-fixed-text-s2-kept
+[148.4 min] 2026-11-02 22:19:37Z start afclaude-fixed-text-s2-kept
+2026-11-02 22:19:42Z queue stopped at the ~2.5 h budget after docagent s2 p0 (2 h 40 min wall since 19:40); docagent s2 had already finished at its 11-min cap (1 context); not run: afclaude s2, codesharp s2 (resumable)

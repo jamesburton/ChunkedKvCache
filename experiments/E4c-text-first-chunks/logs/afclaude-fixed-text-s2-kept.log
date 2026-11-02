@@ -1,0 +1,10 @@
+# provenance
+utc: 2026-11-02 22:19:36
+command: ChunkKvLab e4 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141 --name afclaude --chunker fixed-text --chunk 512 --seed 2 --count 100 --context 2048 --mode kept --contexts 2 --max-minutes 11 --threads 8 --expect-hash 7f78203a68cfad98bccb02da3c5709b25bd3a93d0cfd88dbda4c0cb0efb2e423 --out C:\Development\ChunkedkvCache\experiments\E4c-text-first-chunks\raw\afclaude-fixed-text-s2-kept.csv --kept C:\Development\ChunkedkvCache\experiments\corpus\afclaude.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\afclaude.plans.jsonl --arms drop_required,chunk_starts,query,graph,hybrid_query,random --budgets 5,10,15,20 --light-arms graph,hybrid_query,random --light-budgets 10,20
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1); 1 jobs in parallel x 8 threads
+os: Microsoft Windows 11 Pro 10.0.26200; last boot 2026-11-02 18:51:14 UTC
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ c4579f55909023df4dcec4824ad57f8b97a70d98 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-AFClaude-b3f29c30-20261101111141 = git archive b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c src of C:\Development\AFClaude; source repo HEAD b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c, dirty files now: 1; expected chunk-id sha256 (fixed-text-512) 7f78203a68cfad98bccb02da3c5709b25bd3a93d0cfd88dbda4c0cb0efb2e423
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance

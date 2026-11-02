@@ -1,0 +1,10 @@
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), fixed-512: 3766 chunks, 1530303 tokens (chunk tokens median 512, max 512); Decode(Encode(file)) == file for 1390/1390; 11.0 s
+chunk-id sha256 cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb
+roundtrip codesharp fixed-512: 3766 chunks; decoded-text round trip fails 0 (0.0 %; 0/1390 files; U+FFFD in decoded text 0; mismatch confined to the first/last 3 ids 0); file-range text round trip fails 0 (0.0 %)
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), symbol-512: 7586 chunks, 1535738 tokens (chunk tokens median 157, max 512); Decode(Encode(file)) == file for 1390/1390; 6.3 s
+chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+roundtrip codesharp symbol-512: 7586 chunks; decoded-text round trip fails 0 (0.0 %; 0/1390 files; U+FFFD in decoded text 0; mismatch confined to the first/last 3 ids 0); file-range text round trip fails 0 (0.0 %)
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), fixed-text-512: 3790 chunks, 1530303 tokens (chunk tokens median 497, max 512); Decode(Encode(file)) == file for 1390/1390; 48.5 s
+chunk-id sha256 e2c32d7d13f23bce78168619a3360d7e02e5e18ae46efb57a13b927073fee30a
+roundtrip codesharp fixed-text-512: 3790 chunks; decoded-text round trip fails 0 (0.0 %; 0/1390 files; U+FFFD in decoded text 0; mismatch confined to the first/last 3 ids 0); file-range text round trip fails 0 (0.0 %)
+text-first invariants: OK

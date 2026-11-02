@@ -1,0 +1,21 @@
+# provenance
+utc: 2026-11-02 22:00:54
+command: ChunkKvLab e4 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 --name docagent --chunker fixed-text --chunk 512 --seed 2 --count 100 --context 2048 --mode kept --contexts 2 --max-minutes 11 --threads 8 --expect-hash bb49fec66b3a0743b110b6476ddb5e8352df5f5305856b71431e26da6b164d91 --out C:\Development\ChunkedkvCache\experiments\E4c-text-first-chunks\raw\docagent-fixed-text-s2-kept.csv --kept C:\Development\ChunkedkvCache\experiments\corpus\docagent.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\docagent.plans.jsonl --arms drop_required,chunk_starts,query,graph,hybrid_query,random --budgets 5,10,15,20 --light-arms graph,hybrid_query,random --light-budgets 10,20
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1); 1 jobs in parallel x 8 threads
+os: Microsoft Windows 11 Pro 10.0.26200; last boot 2026-11-02 18:51:14 UTC
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ c4579f55909023df4dcec4824ad57f8b97a70d98 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 src of C:\Development\CSharpDocAgentFrameworkMCP; source repo HEAD 6683823880bc2a7d62708907c725d9eaedf3a016, dirty files now: 0; expected chunk-id sha256 (fixed-text-512) bb49fec66b3a0743b110b6476ddb5e8352df5f5305856b71431e26da6b164d91
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.5 s; engine 0.3.0-dev.3628.25+c4579f55909023df4dcec4824ad57f8b97a70d98
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), fixed-text-512: 176 chunks, 75636 tokens (chunk tokens median 504, max 512); Decode(Encode(file)) == file for 55/55; 1.9 s
+chunk-id sha256 bb49fec66b3a0743b110b6476ddb5e8352df5f5305856b71431e26da6b164d91
+graph: 3772 edges in 3.2 s (offline cost); mapping-mismatch chunks 0
+kept task ids: 27; found 27; missing 
+contexts (first task id): src/DocAgent.McpServer/Ingestion/IncrementalSolutionIngestionService.cs:109:31 src/DocAgent.McpServer/Ingestion/SolutionIngestionService.cs:335:33
+plans: 2 contexts, 4 tasks (kept, random contexts, seed 2, 1.2 s); mean context 2038 tokens, 9.0 chunks
+arms drop_required,chunk_starts,query,graph,hybrid_query,random; budgets 5,10,15,20 % (light arms graph,hybrid_query,random at 10,20 %); definition window 16; shard 0/1
+[docagent/fixed-text/s2/kept/p0 L 2044 chunks 8 tasks 3] 1111 s (full 49.4 s, encode 25.8 s, dev 0.0 s, query 40.2 s, 27 distinct selections); query edges/targets 15/0 18/0 9/0; in-context edges 4; related distractors 2/7 (hop 1: 2); ref EM 2/3; at 18.6 min
+time cap 11 min reached after 1 contexts of this shard
+e4 docagent/fixed-text/s2/kept shard 0/1: 1 contexts in 18.6 min (18.6 in this run) -> C:\Development\ChunkedkvCache\experiments\E4c-text-first-chunks\raw\docagent-fixed-text-s2-kept.csv

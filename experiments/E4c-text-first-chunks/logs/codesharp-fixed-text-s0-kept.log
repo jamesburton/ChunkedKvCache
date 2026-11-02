@@ -1,0 +1,23 @@
+# provenance
+utc: 2026-11-02 20:48:00
+command: ChunkKvLab e4 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 --name codesharp --chunker fixed-text --chunk 512 --seed 0 --count 100 --context 2048 --mode kept --contexts 4 --max-minutes 22 --threads 8 --expect-hash e2c32d7d13f23bce78168619a3360d7e02e5e18ae46efb57a13b927073fee30a --out C:\Development\ChunkedkvCache\experiments\E4c-text-first-chunks\raw\codesharp-fixed-text-s0-kept.csv --kept C:\Development\ChunkedkvCache\experiments\corpus\codesharp.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\codesharp.plans.jsonl --arms drop_required,chunk_starts,query,graph,hybrid_query,random --budgets 5,10,15,20 --light-arms graph,hybrid_query,random --light-budgets 10,20
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1); 1 jobs in parallel x 8 threads
+os: Microsoft Windows 11 Pro 10.0.26200; last boot 2026-11-02 18:51:14 UTC
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ c4579f55909023df4dcec4824ad57f8b97a70d98 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 src of C:\Development\codesharp; source repo HEAD 641c1fb67d94acff5271ee544ea303767c038f6c, dirty files now: 10; expected chunk-id sha256 (fixed-text-512) e2c32d7d13f23bce78168619a3360d7e02e5e18ae46efb57a13b927073fee30a
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.5 s; engine 0.3.0-dev.3628.25+c4579f55909023df4dcec4824ad57f8b97a70d98
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), fixed-text-512: 3790 chunks, 1530303 tokens (chunk tokens median 497, max 512); Decode(Encode(file)) == file for 1390/1390; 64.8 s
+chunk-id sha256 e2c32d7d13f23bce78168619a3360d7e02e5e18ae46efb57a13b927073fee30a
+graph: 33134 edges in 19.6 s (offline cost); mapping-mismatch chunks 0
+kept task ids: 21; found 21; missing 
+contexts (first task id): src/CodeSharp.Core/Permissions/PermissionRuleSet.cs:237:45 src/CodeSharp.Tui/ImageInput/TuiImageInput.cs:129:35 src/CodeSharp.Tools/Orchestration/DispatchAgentTool.cs:517:87 src/CodeSharp.Tui/TuiApp.cs:9175:31
+plans: 4 contexts, 4 tasks (kept, random contexts, seed 0, 4.1 s); mean context 2048 tokens, 9.8 chunks
+arms drop_required,chunk_starts,query,graph,hybrid_query,random; budgets 5,10,15,20 % (light arms graph,hybrid_query,random at 10,20 %); definition window 16; shard 0/1
+[codesharp/fixed-text/s0/kept/p0 L 2048 chunks 7 tasks 1] 378 s (full 42.6 s, encode 25.2 s, dev 0.0 s, query 32.2 s, 11 distinct selections); query edges/targets 13/0; in-context edges 0; related distractors 0/6 (hop 1: 0); ref EM 1/1; at 7.8 min
+[codesharp/fixed-text/s0/kept/p1 L 2048 chunks 9 tasks 1] 388 s (full 34.7 s, encode 25.8 s, dev 0.0 s, query 14.3 s, 15 distinct selections); query edges/targets 7/0; in-context edges 8; related distractors 1/8 (hop 1: 0); ref EM 1/1; at 14.2 min
+[codesharp/fixed-text/s0/kept/p2 L 2048 chunks 10 tasks 1] 351 s (full 33.4 s, encode 24.1 s, dev 0.0 s, query 15.5 s, 14 distinct selections); query edges/targets 3/1; in-context edges 0; related distractors 0/9 (hop 1: 0); ref EM 1/1; at 20.1 min
+[codesharp/fixed-text/s0/kept/p3 L 2047 chunks 13 tasks 1] 305 s (full 28.8 s, encode 30.3 s, dev 0.0 s, query 14.3 s, 11 distinct selections); query edges/targets 6/0; in-context edges 0; related distractors 5/12 (hop 1: 3); ref EM 1/1; at 25.2 min
+e4 codesharp/fixed-text/s0/kept shard 0/1: 4 contexts in 25.2 min (25.2 in this run) -> C:\Development\ChunkedkvCache\experiments\E4c-text-first-chunks\raw\codesharp-fixed-text-s0-kept.csv
