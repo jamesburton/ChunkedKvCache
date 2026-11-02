@@ -75,7 +75,7 @@ hash and with `git status`. **14 of 15 were killed**; the table is in the README
 - **One survives**: counting candidate symbols as bound in `CallResolution`. The fixture has no ambiguous call. The metric
   definition (`Symbol` only) matches the graph builder.
 
-## Step 5: dotLLM itself
+## Step 5: dotLLM itself (superseded by the fix-round rerun below; these first-run headlines are not to be quoted)
 
 Measured at worktree `b2acb3b6`, dirty=0.
 
@@ -203,3 +203,49 @@ targeting packs that are not in the offline cache, and F15 is a redundant check.
 One full ChunkReuse test run failed once, while my own background `run.ps1` (ChunkKvLab) held locks on the DLLs that the
 build copies. I stopped that task through its task ID (TaskStop), not by process name. After a clean rebuild the test passed
 in three runs in a row.
+
+## Re-review round (`review-task5-rereview.md`)
+
+**Status: DONE.**
+
+### dotLLM commit
+
+`229fc630` on `feature/chunk-scan`. Cherry-pick it onto `feature/chunk-cache`. It needs `1eff5dfa` and `5d5333ad`, which
+the coordinator reports are already merged there.
+
+### Fixes
+
+- **R1, plan.** Task 5's file path is now `src/DotLLM.ChunkReuse.Solution/SolutionScanner.cs`. Task 9's package list adds
+  `DotLLM.ChunkReuse.Solution`. Task 6 is untouched; the coordinator is changing it, and I committed only my two plan lines.
+- **R2, Linux and macOS.** CI runs these tests on `ubuntu-latest`. That is **unverified here and must be green before
+  merge**.
+  - I read the test code for Windows assumptions. The case-variant link and the case-insensitive assertions are Windows-only;
+    paths come from `Path.Combine`/`GetTempPath`; the csproj links use `\`, which MSBuild normalises.
+  - The README now has caveats for macOS (APFS is case-insensitive, but the scanner compares ordinally off Windows) and for
+    Windows per-directory case sensitivity.
+- **R3, the F11 survivor.** It is killed by the fixture `Std` (`netstandard2.0;netstandard2.1`; the scanner picks 2.1). The
+  README's wrong reason is corrected.
+- **R4, Debug configuration.**
+  - The 442 extra sites (441 in Cli, 1 in Cuda) are `#if DEBUG` code, because the scanner evaluates projects in Debug. The
+    README now says this and quotes Cli 26.29 % against 30.63 % under the current metric.
+  - New `SolutionScanOptions(Configuration = "Debug")`, and `scan-info --configuration`. The default stays Debug (MSBuild's
+    default, and what produced the recorded numbers). Release is recommended for `chunkcache build`.
+  - Test: `DEBUG`/`RELEASE` preprocessor symbols, and `obj/Release` files.
+- **Nits.**
+  - `///` and `/** */` documentation-comment headers now count as generated-file markers.
+  - `[GeneratedCode]` on a single member no longer marks the file; on a type, delegate or assembly it does.
+  - Theory cases for `#nullable` first, `#pragma` first, a BOM, a CRLF header and an assembly attribute.
+  - A path with an apostrophe in a "processing the file … with message:" message now attributes. 8.3 short names are
+    documented as a caveat.
+  - `SkippedProject.Files` excludes files that another project scans (fixture: `Shared/Legacy.cs`).
+  - `IsPackable=false` on `DotLLM.ChunkReuse.Solution`.
+  - The README describes platform-neutral TFMs as a tiebreak, and documents `FromName`.
+  - `RoslynGraphBuilder` has a doc note on chunk-path spelling.
+  - The first-run headline in this report is marked superseded.
+
+### Tests and mutants
+
+- 30 scanner tests, counting theory cases; all 296 ChunkReuse tests pass.
+- Mutants this round: 6 run (F11, G5, G6, A1, X1, K1), all killed. G6 was rerun after its first form disabled the whole
+  comment filter rather than only the doc-comment kind.
+- No dotLLM rerun: the change does not alter the Debug scan output for dotLLM (see the README).

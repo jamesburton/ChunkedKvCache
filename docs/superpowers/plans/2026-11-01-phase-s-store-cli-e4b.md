@@ -96,7 +96,7 @@
 ### Task 5: Solution scanner (Roslyn workspace)
 
 **Files:**
-- Create (dotLLM): `src/DotLLM.ChunkReuse/Corpus/SolutionScanner.cs`
+- Create (dotLLM): `src/DotLLM.ChunkReuse.Solution/SolutionScanner.cs` (own assembly `DotLLM.ChunkReuse.Solution`, so the `DotLLM.ChunkReuse` library does not carry the MSBuild workspace dependencies)
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/SolutionScannerTests.cs` (small fixture solution under `tests/.../Fixtures/MiniSolution`)
 
 **Interfaces:**
@@ -145,7 +145,7 @@
 **Files:**
 - Create (here): `docs/release/chunkcache-release-plan.md`
 
-- [ ] **Step 1:** Read `dotLLM/docs/PACKAGING.md`; list what the NuGet trusted-publishing setup needs from the user's account (package id, repo, workflow, environment) and which packages change (`DotLLM.ChunkReuse` library, `dotllm` tool vs a separate `chunkcache` tool).
+- [ ] **Step 1:** Read `dotLLM/docs/PACKAGING.md`; list what the NuGet trusted-publishing setup needs from the user's account (package id, repo, workflow, environment) and which packages change (`DotLLM.ChunkReuse` library, `DotLLM.ChunkReuse.Solution` scanner library — currently `IsPackable=false` —, `dotllm` tool vs a separate `chunkcache` tool).
 - [ ] **Step 2:** With the dotLLM lead, agree the PR split (internal bits C1/C4/C7, ChunkReuse library, CLI) and draft issue text for each; do not file anything until the user approves.
 - [ ] **Step 3:** Commit the plan and report to the user for the go-ahead.
 
