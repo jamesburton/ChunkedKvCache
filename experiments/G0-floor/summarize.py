@@ -122,6 +122,34 @@ def main():
                             max_context_ratio=perv[-1] / pointv if pointv else float('nan')))
         out.append('')
 
+        # ---- per-layer single-context spread (what single-context tolerances must absorb) ------------------------------
+        out += ['### Per-layer single-context spread: worst (context, layer) value / pooled per-layer value', '',
+                '| pair | mean K | mean V | p99 K | p99 V | contexts with a layer p99 > 1.5x pooled |', '|---|---|---|---|---|---|']
+        for p in pairs:
+            if p.startswith('c_'):
+                continue
+            worst = {}
+            failing = set()
+            for r in ctx:
+                if r['pair'] != p:
+                    continue
+                f = layer[(p, int(r['layer']), r['kind'])]
+                for stat in ('mean', 'p99'):
+                    ref = float(f[f'rel_l2_{stat}'])
+                    ratio = float(r[f'rel_l2_{stat}']) / ref if ref else float('nan')
+                    key = (stat, r['kind'])
+                    if ratio == ratio and ratio > worst.get(key, (0, ''))[0]:
+                        worst[key] = (ratio, r['layer'])
+                    if stat == 'p99' and ratio > 1.5:
+                        failing.add(r['context_id'])
+            cells = [f'{worst[(s, k)][0]:.2f} (L{worst[(s, k)][1]})' for s in ('mean', 'p99') for k in ('K', 'V')]
+            out.append(f'| {p} | ' + ' | '.join(cells) + f' | {len(failing)} / {nctx} |')
+            for s in ('mean', 'p99'):
+                for k in ('K', 'V'):
+                    tol.append(dict(size=label, pair=p, metric=f'kv_layer_{s}_{k}_single_context_worst_ratio',
+                                    floor=float('nan'), max_context_ratio=worst[(s, k)][0]))
+        out.append('')
+
         # ---- logits ---------------------------------------------------------------------------------------------------
         out += ['### Logits on the teacher-forced E4 evaluation blocks (32 continuation rows per task)', '',
                 '| pair | KL mean [95 % CI] (nats) | KL p99 | KL max | top-1 agreement | max task KL mean / pooled | abs Δ mask NLL mean / max | mask EM agreement |',

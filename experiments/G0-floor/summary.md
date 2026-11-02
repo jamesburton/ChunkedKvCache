@@ -42,6 +42,17 @@ band p99 = largest per-layer p99 in the band. Intervals: 95 % percentile bootstr
 | b_vk512_vs_vk1 | 5.32e-04 [5.05e-04, 5.63e-04] | 9.99e-04 [9.51e-04, 1.05e-03] | 4.44e-04 / 5.21e-04 / 6.98e-04 | 1.31 | 1.28 |
 | c_vk512_rerun | 0 [0, 0] | 0 [0, 0] | 0 / 0 / 0 | n/a | n/a |
 
+### Per-layer single-context spread: worst (context, layer) value / pooled per-layer value
+
+| pair | mean K | mean V | p99 K | p99 V | contexts with a layer p99 > 1.5x pooled |
+|---|---|---|---|---|---|
+| a_cpu_vs_vk512 | 1.20 (L29) | 1.26 (L29) | 2.41 (L28) | 2.23 (L28) | 5 / 20 |
+| b_vk512_vs_vk2048 | 2.26 (L34) | 2.45 (L34) | 2.17 (L28) | 2.11 (L21) | 7 / 20 |
+| b_vk512_vs_vk96 | 1.26 (L30) | 1.60 (L29) | 2.07 (L19) | 1.96 (L25) | 4 / 20 |
+| b_vk512_vs_vk64 | 1.26 (L30) | 1.60 (L29) | 2.07 (L19) | 1.96 (L25) | 4 / 20 |
+| b_vk512_vs_vk8 | 1.80 (L34) | 1.85 (L32) | 2.23 (L31) | 2.10 (L31) | 6 / 20 |
+| b_vk512_vs_vk1 | 1.54 (L34) | 1.56 (L32) | 2.32 (L30) | 2.32 (L30) | 7 / 20 |
+
 ### Logits on the teacher-forced E4 evaluation blocks (32 continuation rows per task)
 
 | pair | KL mean [95 % CI] (nats) | KL p99 | KL max | top-1 agreement | max task KL mean / pooled | abs Δ mask NLL mean / max | mask EM agreement |
@@ -126,6 +137,16 @@ E4 post-query KL(full ‖ arm) on the same tasks (CPU, 32 continuation rows), fo
 | b_vk512_vs_vk64 | 0.011 [0.011, 0.011] | 0.021 [0.02, 0.022] | 0.01 / 0.011 / 0.011 | 1.05 | 1.07 |
 | b_vk512_vs_vk8 | 6.07e-04 [5.56e-04, 6.57e-04] | 1.15e-03 [1.05e-03, 1.25e-03] | 5.17e-04 / 5.94e-04 / 6.92e-04 | 1.14 | 1.17 |
 | c_vk512_rerun | 0 [0, 0] | 0 [0, 0] | 0 / 0 / 0 | n/a | n/a |
+
+### Per-layer single-context spread: worst (context, layer) value / pooled per-layer value
+
+| pair | mean K | mean V | p99 K | p99 V | contexts with a layer p99 > 1.5x pooled |
+|---|---|---|---|---|---|
+| a_cpu_vs_vk512 | 1.05 (L25) | 1.06 (L22) | 1.22 (L30) | 1.24 (L34) | 0 / 5 |
+| b_vk512_vs_vk2048 | 1.11 (L34) | 1.20 (L29) | 1.21 (L35) | 1.26 (L35) | 0 / 5 |
+| b_vk512_vs_vk96 | 1.08 (L25) | 1.16 (L29) | 1.22 (L28) | 1.27 (L30) | 0 / 5 |
+| b_vk512_vs_vk64 | 1.08 (L25) | 1.16 (L29) | 1.22 (L28) | 1.27 (L30) | 0 / 5 |
+| b_vk512_vs_vk8 | 1.30 (L34) | 1.42 (L34) | 1.28 (L35) | 1.42 (L35) | 0 / 5 |
 
 ### Logits on the teacher-forced E4 evaluation blocks (32 continuation rows per task)
 
