@@ -34,10 +34,10 @@ not auto-close on `dev`; close by hand.
 
 | # | PR | Lane / plan tasks | Issue draft | Depends on | Status |
 |---|---|---|---|---|---|
-| 1 | Client package `DotLLM.ChunkCache.Client` (MIT; may ship first) | C: Tasks 6, 7, 8 | _to be written in Tasks 6-8_ | none (no store task) | not started |
+| 1 | Client package `DotLLM.ChunkCache.Client` (MIT; may ship first) | C: Tasks 6, 7, 8 | #1544 (types, `06-client-types.md`); chat client: _Task 8_ | none (no store task) | branch `feature/chunk-cache-client` (types done, chat client in progress) |
 | 2 | Library: `DotLLM.ChunkReuse` store, index, scanner, selector; backend tag, namespace in `ChunkKey`, ledger, locks, `lines-512` | L: Tasks 1-5 | _Tasks 1-5_ | none | not started |
 | 3 | Snapshot lineage (`exact` / `approx` tags) | S: Task 12 | _Task 12_ | none | not started |
-| 4 | Server wire (I1a): parsing, span location, `exact` / `shadow`, response metadata, capabilities / explain / auth | S: Tasks 9, 10, 11, 13, 14 | _Tasks 9-14_ | 3 | not started |
+| 4 | Server wire (I1a): parsing, span location, `exact` / `shadow`, response metadata, capabilities / explain / auth | S: Tasks 9, 10, 11, 13, 14 | #1543 (behaviour pin, `09-server-behaviour-pin.md`, titled 'Server: chunk_cache wire convention, flag off by default'); _Tasks 10-14_ | 3 | Task 9 done on `feature/chunk-cache-server` |
 | 5 | Server store (I1b): sole-writer encode, admission, disk budget, prewarm / evict / forget | S: Tasks 15, 16 | _Tasks 15-16_ | 2, 4 | not started |
 | 6 | CLI (`--json`, deny-list, server-backed writes) and MCP tool | T: Tasks 17, 18 | _Tasks 17-18_ | 2, 5 (endpoint contract), 1 | not started |
 | 7 | Release wiring (`release.yml`: two package-id variables, `PackAsTool` for the CLI) | Task 21 | _Task 21_ | 1, 6 | not started |
@@ -57,3 +57,13 @@ not auto-close on `dev`; close by hand.
 
 Per-PR sections live in the individual issue drafts. Wire-contract fixtures: see
 `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-0-report.md` (hash byte, offset, UTF-16-vs-UTF-8 start).
+
+## Filed issues (jamesburton/dotLLM, filed by dotllm-97)
+
+- #1542 umbrella (this file)
+- #1543 server behaviour pin / lane S lead (`09`)
+- #1544 client types (`06`)
+- #1545 empty-body 400 on OpenAI array content (found by Task 9; not part of this feature)
+- #1540 tiled per-query-position attention; PR #1541 (dotllm-97's)
+
+Branch / commit / PR text uses `Refs #N`; `Closes #N` does not autoclose on dev.
