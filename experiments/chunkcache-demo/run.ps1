@@ -54,7 +54,9 @@ $task = Join-Path $logs 'task.json'
     continuation = "        IndexDiff diff = index.Update(tree.Files, chunker);`n"
     continuation_tokens = 16
 } | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 $task
-Step '7-compare' (@('compare', '--task', $task, '--store', $Store, '--chunkers', 'symbol,fixed', '--selectors', 'chunkstarts,queryrelevance,hybrid', '--budgets', '5,10,20') + $common)
+Step '7-compare' (@('compare', '--task', $task, '--store', $Store, '--chunkers', 'symbol', '--chunkers', 'fixed', '--selectors', 'chunkstarts', '--selectors', 'queryrelevance', '--selectors', 'hybrid', '--budgets', '5', '--budgets', '10', '--budgets', '20') + $common)
+# (The reported run, at dotLLM 94ed8630, used the earlier comma form `--chunkers symbol,fixed ...`; since fb351745 list options
+#  repeat and a comma in a value is a usage error.)
 # (with --json the compare table is printed to stderr, i.e. into logs/7-compare.log)
 "store size after the run:" | Tee-Object -FilePath (Join-Path $logs 'store-size.txt')
 (Get-ChildItem -Recurse -File $Store | Measure-Object -Property Length -Sum).Sum | Tee-Object -FilePath (Join-Path $logs 'store-size.txt') -Append

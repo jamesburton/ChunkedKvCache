@@ -46,11 +46,20 @@ encodes a selection.
 - Steps 3 and 6 are dominated by the scan and, for selections, the Roslyn reference graph over the whole solution
   (70–80 s). The index update itself on an unchanged tree is 0.3 s.
 - **Bug found and fixed on the way:** the first fixed-512 build failed: `FixedSizeChunker` produced chunks that did not
-  tile `src/DotLLM.Tokenizers/ControlTokenGuard.cs`. That file holds U+FDD0, which the Qwen BPE decode drops, so the
-  decode-based offsets fell one character short and `ChunkIndex.Update` refused the file. Fix (dotLLM `8788e78c`): the
-  last chunk always ends at the end of the text. Interior offsets of a fixed chunk can still drift by such characters
-  (fixed chunks are not wire-eligible anyway; integration spec §5.3). The run reported here is the full rerun after the
-  fix.
+  tile `src/DotLLM.Tokenizers/ControlTokenGuard.cs`. That file holds U+FDD0 (the guard's in-band marker), which dotLLM's
+  encoder **strips on every encode** (`ControlTokenGuard.cs` lines 16–17), so the ids never represent it. The chunker
+  derived offsets from the lengths of the decoded slices, which fell one character short at the marker, so the last chunk
+  ended before the text and `ChunkIndex.Update` refused the file. (An earlier version of this README said the decode
+  dropped the character; that was the wrong mechanism, with the same effect on offsets.)
+  - First fix (dotLLM `8788e78c`, used by the run reported here): the last chunk always ends at the end of the text. In
+    that version, the offsets of chunks *after* such a character still drifted by one per stripped character, so their
+    `TextOf`, `select --include-text` text and wire hash were off (fixed chunks are lab-only and not wire-eligible;
+    integration spec §5.3). In the dotLLM solution only `ControlTokenGuard.cs` is affected.
+  - Review fix (dotLLM `fb351745`): offsets advance over the text along the decoded characters and skip stripped
+    markers, so every chunk's text is exactly its ids' text plus the stripped markers (unit test
+    `FixedSizeChunker_EncodeStripsACharacter_ChunksTileAndMatchTheirIds`). Token ids, chunk counts and the corpus hashes
+    are unchanged by either fix.
+  - The run reported here is the full rerun after the first fix.
 
 ## Compare
 
@@ -59,9 +68,14 @@ query's own file (so the answer is not in the context); the query is lines 155�
 (225 tokens, the code just before the call), and the expected continuation is line 167,
 `IndexDiff diff = index.Update(tree.Files, chunker);` (13 tokens). Both chunkings were warm (every context chunk a store
 hit). KL is KL(full ‖ reuse) in nats, mean over the 13 teacher-forced continuation rows; top-1 is agreement with full
-prefill's argmax; EM is greedy exact match of all 13 expected tokens.
+prefill's argmax; **cont. EM** is *continuation* exact match: every one of the 13 expected tokens is the greedy argmax of
+its teacher-forced row. It is not comparable with E4's masked-call EM (E4's primary metric covers the masked call only).
+**calls** counts recompute forwards; scoring probes and the query/continuation forwards are not counted. The run below
+printed `0` calls for `full`; since `fb351745` the `full` row shows its prefill forwards (here 8 context blocks + 1 query
+= 9), and compare does one untimed warm-up forward before the first full prefill (this run had none, so the first
+chunker's full prefill also paid JIT and weight page-in).
 
-| chunker | arm | budget | recomputed | calls | KL | top-1 | EM | reuse ms | full ms | speedup | path |
+| chunker | arm | budget | recomputed | calls | KL | top-1 | cont. EM | reuse ms | full ms | speedup | path |
 |---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---|
 | symbol-512 | full | 100% | 3870 | 0 | 0.0000 | 1.00 | no | 146,741 | 146,741 | 1.00× | cpu-prefill |
 | symbol-512 | naive | 0% | 0 | 0 | 0.2395 | 0.92 | no | 11,880 | 146,741 | 12.35× | - |
@@ -95,7 +109,10 @@ signals) + selection + recompute + query prefill; `full ms` = context + query pr
 - **Which path produced which timing:** full prefill is `cpu-prefill` (512-token blocks); every recompute is
   `cpu-per-run`: one ordinary forward per contiguous run of selected positions. That is the only recompute path on this
   branch; the single-pass Vulkan strategy (jamesburton/dotLLM#1531) plugs in through `IRecomputeStrategy` and is not
-  measured here.
+  measured here. **Only the recompute goes through that seam:** full prefill, store assembly and the scoring probes are
+  CPU-only (`TransformerModel`, `SimpleKvCache`). A Vulkan recompute timed against CPU prefill would be a mixed-backend
+  speedup, so since `fb351745` compare refuses a strategy whose backend differs from its prefill backend. Task 8 needs a
+  prefill/assembly backend seam as well.
 - **On CPU per-run, the number of runs sets the cost.** Chunk starts select contiguous prefixes (7–14 runs) and stay
   4.6–7.6× faster than full prefill at 5–20 %; query relevance and hybrid select scattered tokens (92–369 runs, one
   trunk pass each) and fall to 1.2–2.7×. This is the opposite of what a GPU single-pass path would show (Phase G G2: per

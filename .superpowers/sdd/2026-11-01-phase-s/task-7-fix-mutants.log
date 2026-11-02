@@ -1,0 +1,24 @@
+== 2026-11-02 21:29:31 fix-round mutants in C:/Users/james/AppData/Local/Temp/t7m
+pristine: PASS []
+F1 KILLED: S1: dedupe by key before the selection (old behaviour); failing: Build_Selection_EncodesASelectedChunkWhoseTextAlsoOccursInAnUnselectedEarlierFile
+F2 KILLED: S2: registry index names not validated; failing: Evict_AllForModel_RefusesRegistryIndexNamesOutsideTheStore
+F3 KILLED: S2: index-*.json pattern not required; failing: Evict_AllForModel_RefusesRegistryIndexNamesOutsideTheStore
+F4 KILLED: S4: console code page on stdout; failing: ChildProcess_StdoutIsUtf8WithoutBom_WithNonAsciiPathsAndText
+F5 KILLED: S4: BOM on stdout; failing: ChildProcess_StdoutIsUtf8WithoutBom_WithNonAsciiPathsAndText
+F6 KILLED: S4: commas accepted in list values; failing: Usage_ExitCodes
+F7 KILLED: S5: no JSON error object; failing: Usage_ExitCodes
+F8 KILLED: S9: store-write failures exit 0; failing: Build_StoreWriteFailure_ExitsOne
+F9 KILLED: S9: dry run creates the store; failing: ReadOnlyVerbsAndDryRun_DoNotCreateTheStore
+F10 SURVIVED: S9: status creates the store (dead: the verb checks existence first); failing: 
+F11 KILLED: S8: full row reports 0 forward calls; failing: Compare_PrintsTheTable_NamesThePathOfEachTiming_AndFullRecomputeEqualsFullPrefill
+F12 KILLED: S8: reuse time without the query prefill; failing: Compare_PrintsTheTable_NamesThePathOfEachTiming_AndFullRecomputeEqualsFullPrefill
+F13 KILLED: S8: reuse time without assembly; failing: Compare_PrintsTheTable_NamesThePathOfEachTiming_AndFullRecomputeEqualsFullPrefill
+F14 KILLED: S7: stripped markers not skipped (interior drift); failing: FixedSizeChunker_EncodeStripsACharacter_ChunksTileAndMatchTheirIds
+F15 SURVIVED: S7: last chunk not extended to the end of the text; failing: 
+F16 KILLED: S9: --verbose prints no stack trace; failing: Usage_ExitCodes
+F17 KILLED: S9: stack trace without --verbose; failing: Usage_ExitCodes
+pristine after: PASS []
+== 2026-11-02 21:47:29 fix-round mutants in C:/Users/james/AppData/Local/Temp/t7m
+pristine: PASS []
+F15 KILLED: S7: last chunk not extended to the end of the text; failing: FixedSizeChunker_EncodeStripsACharacter_ChunksTileAndMatchTheirIds
+pristine after: PASS []
