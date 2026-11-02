@@ -74,6 +74,28 @@ Pooled per size (all seeds; top-1 bound = (a) rate × rows + 1 row; KL against t
 | 16384 | 192 | 6 (5.61) | 2.69e-03 | 7.4e-03 | **no** |
 | 32768 | 192 | 9 (5.61) | 6.33e-03 | 7.4e-03 | **no** |
 
+### Control: CPU vs Vulkan on the full prefill vs on the naive cache (same contexts, same run)
+
+If staleness amplified the backend difference, the naive rows would exceed the full rows cell by cell.
+
+| ctx | seed | KL full | KL naive | disagree rows full | disagree rows naive | greedy agree full / naive |
+|---:|---:|---:|---:|---:|---:|---|
+| 2048 | 0 | 2.60e-03 | 2.53e-03 | 2 | 2 | 1.000 / 1.000 |
+| 2048 | 1 | 3.06e-03 | 3.68e-03 | 0 | 2 | 0.938 / 1.000 |
+| 2048 | 2 | 2.08e-03 | 2.21e-03 | 1 | 1 | 1.000 / 1.000 |
+| 4096 | 0 | 2.39e-03 | 3.24e-03 | 2 | 1 | 1.000 / 1.000 |
+| 4096 | 1 | 2.55e-03 | 3.07e-03 | 2 | 0 | 1.000 / 1.000 |
+| 4096 | 2 | 1.08e-03 | 4.40e-04 | 0 | 0 | 1.000 / 1.000 |
+| 8192 | 0 | 3.97e-03 | 5.35e-03 | 2 | 3 | 0.812 / 1.000 |
+| 8192 | 1 | 2.50e-03 | 4.29e-03 | 2 | 2 | 1.000 / 0.250 |
+| 8192 | 2 | 2.86e-03 | 4.92e-03 | 2 | 2 | 1.000 / 1.000 |
+
+| ctx | rows | disagree full / naive (bound) | pooled KL full / naive |
+|---:|---:|---|---|
+| 2048 | 192 | 3 / 5 (5.03) | 2.58e-03 / 2.81e-03 |
+| 4096 | 192 | 4 / 1 (5.03) | 2.00e-03 / 2.25e-03 |
+| 8192 | 192 | 6 / 7 (5.61) | 3.11e-03 / 4.86e-03 |
+
 All-layer mean (mean of the 36 per-layer means) of the cross-check, per size, against the (a) floor:
 
 | ctx | K cross-check | K floor (a) | V cross-check | V floor (a) |

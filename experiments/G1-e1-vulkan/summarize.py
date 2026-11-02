@@ -38,11 +38,14 @@ def read(path):
         return list(csv.DictReader(f))
 
 
-def load(suffix):
+def load(suffix, group=None):
+    """Rows of results-<group><suffix>.csv. group None = every main group (small, 16k, 32k); 'control' = the S4 control rerun only."""
     rows = []
     for p in sorted(DATA.glob(f'results-*{suffix}.csv')):
-        stem = p.name[:-len(suffix) - 4] if suffix else p.stem
+        name = p.name[len('results-'):-len(suffix) - 4]
         if 'smoke' in p.name or (not suffix and any(s in p.name for s in ('-details', '-timing', '-kv', '-xcheck'))):
+            continue
+        if (group is None and name.startswith('control')) or (group is not None and name != group):
             continue
         rows += read(p)
     return rows
@@ -211,6 +214,33 @@ for L in sizes:
     out.append(f"| {L} | {nrows} | {dis} ({b:.2f}) | {klp:.2e} | {kl_bound(L):.1e} | "
                f"{'yes' if dis <= b and klp <= kl_bound(L) else '**no**'} |")
 out.append('')
+
+# control (review S4): CPU vs Vulkan on the FULL prefill of the same contexts, next to the naive cross-check of the same run
+xc_ctl = load('-xcheck', 'control')
+ctl = [r for r in xc_ctl if r['pair'] == 'cpu_vs_vk_full']
+if ctl:
+    out.append('### Control: CPU vs Vulkan on the full prefill vs on the naive cache (same contexts, same run)\n')
+    out.append('If staleness amplified the backend difference, the naive rows would exceed the full rows cell by cell.\n')
+    out.append('| ctx | seed | KL full | KL naive | disagree rows full | disagree rows naive | greedy agree full / naive |')
+    out.append('|---:|---:|---:|---:|---:|---:|---|')
+    ctl_runs = {(int(r['context_tokens']), int(r['seed'])) for r in ctl}
+    pooled_ctl = defaultdict(lambda: [0, 0, 0.0, 0.0, 0])
+    for L, s in sorted(ctl_runs):
+        f = next(r for r in ctl if (int(r['context_tokens']), int(r['seed'])) == (L, s))
+        n = [r for r in xc_ctl if r['pair'] == 'cpu_vs_vk_naive' and (int(r['context_tokens']), int(r['seed'])) == (L, s)]
+        n = n[-1]
+        rows = int(f['rows'])
+        df, dn = round((1 - float(f['top1'])) * rows), round((1 - float(n['top1'])) * rows)
+        p = pooled_ctl[L]
+        p[0] += df; p[1] += dn; p[2] += float(f['kl_mean']) * rows; p[3] += float(n['kl_mean']) * rows; p[4] += rows
+        out.append(f"| {L} | {s} | {float(f['kl_mean']):.2e} | {float(n['kl_mean']):.2e} | {df} | {dn} | "
+                   f"{float(f['greedy_agree']):.3f} / {float(n['greedy_agree']):.3f} |")
+    out.append('')
+    out.append('| ctx | rows | disagree full / naive (bound) | pooled KL full / naive |')
+    out.append('|---:|---:|---|---|')
+    for L, (df, dn, kf, kn, rows) in sorted(pooled_ctl.items()):
+        out.append(f'| {L} | {rows} | {df} / {dn} ({top1_bound(L) * rows + 1:.2f}) | {kf / rows:.2e} / {kn / rows:.2e} |')
+    out.append('')
 
 # all-layer means of the cross-check against the floor's all-layer means
 out.append('All-layer mean (mean of the 36 per-layer means) of the cross-check, per size, against the (a) floor:\n')

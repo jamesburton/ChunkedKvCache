@@ -1,0 +1,169 @@
+# provenance
+utc: 2026-11-02 05:16:20
+command: ChunkKvLab e1 --backend vulkan --cross-check cpu+full --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e2-corpus-4a781829-20261031161333\src --expect-hash b02b1e6e44ebbf82169f29a42d7847d7ba69203fc52f9d07bef60335c90dc800 --sizes 2048,4096,8192 --seeds 3 --out C:\Development\ChunkedkvCache\experiments\G1-e1-vulkan\results-control.csv
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX
+gpu: AMD Radeon(TM) 8060S Graphics, Windows driver 32.0.32015.7029; vulkaninfo: apiVersion=1.4.359; deviceName=AMD Radeon(TM) 8060S Graphics; driverName=AMD proprietary driver; driverInfo=26.10.1 (LLPC)
+gpu lock: HELD name='chunk-vulkan-t3' pid=106632 age=1s reason='ChunkedkvCache G1 E1 on Vulkan control (Phase G Task 3), Qwen3-4B'
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-vulkan @ 6025b79d6e7d4ede86e5f8b33fcd8f2f215d4411 (branch feature/chunk-reuse-vulkan); dirty files: 0
+corpus: C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e2-corpus-4a781829-20261031161333\src = git archive 4a7818290766b69a3bae0999874154185c7fa587 src of C:\Development\dotLLM (frozen snapshot); expected chunk-id sha256 b02b1e6e44ebbf82169f29a42d7847d7ba69203fc52f9d07bef60335c90dc800
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on vulkan in 3.1 s; engine 0.3.0-dev.3644.13+6025b79d6e7d4ede86e5f8b33fcd8f2f215d4411
+backend vulkan, device AMD Radeon(TM) 8060S Graphics
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on cpu in 0.4 s; engine 0.3.0-dev.3644.13+6025b79d6e7d4ede86e5f8b33fcd8f2f215d4411
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e2-corpus-4a781829-20261031161333\src (*.cs): 1086 documents, 7257 chunks of 512 tokens, tokenised once in 7.2 s; chunk-id sha256 b02b1e6e44ebbf82169f29a42d7847d7ba69203fc52f9d07bef60335c90dc800
+KV F32 bytes/token 294912; fingerprint 3fa65a8b52026d6a…
+warm-up encode 1354 ms
+[seed 0 ctx 2048] request 5270 5931 4051 5574; base 5270 5931 5574 4051; matched 2 chunks; continuation document successor
+[seed 0 ctx 2048 +0 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 1652 ms (build 1628 + first 24)  prefill 2048  reusedKV 0 MiB
+[seed 0 ctx 2048 +3 s] encode chunks
+[seed 0 ctx 2048 +8 s] assemble (host write)
+  naive_concat  top1 0.859  KL 0.144 (max 1.53)  EM 0.625  TTFT 267 ms (build 247 + first 21)  prefill 0  reusedKV 576 MiB
+[seed 0 ctx 2048 +12 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 1285 ms (build 1264 + first 20)  prefill 1024  reusedKV 288 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 2048 +16 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 2048 +25 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.002534 (max 0.0175)  top1 0.969  bit-identical False
+[seed 0 ctx 2048 +43 s] cross-check: CPU full prefill
+  check cpu_vs_vk_full   KL 0.0026 (max 0.0241)  top1 0.969  bit-identical False
+[seed 0 ctx 2048 +63 s] done at 1.2 min; 4 chunks encoded, 1308 ms/chunk
+[seed 0 ctx 4096] request 5270 5931 5574 4051 3212 4058 6575 1498; base 5270 5931 5574 4051 1498 4058 6575 3212; matched 4 chunks; continuation document successor
+[seed 0 ctx 4096 +0 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 5106 ms (build 5080 + first 26)  prefill 4096  reusedKV 0 MiB
+[seed 0 ctx 4096 +7 s] encode chunks
+[seed 0 ctx 4096 +12 s] assemble (host write)
+  naive_concat  top1 0.859  KL 0.2763 (max 4.64)  EM 1.000  TTFT 412 ms (build 387 + first 25)  prefill 0  reusedKV 1152 MiB
+[seed 0 ctx 4096 +16 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 3545 ms (build 3518 + first 27)  prefill 2048  reusedKV 576 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 4096 +23 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 4096 +42 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.00324 (max 0.0745)  top1 0.984  bit-identical False
+[seed 0 ctx 4096 +2234 s] cross-check: CPU full prefill
+  check cpu_vs_vk_full   KL 0.002388 (max 0.0163)  top1 0.969  bit-identical False
+[seed 0 ctx 4096 +2274 s] done at 39.2 min; 8 chunks encoded, 1318 ms/chunk
+[seed 0 ctx 8192] request 5270 5931 5574 4051 1498 4058 6575 3212 7094 4595 234 2125 3414 7127 1992 3397; base 5270 5931 5574 4051 1498 4058 6575 3212 7094 1992 2125 3397 4595 3414 7127 234; matched 9 chunks; continuation document successor
+[seed 0 ctx 8192 +0 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 19237 ms (build 19201 + first 36)  prefill 8192  reusedKV 0 MiB
+[seed 0 ctx 8192 +21 s] encode chunks
+[seed 0 ctx 8192 +35 s] assemble (host write)
+  naive_concat  top1 0.672  KL 0.5539 (max 3.93)  EM 0.125  TTFT 1073 ms (build 1037 + first 36)  prefill 0  reusedKV 2304 MiB
+[seed 0 ctx 8192 +40 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 12861 ms (build 12825 + first 36)  prefill 3584  reusedKV 1296 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 8192 +57 s] assemble (device copy)
+[heartbeat 2026-11-02 05:57:33 UTC, +41.2 min]
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 0 ctx 8192 +128 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.005347 (max 0.0284)  top1 0.953  bit-identical False
+[seed 0 ctx 8192 +180 s] cross-check: CPU full prefill
+  check cpu_vs_vk_full   KL 0.003968 (max 0.0268)  top1 0.969  bit-identical False
+[seed 0 ctx 8192 +359 s] done at 45.1 min; 16 chunks encoded, 1497 ms/chunk
+[seed 1 ctx 2048] request 1804 804 5600 3390; base 1804 804 3390 5600; matched 2 chunks; continuation document successor
+[seed 1 ctx 2048 +0 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 1679 ms (build 1659 + first 20)  prefill 2048  reusedKV 0 MiB
+[seed 1 ctx 2048 +3 s] encode chunks
+[seed 1 ctx 2048 +8 s] assemble (host write)
+  naive_concat  top1 0.844  KL 0.1386 (max 2.65)  EM 0.375  TTFT 272 ms (build 252 + first 20)  prefill 0  reusedKV 576 MiB
+[seed 1 ctx 2048 +12 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 1283 ms (build 1263 + first 20)  prefill 1024  reusedKV 288 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 1 ctx 2048 +16 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 1 ctx 2048 +25 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.00368 (max 0.0249)  top1 0.969  bit-identical False
+[seed 1 ctx 2048 +42 s] cross-check: CPU full prefill
+  check cpu_vs_vk_full   KL 0.003059 (max 0.0166)  top1 1.000  bit-identical False
+[seed 1 ctx 2048 +58 s] done at 46.1 min; 4 chunks encoded, 1314 ms/chunk
+[seed 1 ctx 4096] request 1804 804 3390 5600 6850 4772 3143 2573; base 1804 804 3390 5600 4772 3143 2573 6850; matched 4 chunks; continuation document successor
+[seed 1 ctx 4096 +0 s] full prefill
+[heartbeat 2026-11-02 06:02:33 UTC, +46.2 min]
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 5145 ms (build 5110 + first 36)  prefill 4096  reusedKV 0 MiB
+[seed 1 ctx 4096 +7 s] encode chunks
+[seed 1 ctx 4096 +12 s] assemble (host write)
+  naive_concat  top1 0.859  KL 0.2004 (max 2.28)  EM 1.000  TTFT 447 ms (build 422 + first 25)  prefill 0  reusedKV 1152 MiB
+[seed 1 ctx 4096 +16 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 3511 ms (build 3486 + first 26)  prefill 2048  reusedKV 576 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 1 ctx 4096 +23 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 1 ctx 4096 +40 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.003068 (max 0.0254)  top1 1.000  bit-identical False
+[seed 1 ctx 4096 +62 s] cross-check: CPU full prefill
+  check cpu_vs_vk_full   KL 0.002548 (max 0.0162)  top1 0.969  bit-identical False
+[seed 1 ctx 4096 +103 s] done at 47.8 min; 8 chunks encoded, 1338 ms/chunk
+[seed 1 ctx 8192] request 1804 804 3390 5600 4772 3143 2573 6850 4665 742 1808 2331 4954 4757 217 7182; base 1804 804 3390 5600 4772 3143 2573 6850 742 4665 217 1808 2331 7182 4954 4757; matched 8 chunks; continuation document successor
+[seed 1 ctx 8192 +0 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 19260 ms (build 19224 + first 37)  prefill 8192  reusedKV 0 MiB
+[seed 1 ctx 8192 +21 s] encode chunks
+[seed 1 ctx 8192 +32 s] assemble (host write)
+  naive_concat  top1 0.750  KL 0.6989 (max 4.95)  EM 0.125  TTFT 862 ms (build 825 + first 37)  prefill 0  reusedKV 2304 MiB
+[seed 1 ctx 8192 +37 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 14158 ms (build 14120 + first 38)  prefill 4096  reusedKV 1152 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 1 ctx 8192 +56 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 1 ctx 8192 +142 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.004295 (max 0.0608)  top1 0.969  bit-identical False
+[seed 1 ctx 8192 +196 s] cross-check: CPU full prefill
+[heartbeat 2026-11-02 06:07:33 UTC, +51.2 min]
+  check cpu_vs_vk_full   KL 0.002504 (max 0.0181)  top1 0.969  bit-identical False
+[seed 1 ctx 8192 +381 s] done at 54.2 min; 16 chunks encoded, 1344 ms/chunk
+[seed 2 ctx 2048] request 5595 2933 7148 1206; base 5595 2933 1206 7148; matched 2 chunks; continuation document successor
+[seed 2 ctx 2048 +0 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 1652 ms (build 1632 + first 20)  prefill 2048  reusedKV 0 MiB
+[seed 2 ctx 2048 +3 s] encode chunks
+[seed 2 ctx 2048 +8 s] assemble (host write)
+  naive_concat  top1 0.891  KL 0.1018 (max 1.04)  EM 0.312  TTFT 228 ms (build 208 + first 20)  prefill 0  reusedKV 576 MiB
+[seed 2 ctx 2048 +12 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 1118 ms (build 1097 + first 20)  prefill 1024  reusedKV 288 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 2 ctx 2048 +16 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 2 ctx 2048 +25 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.002211 (max 0.0172)  top1 0.984  bit-identical False
+[seed 2 ctx 2048 +42 s] cross-check: CPU full prefill
+  check cpu_vs_vk_full   KL 0.002076 (max 0.0221)  top1 0.984  bit-identical False
+[seed 2 ctx 2048 +58 s] done at 55.2 min; 4 chunks encoded, 1324 ms/chunk
+[seed 2 ctx 4096] request 5595 2933 1206 7148 794 2229 3237 5822; base 5595 2933 1206 7148 794 2229 5822 3237; matched 6 chunks; continuation document successor
+[seed 2 ctx 4096 +0 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 5127 ms (build 5102 + first 26)  prefill 4096  reusedKV 0 MiB
+[seed 2 ctx 4096 +7 s] encode chunks
+[seed 2 ctx 4096 +12 s] assemble (host write)
+  naive_concat  top1 0.984  KL 0.0855 (max 3.34)  EM 1.000  TTFT 439 ms (build 414 + first 25)  prefill 0  reusedKV 1152 MiB
+[seed 2 ctx 4096 +16 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 2097 ms (build 2071 + first 26)  prefill 1024  reusedKV 864 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 2 ctx 4096 +21 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 2 ctx 4096 +39 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.0004399 (max 0.00997)  top1 1.000  bit-identical False
+[seed 2 ctx 4096 +61 s] cross-check: CPU full prefill
+[heartbeat 2026-11-02 06:12:33 UTC, +56.2 min]
+  check cpu_vs_vk_full   KL 0.001077 (max 0.0481)  top1 1.000  bit-identical False
+[seed 2 ctx 4096 +101 s] done at 56.9 min; 8 chunks encoded, 1341 ms/chunk
+[seed 2 ctx 8192] request 5595 2933 1206 7148 794 2229 5822 3237 5556 3707 90 1638 66 2781 219 2038; base 5595 2933 1206 7148 794 2229 5822 3237 1638 90 5556 219 66 3707 2781 2038; matched 8 chunks; continuation document successor
+[seed 2 ctx 8192 +0 s] full prefill
+  full          top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 19221 ms (build 19183 + first 38)  prefill 8192  reusedKV 0 MiB
+[seed 2 ctx 8192 +21 s] encode chunks
+[seed 2 ctx 8192 +32 s] assemble (host write)
+  naive_concat  top1 0.891  KL 0.329 (max 6.03)  EM 1.000  TTFT 867 ms (build 831 + first 36)  prefill 0  reusedKV 2304 MiB
+[seed 2 ctx 8192 +37 s] prefix reuse
+  prefix_reuse  top1 1.000  KL 0 (max 0)  EM 1.000  TTFT 14134 ms (build 14096 + first 38)  prefill 4096  reusedKV 1152 MiB
+  check prefix_vs_full   KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 2 ctx 8192 +55 s] assemble (device copy)
+  check dev_vs_host      KL 0 (max 0)  top1 1.000  bit-identical True
+[seed 2 ctx 8192 +152 s] cross-check: CPU encode + assembly
+  check cpu_vs_vk_naive  KL 0.004924 (max 0.133)  top1 0.969  bit-identical False
+[seed 2 ctx 8192 +207 s] cross-check: CPU full prefill
+[heartbeat 2026-11-02 06:17:33 UTC, +61.2 min]
+  check cpu_vs_vk_full   KL 0.002863 (max 0.0876)  top1 0.969  bit-identical False
+[seed 2 ctx 8192 +386 s] done at 63.3 min; 16 chunks encoded, 1345 ms/chunk
+E1 finished in 63.3 min -> C:\Development\ChunkedkvCache\experiments\G1-e1-vulkan\results-control.csv (+ -details, -timing, -kv, -xcheck)
+# exit code 0 after 63.6 min
