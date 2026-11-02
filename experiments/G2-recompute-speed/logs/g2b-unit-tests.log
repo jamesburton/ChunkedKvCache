@@ -1,0 +1,26 @@
+# G2b unit tests, Mon Nov  2 19:15:03 UTC 2026, dotLLM 1421f319 (branch feature/chunk-reuse-vulkan-tiled), dirty 3
+[gpu-lock] acquired by 'chunk-vulkan-t4b' (pid 2655): ChunkedkvCache G2b: ChunkReuse + qpos unit tests, tiled and ref (~5 min)
+== tiled
+  Passed DotLLM.Tests.Unit.ChunkReuse.CorpusTests.TaskGenerator_UnresolvedSymbolsAreSkipped [38 ms]
+  Skipped DotLLM.Tests.Unit.Vulkan.VulkanFlashAttentionGqaQueryPositionsTests.Bench_OldVsTiled [1 ms]
+[xUnit.net 00:00:17.00]         all positions via ATTN_QPOS: K/V max |d| vs Vulkan full 2.568E-003, vs CPU full 1.765E-003; last logits 2.719E-003 / 1.433E-003
+  Failed DotLLM.Tests.Unit.ChunkReuse.VulkanRecomputeTestsGpu.Recompute_AllPositions_EqualsFullPrefillWithinFloor [360 ms]
+ all positions via ATTN_QPOS: K/V max |d| vs Vulkan full 2.568E-003, vs CPU full 1.765E-003; last logits 2.719E-003 / 1.433E-003
+  Failed DotLLM.Tests.Unit.ChunkReuse.VulkanRecomputeTestsGpu.Recompute_FirstAndLastPosition_Edge [355 ms]
+== ref
+  Passed DotLLM.Tests.Unit.ChunkReuse.CorpusTests.TaskGenerator_UnresolvedSymbolsAreSkipped [37 ms]
+  Skipped DotLLM.Tests.Unit.Vulkan.VulkanFlashAttentionGqaQueryPositionsTests.Bench_OldVsTiled [1 ms]
+  Skipped DotLLM.Tests.Unit.ChunkReuse.VulkanRecomputeTestsGpu.Recompute_TiledAndReferenceKernels_AgreeWithinFloor [1 ms]
+[gpu-lock] released by 'chunk-vulkan-t4b'
+
+# rerun after making the two kernel-exactness tests kernel-aware, Mon Nov  2 19:16:42 UTC 2026
+[gpu-lock] acquired by 'chunk-vulkan-t4b' (pid 1656): G2b unit tests tiled+ref (~3 min)
+== tiled
+Total tests: 308
+     Passed: 307
+    Skipped: 1
+== ref
+Total tests: 308
+     Passed: 306
+    Skipped: 2
+[gpu-lock] released by 'chunk-vulkan-t4b'

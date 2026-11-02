@@ -1,0 +1,132 @@
+# provenance
+utc: 2026-11-02 20:36:46
+group: b-8k-timing
+command: ChunkKvLab recompute --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --names afclaude,docagent,codesharp --corpus-dirs C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 --hashes 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938,5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7,bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb --contexts 1,1,0 --kept-dir C:\Development\ChunkedkvCache\experiments\corpus --mode unfiltered --context 8192 --max-rows 128 --label b-8k --out-dir C:\Development\ChunkedkvCache\experiments\G2-recompute-speed --repeats 3 --eval 0
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX
+gpu: AMD Radeon(TM) 8060S Graphics, Windows driver 32.0.32015.7029; vulkaninfo: apiVersion=1.4.359; deviceName=AMD Radeon(TM) 8060S Graphics; driverName=AMD proprietary driver; driverInfo=26.10.1 (LLPC)
+gpu lock: HELD name='chunk-vulkan-t4b' pid=12398 age=1s reason='ChunkedkvCache G2 recompute b-8k-timing (Phase G Task 4), Qwen3-4B'
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-vulkan @ 7bef8f389ebe25debc64f129e1ed2282bb643caa (branch feature/chunk-reuse-vulkan-tiled); dirty files: 0
+corpus afclaude: t8-corpus-AFClaude-b3f29c30-20261101111141 = git archive b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c of C:\Development\AFClaude; expected chunk-id sha256 (symbol-512) 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+corpus docagent: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 of C:\Development\CSharpDocAgentFrameworkMCP; expected chunk-id sha256 (symbol-512) 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+corpus codesharp: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 of C:\Development\codesharp; expected chunk-id sha256 (symbol-512) bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+env DOTLLM_VULKAN_ATTN_QPOS=
+power requests held: ExecutionRequired, SystemRequired, DisplayRequired
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on vulkan in 3.7 s; engine 0.3.0-dev.3658.6+7bef8f389ebe25debc64f129e1ed2282bb643caa
+vulkan device: AMD Radeon(TM) 8060S Graphics; eval off (timing run: all-row logits never widened); single-pass row cap 128; per-query-position attention: loaded True, tiled loaded True, tiled enabled True (DOTLLM_VULKAN_ATTN_QPOS=(unset))
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), symbol-512: 74 chunks, 12744 tokens (chunk tokens median 107, max 510); Decode(Encode(file)) == file for 9/9; 1.0 s
+chunk-id sha256 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+plans: 1 contexts, 4 tasks (unfiltered, seed 0, 2.9 s); mean context 8188 tokens, 58.0 chunks
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +1 s] full prefill block 512 rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +21 s] full prefill block 512 rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +41 s] full prefill block 512 rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +62 s] full prefill block 2048 rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +83 s] full prefill block 2048 rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +103 s] full prefill block 2048 rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +124 s] encode (host entries: forward + readback)
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +168 s] upload host entries into resident caches
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +196 s] control tail_ordinary: 128 rows at 8060.. rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +197 s] control tail_qpos: 128 rows at 8059.. rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +198 s] control tail_ordinary: 128 rows at 8060.. rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +200 s] control tail_qpos: 128 rows at 8059.. rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +201 s] control tail_ordinary: 128 rows at 8060.. rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +203 s] control tail_qpos: 128 rows at 8059.. rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +204 s] chunk_starts 5 % (409 rows, 57 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +205 s] chunk_starts 5 % (409 rows, 57 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +206 s] chunk_starts 5 % (409 rows, 57 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +207 s] chunk_starts 5 % (409 rows, 57 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +210 s] chunk_starts 5 % (409 rows, 57 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +213 s] chunk_starts 5 % (409 rows, 57 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +217 s] chunk_starts 10 % (819 rows, 52 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +219 s] chunk_starts 10 % (819 rows, 52 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +221 s] chunk_starts 10 % (819 rows, 52 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +225 s] chunk_starts 10 % (819 rows, 52 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +229 s] chunk_starts 10 % (819 rows, 52 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +233 s] chunk_starts 10 % (819 rows, 52 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +238 s] chunk_starts 20 % (1638 rows, 46 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +244 s] chunk_starts 20 % (1638 rows, 46 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +247 s] chunk_starts 20 % (1638 rows, 46 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +249 s] chunk_starts 20 % (1638 rows, 46 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +254 s] chunk_starts 20 % (1638 rows, 46 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +259 s] chunk_starts 20 % (1638 rows, 46 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +265 s] random 5 % (409 rows, 386 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +267 s] random 5 % (409 rows, 386 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +282 s] random 5 % (409 rows, 386 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +283 s] random 5 % (409 rows, 386 runs) PerRun rep 0
+[heartbeat 2026-11-02 20:41:48 UTC, +5.0 min, 5.0 min since previous]
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +298 s] random 5 % (409 rows, 386 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +314 s] random 5 % (409 rows, 386 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +329 s] random 10 % (819 rows, 736 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +331 s] random 10 % (819 rows, 736 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +333 s] random 10 % (819 rows, 736 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +334 s] random 10 % (819 rows, 736 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +363 s] random 10 % (819 rows, 736 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +392 s] random 10 % (819 rows, 736 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +420 s] random 20 % (1638 rows, 1311 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +423 s] random 20 % (1638 rows, 1311 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +425 s] random 20 % (1638 rows, 1311 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +428 s] random 20 % (1638 rows, 1311 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +475 s] random 20 % (1638 rows, 1311 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 chunks 58 +529 s] random 20 % (1638 rows, 1311 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/unfiltered/p0 L 8188 tasks 4] done in 583 s; at 9.8 min
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 0.9 s
+chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+plans: 1 contexts, 1 tasks (unfiltered, seed 0, 2.9 s); mean context 8192 tokens, 66.0 chunks
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +0 s] full prefill block 512 rep 0
+[heartbeat 2026-11-02 20:46:48 UTC, +10.0 min, 5.0 min since previous]
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +20 s] full prefill block 512 rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +41 s] full prefill block 512 rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +62 s] full prefill block 2048 rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +84 s] full prefill block 2048 rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +104 s] full prefill block 2048 rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +124 s] encode (host entries: forward + readback)
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +150 s] upload host entries into resident caches
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +174 s] control tail_ordinary: 128 rows at 8064.. rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +175 s] control tail_qpos: 128 rows at 8063.. rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +177 s] control tail_ordinary: 128 rows at 8064.. rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +181 s] control tail_qpos: 128 rows at 8063.. rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +182 s] control tail_ordinary: 128 rows at 8064.. rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +184 s] control tail_qpos: 128 rows at 8063.. rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +185 s] chunk_starts 5 % (410 rows, 65 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +186 s] chunk_starts 5 % (410 rows, 65 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +188 s] chunk_starts 5 % (410 rows, 65 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +189 s] chunk_starts 5 % (410 rows, 65 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +193 s] chunk_starts 5 % (410 rows, 65 runs) PerRun rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +197 s] chunk_starts 5 % (410 rows, 65 runs) PerRun rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +200 s] chunk_starts 10 % (819 rows, 61 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +202 s] chunk_starts 10 % (819 rows, 61 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +204 s] chunk_starts 10 % (819 rows, 61 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +206 s] chunk_starts 10 % (819 rows, 61 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +211 s] chunk_starts 10 % (819 rows, 61 runs) PerRun rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +216 s] chunk_starts 10 % (819 rows, 61 runs) PerRun rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +221 s] chunk_starts 20 % (1638 rows, 58 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +224 s] chunk_starts 20 % (1638 rows, 58 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +227 s] chunk_starts 20 % (1638 rows, 58 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +229 s] chunk_starts 20 % (1638 rows, 58 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +236 s] chunk_starts 20 % (1638 rows, 58 runs) PerRun rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +242 s] chunk_starts 20 % (1638 rows, 58 runs) PerRun rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +249 s] random 5 % (410 rows, 389 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +250 s] random 5 % (410 rows, 389 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +252 s] random 5 % (410 rows, 389 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +254 s] random 5 % (410 rows, 389 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +268 s] random 5 % (410 rows, 389 runs) PerRun rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +282 s] random 5 % (410 rows, 389 runs) PerRun rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +299 s] random 10 % (819 rows, 734 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +301 s] random 10 % (819 rows, 734 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +304 s] random 10 % (819 rows, 734 runs) SinglePass rep 2
+[heartbeat 2026-11-02 20:51:48 UTC, +15.0 min, 5.0 min since previous]
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +316 s] random 10 % (819 rows, 734 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +343 s] random 10 % (819 rows, 734 runs) PerRun rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +371 s] random 10 % (819 rows, 734 runs) PerRun rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +405 s] random 20 % (1638 rows, 1296 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +407 s] random 20 % (1638 rows, 1296 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +410 s] random 20 % (1638 rows, 1296 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +413 s] random 20 % (1638 rows, 1296 runs) PerRun rep 0
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +467 s] random 20 % (1638 rows, 1296 runs) PerRun rep 1
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 chunks 66 +519 s] random 20 % (1638 rows, 1296 runs) PerRun rep 2
+[recompute docagent/symbol/s0/unfiltered/p0 L 8192 tasks 1] done in 571 s; at 19.4 min
+recompute b-8k: 2 contexts in 19.4 min -> C:\Development\ChunkedkvCache\experiments\G2-recompute-speed
+# exit code 0 after 19.7 min

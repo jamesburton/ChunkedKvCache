@@ -46,6 +46,19 @@ $groupSpec = @{
     '8k-timing-b' = @{ label = '8k-b'; context = 8192; mode = 'unfiltered'; contexts = '0,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
     '16k-point'  = @{ label = '16k'; context = 16384; mode = 'unfiltered'; contexts = '0,0,1'; maxRows = 64; extra = @('--repeats', 1, '--eval', 0, '--budgets', 5, '--selectors', 'chunk_starts', '--full-blocks', 512) }
     '2k-eval'    = @{ label = '2k-eval'; context = 2048; mode = 'kept';    contexts = '7,7,6'; maxRows = 512; extra = @('--repeats', 1, '--eval', 1, '--cpu-contexts', 6, '--full-blocks', 512) }
+    # G2b (tiled ATTN_QPOS, dotLLM feature/chunk-reuse-vulkan-tiled): every single-pass forward capped at 128 rows; 'ref' arms force the old
+    # reference kernel (DOTLLM_VULKAN_ATTN_QPOS=ref) on the smallest cells only.
+    'b-2k-timing'     = @{ label = 'b-2k'; context = 2048; mode = 'kept'; contexts = '3,3,2'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
+    'b-2k-timing-ref' = @{ label = 'b-2k-ref'; context = 2048; mode = 'kept'; contexts = '1,0,0'; maxRows = 128; env = 'ref'; extra = @('--repeats', 3, '--eval', 0, '--budgets', 5, '--selectors', 'chunk_starts', '--full-blocks', 512) }
+    'b-8k-timing'     = @{ label = 'b-8k'; context = 8192; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
+    'b-16k-timing'    = @{ label = 'b-16k'; context = 16384; mode = 'unfiltered'; contexts = '0,0,1'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0, '--budgets', '5,20', '--full-blocks', 512) }
+    'b-32k-timing'    = @{ label = 'b-32k'; context = 32768; mode = 'unfiltered'; contexts = '0,0,1'; maxRows = 128; extra = @('--repeats', 1, '--eval', 0, '--budgets', 5, '--selectors', 'chunk_starts', '--full-blocks', 256) }
+    'b-2k-eval'       = @{ label = 'b-2k-eval'; context = 2048; mode = 'kept'; contexts = '7,7,6'; maxRows = 128; extra = @('--repeats', 1, '--eval', 1, '--cpu-contexts', 6, '--full-blocks', 512) }
+    'b-2k-eval-ref'   = @{ label = 'b-2k-eval-ref'; context = 2048; mode = 'kept'; contexts = '2,2,1'; maxRows = 128; env = 'ref'; extra = @('--repeats', 1, '--eval', 1, '--full-blocks', 512, '--budgets', '5,20') }
+    # Reruns after dotllm-97's #1540 agent ran GPU unit tests during the first G2b timing groups (its lock request had timed out).
+    'b-2k-timing-r2'  = @{ label = 'b-2k-r2'; context = 2048; mode = 'kept'; contexts = '3,3,2'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
+    'b-8k-timing-r2'  = @{ label = 'b-8k-r2'; context = 8192; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
+    'b-8k-eval'       = @{ label = 'b-8k-eval'; context = 8192; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 1, '--eval', 1, '--full-blocks', 512) }
     '8k-eval'    = @{ label = '8k-eval'; context = 8192; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 1, '--eval', 1, '--full-blocks', 512) }
 }
 
@@ -117,6 +130,8 @@ foreach ($group in $Groups) {
         $cmd = "dotnet run -c Release --no-build --project `"$project`" -- $argLine >> `"$logPath`" 2>&1"
         $sw = [Diagnostics.Stopwatch]::StartNew()
         Write-Output "start $group ($label)"
+        if ($s.env) { $env:DOTLLM_VULKAN_ATTN_QPOS = $s.env } else { Remove-Item Env:DOTLLM_VULKAN_ATTN_QPOS -ErrorAction SilentlyContinue }
+        "env DOTLLM_VULKAN_ATTN_QPOS=$($env:DOTLLM_VULKAN_ATTN_QPOS)" | Add-Content -Path $logPath -Encoding utf8
         $proc = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', $cmd -NoNewWindow -PassThru
         $null = $proc.Handle
         $lastRefresh = $sw.Elapsed.TotalMinutes
