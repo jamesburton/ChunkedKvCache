@@ -1,0 +1,49 @@
+# provenance
+utc: 2026-11-02 17:04:05
+dotLLM: fe6b7fea3f6cd819af97e843060d7c1ec2e033c4 dirty=0 (scanned solution = this worktree)
+HEAD~3: 69eb5772e52cd44633385bcf35e1057c642a2777
+sdk: 10.0.401
+model (tokenizer only): C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+command: ChunkKvLab select --solution C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx --configuration Release --chunker symbol --chunk 512 --show 15 --symbol ChunkIndex.Update --hops 2 --budget 20000 --exclude tests/**,benchmarks/**
+
+scan C:\Development\dotLLM\.claude\worktrees\chunk-cache\dotLLM.slnx (Configuration=Release): 28 projects, 0 skipped entries, 2603 files (85 generated), 2518 authored files after RelativizeScan (excluded 0); root C:\Development\dotLLM\.claude\worktrees\chunk-cache [15.7 s]
+chunker symbol-512: 39612 chunks, 7995530 tokens [24.9 s]
+graph (per-project compilations): 374392 edges [30.3 s]
+
+request: symbol=ChunkIndex.Update hops=2 paths=[] exclude=[tests/**, benchmarks/**] since=- budget=none [338 ms]
+  definition DotLLM.ChunkReuse.Store.ChunkIndex.Update (method) src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:365
+  candidates 140 chunks / 30491 tokens in 19 files; selected 140 chunks / 30491 tokens in 19 files; trimmed 0 chunks / 0 tokens
+  by reason (selected / candidates, tokens selected / candidates):
+    Definition      hop  0:     1 /     1 chunks,     486 /     486 tokens
+    DefinitionBody  hop  0:     2 /     2 chunks,     687 /     687 tokens
+    Callee          hop  1:    20 /    20 chunks,    2776 /    2776 tokens
+    Caller          hop  2:   116 /   116 chunks,   26511 /   26511 tokens
+    Callee          hop  2:     1 /     1 chunks,      31 /      31 tokens
+
+request: symbol=ChunkIndex.Update hops=2 paths=[] exclude=[tests/**, benchmarks/**] since=- budget=20000 [236 ms]
+  definition DotLLM.ChunkReuse.Store.ChunkIndex.Update (method) src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:365
+  candidates 140 chunks / 30491 tokens in 19 files; selected 84 chunks / 19566 tokens in 16 files; trimmed 56 chunks / 10925 tokens
+  by reason (selected / candidates, tokens selected / candidates):
+    Definition      hop  0:     1 /     1 chunks,     486 /     486 tokens
+    DefinitionBody  hop  0:     2 /     2 chunks,     687 /     687 tokens
+    Callee          hop  1:    20 /    20 chunks,    2776 /    2776 tokens
+    Caller          hop  2:    61 /   116 chunks,   15617 /   26511 tokens
+    Callee          hop  2:     0 /     1 chunks,       0 /      31 tokens
+  first 15 selected (rank order):
+    1000 w0     486 tok  src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:352-388  definition of DotLLM.ChunkReuse.Store.ChunkIndex.Update
+     900 w0     503 tok  src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:389-438  body of DotLLM.ChunkReuse.Store.ChunkIndex.Update
+     900 w0     184 tok  src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:439-459  body of DotLLM.ChunkReuse.Store.ChunkIndex.Update
+     599 w16     58 tok  src/DotLLM.ChunkReuse/Store/ChunkRef.cs:45-49  referenced by hop-0 chunks (hop 1, 16 edges)
+     599 w13    101 tok  src/DotLLM.ChunkReuse/Corpus/Chunk.cs:1-6  referenced by hop-0 chunks (hop 1, 13 edges)
+     599 w13     22 tok  src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:830-831  referenced by hop-0 chunks (hop 1, 13 edges)
+     599 w10    146 tok  src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:156-168  referenced by hop-0 chunks (hop 1, 10 edges)
+     599 w4      69 tok  src/DotLLM.ChunkReuse/Corpus/Chunk.cs:30-35  referenced by hop-0 chunks (hop 1, 4 edges)
+     599 w4     361 tok  src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:17-37  referenced by hop-0 chunks (hop 1, 4 edges)
+     599 w4      37 tok  src/DotLLM.ChunkReuse/Store/ChunkRef.cs:52-54  referenced by hop-0 chunks (hop 1, 4 edges)
+     599 w3      46 tok  src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:178-180  referenced by hop-0 chunks (hop 1, 3 edges)
+     599 w2     222 tok  src/DotLLM.ChunkReuse/Corpus/Chunk.cs:7-22  referenced by hop-0 chunks (hop 1, 2 edges)
+     599 w2     222 tok  src/DotLLM.ChunkReuse/Store/ChunkIndex.cs:807-827  referenced by hop-0 chunks (hop 1, 2 edges)
+     599 w2     197 tok  src/DotLLM.ChunkReuse/Store/ChunkKey.cs:38-49  referenced by hop-0 chunks (hop 1, 2 edges)
+     599 w1      63 tok  src/DotLLM.ChunkReuse/Corpus/Chunk.cs:39-45  referenced by hop-0 chunks (hop 1, 1 edges)
+  first trimmed: 598 w2 503 tok src/DotLLM.ChunkReuse/Store/ChunkKey.cs:50-81 references hop-1 chunks (hop 2, 2 edges)
+exit 0; wall 71.9 s
