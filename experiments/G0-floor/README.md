@@ -99,8 +99,8 @@ then, (b, 2048) is a lower bound, not a tolerance.
 agree with the CPU to about 1e-6 (Task 1: shift 5.96e-7, round-trips bit-exact), and so do layer-0 K/V (Task 3: 7e-7 / 1.4e-6).
 **Past layer 0, CPU vs Vulkan K/V differ by about 1e-3 to 2e-3 absolute** on values of magnitude ~5 (Task 3 spike: 1.1e-3 / 1.3e-3
 at layer 1, 1.6e-3 / 2.1e-3 at layer 2), so ≤ 1e-5 holds only for the shift, row IO and layer 0. Task 3's GPU tests use 1e-2 for
-deeper cross-backend layers (their own choice, about 5× headroom). *(Corrected in Phase G Task 3's fix round, with the Task 2
-owner's approval.)*
+deeper cross-backend layers (their own choice, about 5× headroom). *(Corrected in Phase G Task 3's fix round, with the
+coordinator's approval.)*
 
 The size is the context size of the test (2K or 8K table). For 16K and 32K, use the 8K floor, with p99s × 1.6, until it is
 measured. That may be tight for the small floors. RoPE shifts on top of rows add at most the Task 1 shift error (max |Δ| 2.4e-7 at small deltas, 2.4e-4 at a

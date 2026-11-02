@@ -1,4 +1,6 @@
-"""Phase G Task 3 mutation runs in a git-archive scratch copy (never the live worktree).
+"""Phase G Task 3 fix-round mutation runs. Run in the LIVE worktree, as the coordinator directed for this round (no other jobs
+were running): sources backed up first, every mutant restored and byte-compared, the tree diffed against the backup afterwards.
+F3's first pattern ('if (false)') did not compile (log line 3); this file carries the revised pattern that produced the kill.
 usage: python -I mutate3.py <scratch-root> [mutant ids...]
 Each mutant: (id, file, old, new, occurrence index or None = must be unique)."""
 import subprocess, sys, os, re

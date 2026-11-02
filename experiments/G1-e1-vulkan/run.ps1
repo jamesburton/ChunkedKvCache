@@ -35,7 +35,7 @@ $groupSizes = @{ 'small' = '2048,4096,8192'; '16k' = '16384'; '32k' = '32768'; '
 # Keep the system awake while this script runs (the waiting loop runs on this thread, so the request lasts the whole run).
 Add-Type -Namespace G1Power -Name Native -MemberDefinition '[System.Runtime.InteropServices.DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint esFlags);'
 $esContinuous = [uint32]2147483648   # ES_CONTINUOUS
-$esSystemRequired = [uint32]3        # ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED (system-required alone does not stop Modern Standby)
+$esSystemAndDisplayRequired = [uint32]3   # ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED (system-required alone does not stop Modern Standby)
 
 $repo = 'bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF'
 $hub = Join-Path $env:USERPROFILE '.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots'
@@ -92,7 +92,7 @@ foreach ($group in $Groups) {
         if ($wtDirty.Count -gt 0) { Write-Warning "dotLLM worktree has $($wtDirty.Count) uncommitted changes: $stem is not reproducible from the commit alone" }
         $argLine = ($labArgs | ForEach-Object { if ($_ -match '\s') { '"' + $_ + '"' } else { "$_" } }) -join ' '
         $cmd = "dotnet run -c Release --no-build --project `"$project`" -- $argLine >> `"$logPath`" 2>&1"
-        $null = [G1Power.Native]::SetThreadExecutionState($esContinuous -bor $esSystemRequired)
+        $null = [G1Power.Native]::SetThreadExecutionState($esContinuous -bor $esSystemAndDisplayRequired)
         $sw = [Diagnostics.Stopwatch]::StartNew()
         Write-Output "start $stem"
         $proc = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', $cmd -NoNewWindow -PassThru

@@ -5,8 +5,9 @@ concatenation's loss against full prefill is the same within a few percent of th
 bit-exact is bit-exact. Full prefill is about 10× faster than on the CPU. Device-copy assembly runs at about 70,000 tok/s. Host-write
 assembly runs at about 9,000 tok/s, no faster than the CPU, because each `WriteRows` call costs about 1.5 ms. Chunk readback is
 slow (about 145 MB/s). CPU vs Vulkan on the same naive cache: KV is within 1.3× of the (a) floor everywhere. Top-1 exceeds the (a)
-bound from 8K up, but a control shows the full prefill of the same 8K tasks does too (6 vs 7 of 192 rows), so that is task
-variance. KL is somewhat higher on the stale state (1.56× at 8K), which is a hypothesis with 3 tasks per size.
+bound from 8K up. A control shows the full prefill of the same 8K tasks exceeds it too (6 vs 7 of 192 rows), so the 8K excess is
+task variance, and no stale-cache top-1 effect is detectable at 2K–8K. The 16K/32K excess is uncontrolled. KL is somewhat higher
+on the stale state (1.56× at 8K), which is a hypothesis with 3 tasks per size.
 
 ## Setup
 
@@ -132,19 +133,22 @@ these tasks.
 - **Cross-process reproducibility, measured:** the control run's `results` rows (top-1, KL, EM) and its naive cross-check rows
   are identical, to every printed digit, to the main run's, which was a different process on another day. The control run
   itself was suspended by Modern Standby from 05:18 to 05:54 UTC: `run.ps1` held only `ES_SYSTEM_REQUIRED` then, which does not
-  prevent it, and the heartbeat log shows the gap. Values are unaffected; its timings are not used. `run.ps1` and the lab now
-  hold display- and execution-required requests (`KeepAwake.cs`, dotLLM `1e6fc40e`).
+  prevent it, and the heartbeat log shows the gap. Values are unaffected; its timings are not used. `KeepAwake` (lab, dotLLM `1e6fc40e`) and `ES_DISPLAY_REQUIRED` in `run.ps1` were added after the control ran, so they are **unproven against an actual standby**.
+  The smoke test only shows that the three `PowerSetRequest` calls succeeded, and `PowerRequestExecutionRequired` is advisory (power policy decides).
 
 | ctx | KL full, per seed | KL naive, per seed | top-1 disagree full / naive, pooled (bound) | pooled KL full / naive |
 |---:|---|---|---|---|
 | 2048 | 2.6e-3, 3.1e-3, 2.1e-3 | 2.5e-3, 3.7e-3, 2.2e-3 | 3 / 5 (5.03) | 2.6e-3 / 2.8e-3 |
-| 4096 | 2.4e-3, 2.6e-3, 1.1e-3 | 3.2e-3, 3.1e-3, 4.4e-4 | 4 / 1 (5.03) | 2.0e-3 / 2.3e-3 |
+| 4096 | 2.4e-3, 2.5e-3, 1.1e-3 | 3.2e-3, 3.1e-3, 4.4e-4 | 4 / 1 (5.03) | 2.0e-3 / 2.3e-3 |
 | 8192 | 4.0e-3, 2.5e-3, 2.9e-3 | 5.4e-3, 4.3e-3, 4.9e-3 | **6** / 7 (5.61) | 3.1e-3 / 4.9e-3 |
 
-- **The top-1 excess is not a stale-cache effect.** On the full prefill of the same 8K tasks, CPU vs Vulkan also disagrees on 6 of
-  192 rows, above the same bound, while G0's 8K tasks gave 1.6 %. Per-cell top-1 counts are about equal on the two states (full
-  2, 2, 2 vs naive 3, 2, 2 at 8K). So the overshoot is task variance on these contexts: the (a) top-1 bound comes from G0's own 14
-  tasks at 8K and does not transfer to E1's continuations. The greedy divergences are not stale-cache-specific either: the full
+- **The 8K top-1 excess is task variance; no stale-cache top-1 effect is detectable at 2K–8K.** On the full prefill of the same
+  8K tasks, CPU vs Vulkan also disagrees on 6 of 192 rows, above the same bound, while G0's 8K tasks gave 1.6 %. Per-cell top-1
+  counts are about equal on the two states (full 2, 2, 2 vs naive 3, 2, 2 at 8K). The (a) top-1 bound comes from G0's own 14
+  tasks at 8K and does not transfer to E1's continuations.
+  - At these counts the control rules out a large stale effect, not a small one of 1–3 rows.
+  - **16K and 32K are uncontrolled.** Their excess (6 and 9 of 192; 32K is the only clearly significant one, judged against an
+    extrapolated floor) has no full-prefill control. The greedy divergences are not stale-cache-specific either: the full
   state diverges in 2 of 9 cells (2K seed 1 0.94, 8K seed 0 0.81), the naive state in 1 of 9 (8K seed 1).
 - **KL is slightly higher on the stale state.** Naive KL exceeds full KL in 7 of 9 cells and in all three 8K cells, pooled 1.56×
   at 8K, and 1.1× at 2K and 4K. A modest amplification of the backend difference on stale caches is plausible, but with 3 tasks
@@ -182,9 +186,14 @@ Values are medians over seeds. **32K seed 1's full prefill took 4,723 s instead 
   state as such. A host thread blocked in a fence wait for minutes, with the GPU busy, looks idle to the power manager.
 - `Stopwatch` counted through the stall. The Vulkan work resumed without a device loss, and the seed's quality numbers are
   unaffected (prefix reuse bit-exact).
-- **Since the fix round, `run.ps1` holds a power request** (`SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)`) while a
-  group runs, and the lab logs a heartbeat every 5 min, so a future stall shows as a gap in the run log. `powercfg /requests`
-  needs an elevated prompt, so the request was not verified from this session.
+- **Keep-awake after the fix round.**
+  - `run.ps1` holds `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED)` while a group runs.
+    `ES_SYSTEM_REQUIRED` alone did not stop the control run's standby.
+  - The lab holds `PowerRequestExecutionRequired`, `SystemRequired` and `DisplayRequired` (`KeepAwake.cs`).
+  - Both were added after the control ran, so they are **unproven against an actual standby**. The smoke test only shows that the
+    requests were registered; `PowerRequestExecutionRequired` is advisory (power policy decides), and `powercfg /requests` needs an
+    elevated prompt.
+  - The lab logs a heartbeat every 5 min, with the time since the previous one, so a stall shows explicitly in the run log.
 - **The GPU-lock refresher (the `run.ps1` loop) was presumably frozen too.** The gap was ~75 min against the lock's 90-min
   staleness limit; a longer standby would have let another agent take the GPU lock in the middle of the run.
 
@@ -245,4 +254,6 @@ Values are medians over seeds. **32K seed 1's full prefill took 4,723 s instead 
   - Red phase: `logs/red-build-fix1.log`.
   - Mutants: 9 of 10 killed (`logs/mutants-fix1.log`, driver `logs/mutate-fix1.py`), run in the live worktree as directed and
     restored byte for byte. F4 (the assembler's own disposed check) is redundant with the `Cache` getter guard.
+  - F3's first pattern did not compile (log line 3, CS0103). The committed driver carries the revised pattern that produced the
+    kill (log line 11).
   - The S4 control is `./run.ps1 -Groups control` (`results-control*`, `logs/results-control.log`).
