@@ -154,7 +154,7 @@ with negligible selection overhead"; the Task 11 brief sharpens it to the best b
 Recommendation 5's first test, run as the first task of the Phase S plan
 (`docs/superpowers/plans/2026-11-01-phase-s-store-cli-e4b.md`). Same kept call sites, arms, budgets and statistics as E4, but
 each context is the required chunk plus distractors of which half come from files within two reference-graph hops of the
-calling file (use/call/definition edges; imports and the masked call's own edge excluded), the rest random; every cell is
+calling file (use/call/definition edges; imports and every edge inside the masked call excluded), the rest random; every cell is
 re-validated. 3 corpora × 2 chunkers × 3 seeds, 58 valid instances / 12 clusters; E4's rows are the random-context control
 (one E4 context reproduced exactly at the new commit). Details: `experiments/E4b-related-contexts/README.md`.
 
@@ -162,19 +162,22 @@ re-validated. 3 corpora × 2 chunkers × 3 seeds, 58 valid instances / 12 cluste
   instances whose query references a stale context chunk 64 % vs 45 %; graph-picked share of the graph arm's budget 54 / 31 /
   20 / 15 % vs 38 / 23 / 16 / 12 % at 5 / 10 / 15 / 20 %.
 - **The verdict does not change. Graph does not beat QR at equal budget:** pooled Graph − QR −0.10 [−0.19, −0.05] at 5 %, +0.06,
-  +0.02, −0.02 at 10 / 15 / 20 % (CIs ∋ 0, admitting losses up to 0.20); worse at every budget with fixed chunks (−0.08
-  [−0.35, −0.03] at 20 %).
+  +0.02, −0.02 at 10 / 15 / 20 % (CIs ∋ 0, admitting losses up to 0.20); with fixed chunks the point estimates are negative
+  at every budget, the CI excluding 0 only at 20 % (−0.08 [−0.35, −0.03]).
 - **Hybrid(QR) stays the best runnable arm from 10 %, not significantly:** 0.87 / 0.90 / 0.94 of the gap vs QR 0.77 / 0.84 /
   0.90 (+0.10 [−0.01, +0.34], +0.07 [−0.05, +0.23], +0.04 [−0.01, +0.12]); −0.07 [−0.14, −0.02] at 5 %; within ±0.04 of QR
-  with fixed chunks. On the 55 instances valid in both kinds, Hybrid − QR is +0.11 / +0.09 / +0.04 at 10 / 15 / 20 % on related
-  contexts against +0.06 / +0.04 / +0.06 on random ones: the extra structure buys at most a few hundredths, within noise
-  (the one CI clearing 0, +0.09 [+0.01, +0.26] at 15 %, is one of ≈ 40 unadjusted comparisons).
-- **Where it helps:** only where the query has targets (n = 37): Hybrid − QR +0.15 [−0.02, +0.48] at 10 %, EM 4/0; elsewhere
-  the graph's lower tiers displace chunk starts (−0.08 [−0.15, −0.04] at 10 % without targets).
+  with fixed chunks. On the 55 instances valid in both kinds, a paired related-minus-random difference (the reviewer's
+  computation) gives Hybrid − QR +0.05 [−0.01, +0.23] at 10 %, +0.045 [+0.01, +0.15] at 15 %, −0.02 [−0.05, +0.01] at 20 %,
+  and Graph − QR intervals that all include 0: no reliable change, though the intervals admit gains up to ≈ 0.2 (≈ 60
+  correlated paired cells are reported without multiplicity adjustment).
+- **Where it helps:** only where the query has targets (n = 37): Hybrid − QR +0.15 [−0.02, +0.48] at 10 %, EM 4/0. Without
+  targets the graph has little to pick and falls back to chunk starts (Graph ≈ ChunkStarts), which trail QR by 0.08 at 10 %.
 - 95 / 20 bar: fixed chunks QR and Hybrid EM 0.96 at 20 % (point estimate, 28 instances); symbol 0.93 best: not met.
 - Caveats: re-validation drops 22 % of related instances (11 of 16 because full prefill itself misses the call in the
   crowded neighbourhood, 5 because the context answers without the required chunk), hop-2
-  files were rarely needed, AFClaude contexts are ≈ 74 % related (small corpus), 246 min CPU wall (over the 3 h budget).
+  files were rarely needed, the related share is ≈ 0.8 on AFClaude and 0.38 / 0.47 on codesharp (only DocAgent at 0.5),
+  time caps truncated 8 of 18 cells, random symbol/seed 0 relies on Task 8's validation, 246 min CPU wall (over the 3 h
+  budget).
 
 The Phase S recipe is unchanged: fixed-size chunks, chunk starts as the static default, query relevance (or Hybrid) when a
 query is known, the reference graph as an optional cheap signal, never alone and not at 5 %.

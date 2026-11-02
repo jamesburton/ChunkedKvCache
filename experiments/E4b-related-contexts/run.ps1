@@ -5,7 +5,7 @@
 # Usage:
 #   ./run.ps1 -Snapshots <dir holding the t8-corpus-* snapshots> -Jobs <jobs.csv> [-OutDir <dir>] [-Parallel 2] [-Threads 16]
 #   jobs.csv columns: name,chunker,seed,mode,kind,fraction,contexts,maxminutes,arms,budgets,lightarms,lightbudgets,shard
-#   then: uv run summarize.py <OutDir>   and   uv run plot.py
+#   then: uv run summarize.py <OutDir>   (E4b has no plot script)
 param(
     [Parameter(Mandatory = $true)] [string] $Snapshots,
     [Parameter(Mandatory = $true)] [string] $Jobs,
