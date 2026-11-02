@@ -92,63 +92,143 @@ into `float[][]`. The OS page cache was warm, because the file had just been wri
 
 # Store-backed assembly parity (Phase S, Task 3)
 
-dotLLM branch `feature/chunk-store`: `src/DotLLM.ChunkReuse/Store/StoredContextAssembler.cs` (`8d1d83ff`), tests
-`tests/DotLLM.Tests.Unit/ChunkReuse/StoredAssemblyTests.cs` (`8d1d83ff`, `955a0af4`), lab command `ChunkKvLab store-assembly`
-(`benchmarks/ChunkKvLab/StoreAssemblyCheck.cs`, `a806f4c0`).
+dotLLM branch `feature/chunk-store`:
+
+- `src/DotLLM.ChunkReuse/Store/StoredContextAssembler.cs` (`8d1d83ff`; review fixes in `3d35d20f`)
+- `src/DotLLM.ChunkReuse/GgufIdentity.cs` (`3d35d20f`)
+- tests `tests/DotLLM.Tests.Unit/ChunkReuse/{StoredAssemblyTests,GgufIdentityTests}.cs`
+- lab command `ChunkKvLab store-assembly` (`benchmarks/ChunkKvLab/StoreAssemblyCheck.cs`, `a806f4c0`)
 
 ## What it does
 
-`StoredContextAssembler(fingerprint, tokenizerId).Assemble(chunks, model, store, destination?, query)` returns
-`StoredAssembly(Context, Stats, Entries)` (deconstructs to `(Context, Stats)`), where `Stats = AssemblyStats(Hits, Misses,
-EncodedTokens)`.
+`StoredContextAssembler.Assemble(chunks, model, store, destination?, query)` returns `StoredAssembly(Context, Stats, Entries)`.
+It deconstructs to `(Context, Stats)`.
 
-- It looks each chunk up under `ChunkKey.Create(fingerprint, tokenizer, RoPE from config, "cpu", F32, tokens)`.
-- It accepts a hit only when the entry has this fingerprint, exactly the chunk's token ids, and one `[n, stride(l)]` K and V
-  array per KV layer. A well-formed entry that fails these checks is evicted, re-encoded and replaced (`Rejected`).
-- A damaged, truncated, old-format, foreign-key or stale-schema entry is a miss: it is re-encoded and stored, never an error.
-- A chunk that appears twice in one context is encoded once.
-- If Put throws `ChunkStoreBusyException`, the fresh entry is used and not stored (`StoreFailures`), and a later call repairs
-  the entry. Any other store exception propagates.
-- The entries are then placed with `ChunkAssembler`.
+- **Counts.** `Stats = AssemblyStats(Hits, Misses, EncodedTokens, Repeats)`, and `Hits + Misses + Repeats` is the chunk count.
+  - `Hits` counts store hits only.
+  - `Repeats` counts chunks whose key already occurred earlier in the same call. They reuse that entry with no store read and
+    no encode.
+- **Lookup.** Each chunk is looked up under `ChunkKey.Create(fingerprint, tokenizer, RoPE from config, "cpu", F32, tokens,
+  positioning: Isolated)`.
+- **Hit check.** A hit is accepted only when the entry has this fingerprint, exactly the chunk's token ids, and one
+  `[n, stride(l)]` K and V array per KV layer. A well-formed entry that fails these checks is evicted, re-encoded and replaced
+  (`Rejected`).
+- **Store failures are misses.**
+  - A damaged, truncated, old-format, foreign-key or stale-schema entry is re-encoded and stored, never an error.
+  - If the store cannot write, the fresh entry is used and not stored, and `StoreFailures` counts it. That covers Put throwing
+    `ChunkStoreBusyException`, and Evict of a rejected entry throwing `IOException` or `UnauthorizedAccessException`. A later
+    call repairs the entry.
+  - Any other store exception propagates.
+- **Validation before any work.** The chunks, the model identity (see below) and the destination are all checked before any
+  store read or encode. The destination check covers exact host F32, the layer count, the per-layer strides and the capacity
+  (`CurrentLength + Σn ≤ MaxLength`). The destination is left unchanged whenever the call throws.
+- **Non-empty destination.** The chunks are appended at the destination's `CurrentLength`, and that value is returned as
+  `DestinationOffset`. `Context.ChunkStarts` stays relative to the context, so chunk `c` sits at destination row
+  `DestinationOffset + ChunkStarts[c]`. The keys are re-rotated to those absolute positions; a test compares this bit-exactly
+  against placing `[D, A, B]` in one call.
+
+## Identity contract
+
+- **The fingerprint is the caller's responsibility.**
+  - `new StoredContextAssembler(fingerprint, tokenizerId)` does not tie the fingerprint to the model passed to `Assemble`. A
+    mismatched pair would write one model's K/V under another model's keys, and every later reader would accept them (store
+    poisoning).
+  - `StoredContextAssembler.ForModel(config, modelId, quant, tokenizerId)` keeps the fingerprint inputs and refuses a model
+    whose configuration does not reproduce the fingerprint (shape, RoPE, NoPE layers, KV layout). It cannot see the weights, so
+    the model id must itself be content-based.
+- **Content-based ids (`GgufIdentity`), now used by the lab instead of the file name:**
+  - `ModelId` is the SHA-256 of the GGUF header (all metadata and the tensor table) plus the first 4 KiB of every tensor's data.
+    A renamed file keeps its id. A file with other metadata, another tensor table, or other leading weight blocks gets a new id.
+  - It is not a full-weight hash: a change only after the first 4 KiB of a tensor is not detected (pinned by a test). Pass a
+    full weights SHA-256 or an HF revision when that matters.
+  - Split GGUFs are refused.
+  - `TokenizerId` is the SHA-256 of the `tokenizer.ggml.*` metadata, in key order and length-prefixed. The chat template does
+    not take part.
+  - On Qwen3-4B Q4_K_M: model id `gguf-sha256:49ae071f…`, tokenizer id `gguf-tokenizer-sha256:ac4d5cb5…`, quant label
+    `ftype-15` (from `general.file_type`). Hashing adds no measurable load time (0.6 s load).
+- **Isolated encodes only.**
+  - Store entries must be `ChunkEncoder` encodes of the chunk alone at positions `0..n-1`. This is documented in `IChunkStore`,
+    `ChunkKey` and the assembler.
+  - The positioning is now part of the key (`ChunkPositioning.Isolated` or `Contextual`, key scheme `chunk-key/v3`). K/V
+    computed with preceding context, such as a recompute output, would be stored as `Contextual` and never answer an isolated
+    lookup. A test checks this.
+  - Keys written by Task 2 (`chunk-key/v2`) no longer match. Those stores were deleted.
 
 ## Measurement (Qwen3-4B-Instruct-2507 Q4_K_M, CPU, 8 threads)
 
-`ChunkKvLab store-assembly`, E4 kept contexts (symbol chunker, seed 0, 2K tokens):
+**Run setup.**
 
-- 17 docagent contexts (all that docagent has) and the first 3 afclaude contexts, giving 20 contexts and 33 tasks.
+- `ChunkKvLab store-assembly` on the E4 kept contexts (symbol chunker, seed 0, 2K tokens).
+- Docagent has only 17 kept contexts, so all 17 were used, plus the first 3 afclaude contexts: 20 contexts and 33 tasks.
 - Logs: [`assembly-docagent.log`](assembly-docagent.log), [`assembly-afclaude.log`](assembly-afclaude.log). Per-task CSVs are
   next to them.
-- Release build of `a806f4c0` (dirty=0).
+- Release build of `a806f4c0` (dirty=0). That build predates the review fixes, so it keyed by file-name identities, and its
+  `cold_hits` include in-call repeats. Neither affects parity or the timings.
 
-Each context is assembled three ways:
+**Three assembly paths per context.**
 
 - **fresh:** `ChunkEncoder` plus `ChunkAssembler`, with no store.
-- **cold:** store-backed, against one store shared across contexts, so a chunk seen in an earlier context is a hit.
+- **cold:** store-backed. One store was shared across the contexts of each corpus run (docagent and afclaude each had their own
+  store), so a chunk seen in an earlier context of the same run is a hit.
 - **warm:** store-backed, with a new store instance, so every chunk is read from disk.
 
-Every task is then evaluated teacher-forced on the fresh cache and on the warm cache.
+Every task was then evaluated teacher-forced on the fresh cache and on the warm cache.
 
 | quantity | value |
 |---|---|
 | caches bit-identical (fresh = cold = warm, all layers, all rows) | **20 / 20 contexts** |
 | continuation logits bit-identical (warm vs fresh) | **33 / 33 tasks** (max \|Δ\| 0, KL 0, top-1 1.0) |
 | masked-call NLL identical / greedy EM fresh vs warm | 33 / 33; 6 vs 6 (naive concatenation, no recompute) |
-| warm assembly (2K tokens, 12–23 chunks) | mean **668 ms** (556–801), all hits |
-| fresh assembly | mean 32,989 ms (median 30,830) |
-| cold assembly (encode + put; 91 hits, 241 misses over 20 contexts) | mean 22,764 ms |
-| fresh / warm | mean **49.7×**, min 31.1× |
-| store after 17 docagent contexts | 206 entries, 7.99 GB (F32) |
+| warm assembly (2K tokens, 12–23 chunks, all from the store) | mean **668 ms**, median 655 ms (556–801) |
+| fresh assembly | mean 32,989 ms, median 30,830 ms |
+| cold assembly (encode + put; 91 hits incl. in-call repeats, 241 misses) | mean 22,764 ms |
+| fresh / warm, per context | **median 47.2×**, mean 49.7×, min 31.1×, max 81.6× |
+| docagent store after 17 contexts | 206 entries, 7,994,086,208 B = 7.99 GB = 7.44 GiB (F32) |
+
+Per context. Cold hits marked * include in-call repeats as well as chunks shared with earlier contexts of the same run.
+
+| context | chunks | cold encoded / context tokens | fresh ms | cold ms | cold hits* / misses | warm ms | fresh / warm |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| doc0 | 14 | 2040 / 2040 | 49,946 | 30,322 | 0 / 14 | 636 | 78.5× |
+| doc1 | 16 | 2013 / 2048 | 46,193 | 33,714 | 1 / 15 | 759 | 60.9× |
+| doc2 | 22 | 2048 / 2048 | 53,199 | 31,674 | 0 / 22 | 652 | 81.6× |
+| doc3 | 22 | 2020 / 2048 | 44,470 | 32,016 | 2 / 20 | 747 | 59.5× |
+| doc4 | 15 | 1995 / 2048 | 26,981 | 26,533 | 2 / 13 | 671 | 40.2× |
+| doc5 | 12 | 1931 / 2048 | 27,808 | 23,217 | 3 / 9 | 612 | 45.4× |
+| doc6 | 12 | 1915 / 2047 | 22,288 | 21,311 | 1 / 11 | 716 | 31.1× |
+| doc7 | 18 | 1848 / 2048 | 32,801 | 23,101 | 6 / 12 | 618 | 53.1× |
+| doc8 | 20 | 1069 / 2046 | 24,071 | 13,254 | 7 / 13 | 556 | 43.3× |
+| doc9 | 19 | 1841 / 2048 | 22,791 | 19,436 | 6 / 13 | 612 | 37.2× |
+| doc10 | 23 | 1106 / 2045 | 22,311 | 20,368 | 9 / 14 | 642 | 34.8× |
+| doc11 | 12 | 1992 / 2046 | 31,274 | 31,135 | 1 / 11 | 602 | 52.0× |
+| doc12 | 13 | 889 / 2045 | 28,884 | 19,654 | 5 / 8 | 801 | 36.1× |
+| doc13 | 20 | 1290 / 2043 | 33,350 | 22,000 | 10 / 10 | 642 | 51.9× |
+| doc14 | 16 | 1378 / 2048 | 23,533 | 15,171 | 8 / 8 | 744 | 31.6× |
+| doc15 | 14 | 1312 / 2044 | 34,796 | 17,282 | 7 / 7 | 577 | 60.3× |
+| doc16 | 19 | 419 / 2041 | 34,185 | 5,902 | 13 / 6 | 697 | 49.0× |
+| afc0 | 12 | 2045 / 2045 | 27,340 | 27,399 | 0 / 12 | 684 | 40.0× |
+| afc1 | 14 | 1823 / 2041 | 30,386 | 32,310 | 2 / 12 | 735 | 41.3× |
+| afc2 | 19 | 602 / 2048 | 43,167 | 9,481 | 8 / 11 | 658 | 65.6× |
 
 **Caveats:**
 
-- The box was shared with other agents' builds, so the times are rough.
-- The fresh pass ran first in each context. On the 3 contexts where cold had no hits, cold was faster than fresh (29.8 s vs
-  43.5 s), so the order and the contention matter at this scale. Put costs about 0.2 s per chunk (Task 2).
-- Warm reads come from a just-written store, so the OS page cache is warm. A cold-disk read was not measured.
-- The stores were deleted after the run.
+- **The box was shared**, with other agents building in parallel, so the times are rough.
+- **Contention varied over time.** Fresh took 44–53 s for docagent contexts 0–3 and about 22–35 s afterwards. That is
+  time-varying contention early in the run, not an ordering effect of fresh running first.
+  - On the three contexts where cold had no hits, cold was faster than fresh only for doc0 (49.9 → 30.3 s) and doc2
+    (53.2 → 31.7 s). For afc0 it was the same (27.3 → 27.4 s).
+  - Those early contexts inflate the mean ratio, so the median (47.2×) is the better summary.
+- **Put cost:** about 0.2 s per chunk (Task 2).
+- **Page cache:** the warm pass reads files that the cold pass had just written, so they were in the OS page cache, possibly
+  still as dirty pages. A cold-disk read was not measured.
+- **Timing asymmetry, since fixed:** in this run the fresh time included allocating its cache and the other paths did not.
+  This is negligible against 33 s, and the lab now allocates outside the stopwatch.
+- **Cleanup:** the stores were deleted after the run.
 
 **Open point:**
 
 - The `.ckv` header does not yet persist the backend tag.
 - `ChunkKvEntry.Backend` exists only on `feature/chunk-reuse-vulkan`.
-- Until those branches meet, the skipped test `StoredAssemblyTests.TODO_StoreHeader_PersistsBackendTag` holds the place for this.
+- The backend is part of the key, so a cross-backend wrong hit is impossible today.
+- The skipped test `StoredAssemblyTests.TODO_StoreHeader_PersistsBackendTag` (`TODO(chunk-store-backend-in-header)`) holds the
+  place until those branches meet.
