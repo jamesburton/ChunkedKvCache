@@ -1,0 +1,17 @@
+# E7 incremental re-encode, started 2026-11-02T15:27:25.5418581+00:00
+dotLLM worktree C:\Development\dotLLM\.claude\worktrees\chunk-index branch feature/chunk-index head 6aa4832d9afaea94f7c1bccf03556388d71a82f1 dirty=0
+corpus codesharp snapshot t8-corpus-codesharp-8e2adbd8-20261101111016 (git archive C:\Development\codesharp @ 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2); expect symbol-512 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb, fixed-512 cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb
+model (tokenizer only) C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+seeds 0,1,2, edits per seed 100; host AMD RYZEN AI MAX+ 395 w/ Radeon 8060S          , dotnet 10.0.401
+model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (tokenizer only)
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), symbol-512: 7586 chunks, 1535738 tokens (chunk tokens median 157, max 512); Decode(Encode(file)) == file for 1390/1390; 22.5 s
+chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), fixed-512: 3766 chunks, 1530303 tokens (chunk tokens median 512, max 512); Decode(Encode(file)) == file for 1390/1390; 2.8 s
+chunk-id sha256 cde11b22a9d64764f3043bf1d7be6035190465e8d4ec03a7c22e765faa19dceb
+symbol: index built in 5.0 s: 7586 chunks, 1535738 tokens, 7497 distinct keys; status missing 0
+fixed: index built in 1.6 s: 3766 chunks, 1530303 tokens, 3765 distinct keys; status missing 0
+edit sites: 2698 methods/constructors with a statement alone on its line, in 716 files
+seed 0: 100 edits done (69 s)
+seed 1: 100 edits done (105 s)
+seed 2: 100 edits done (143 s)
+done in 142.9 s; rows in C:\Development\ChunkedkvCache\experiments\E7-incremental\raw\codesharp.csv
