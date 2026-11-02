@@ -196,10 +196,14 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   `chunk-key/v4`; `public static class ChunkNamespace { public const string Default = ""; public static string ForApiKey(string
   apiKey); }` (`ForApiKey` = `"k-"` + first 16 hex of SHA-256 of the key). `StoredContextAssembler.Assemble(..., string
   @namespace = ChunkNamespace.Default)`. The index producer identity (`keyOf([])`) therefore includes the namespace.
+  **Validity rule** (Task 2 review; implemented in the Task 2 fix round): a namespace matches
+  `^(|k-[0-9a-f]{16}|[a-z0-9._-]{1,64})$`; `ChunkNamespace.Validate(string ns)` throws `ArgumentException` otherwise, and
+  `ChunkKey.Create`, `ServerLedger` and the index path all call it.
 
 - [ ] **Step 1: Write failing tests:** `Key_DiffersByNamespace`; `Key_DefaultNamespace_GoldenV4` (new golden hex; v3 golden
   no longer matches); `ForApiKey_IsStable_AndNeverEqualsDefault`; `Assemble_OtherNamespace_AllMisses`;
-  `Index_SavedUnderOtherNamespace_LoadsEmptyWithNote`.
+  `Index_SavedUnderOtherNamespace_LoadsEmptyWithNote`; `Namespace_InvalidValues_Rejected` (upper case, `/`, `\`, 65
+  chars, `k-` with 15 hex digits, non-ASCII).
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement; bump the scheme string; document in `experiments/store/README.md` that v3 stores are rebuilt.
 - [ ] **Step 4:** Rerun; PASS; mutants: namespace not hashed; default namespace hashed as null-skip collapsing to v3.
@@ -273,9 +277,10 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/StoreRegistryTests.cs`
 
 **Interfaces:**
-- Produces: `ChunkIndex.DefaultPath(string storeRoot, string chunkerName, string modelId)` =
-  `<storeRoot>/index-<chunker>.<model12>.json`, where `model12` = the first 12 hex digits of SHA-256 of the content model id
-  (`GgufIdentity.ModelId` form); the index lock follows (`index-<chunker>.<model12>.lock`). `StoreRegistry` =
+- Produces: `ChunkIndex.DefaultPath(string storeRoot, string chunkerName, string modelId, string ns)` =
+  `<storeRoot>/index-<chunker>.<model12>.<ns-or-default>.json`, where `model12` = the first 12 hex digits of SHA-256 of the
+  content model id (`GgufIdentity.ModelId` form) and `<ns-or-default>` is the validated namespace or the literal `default`
+  for `ChunkNamespace.Default`; the index lock follows (`index-<chunker>.<model12>.<ns-or-default>.lock`). `StoreRegistry` =
   `<storeRoot>/chunkcache.json` listing each index: `{file, chunker, model_id, tokenizer_id, backend, namespace, updated}`,
   written atomically under the store lock; `StoreRegistry.Find(chunker, modelId, ns) -> string? indexPath`.
   `ReferencedKeysUnder` / `StoreWideOrphans` read every `index-*.json` as today (registry is advisory; a missing registry is
@@ -285,10 +290,12 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 
 - [ ] **Step 1: Write failing tests:** `TwoModelsSameChunker_TwoIndexFiles`; `Registry_ListsEveryIndex_AndRebuildsWhenMissing`;
   `Registry_SaveIsAtomic`; `OldIndexName_MigratedWhenProducerMatches`; `OldIndexName_OtherProducer_LeftAndStillReferenced`;
-  `Orphans_CountKeysFromAllModelIndexes`.
+  `Orphans_CountKeysFromAllModelIndexes`; `TwoNamespaces_TwoIndexFilesAndLocks`;
+  `StoreWideOrphans_FromOneNamespace_NeverDeletesOtherNamespacesEntries`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Rerun; PASS; mutants: model hash omitted from the name; registry treated as authoritative for orphans.
+- [ ] **Step 4:** Rerun; PASS; mutants: model hash omitted from the name; namespace omitted from the name or lock;
+  registry treated as authoritative for orphans.
 - [ ] **Step 5:** Commit; write the issue draft.
 
 ### Task 5: Wire-eligible chunking (L6) [CPU; may run beside Tasks 2–4]
@@ -519,6 +526,9 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
   message are joined with `'
 '` (offsets shift by the preceding blocks plus separators), and `tool_result` blocks are split
   into their own engine `tool` messages; a span in a block the converter does not carry as text is `chunk_span_invalid`.
+  **Namespace (Task 2 review).** The `ns` argument always comes from the server (`ChunkCacheAuth`, Task 14:
+  `ChunkNamespace.ForApiKey(key)` or `Default`). A body `chunk_cache.namespace` is ignored with warning
+  `chunk_namespace_ignored` (strict: 400 with that code) unless it equals the caller's own namespace.
   `ChunkCacheCodes` holds the §5.8 code strings. Validation: version, hash recomputed over the decoded text, spans on UTF-8
   boundaries / in range / non-overlapping / text parts only, manifest conflict, too many, `chunk_not_wire_eligible`
   (`WireChunking.IsWireChunker` semantics, copied as a server constant list until the server references `DotLLM.ChunkReuse` in
@@ -530,11 +540,12 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
   `IdLongerThan256_Rejected`; `TooMany_Warns_StrictIs400`; `UnknownChunker_NotWireEligibleWarning`; `QueryDefaultsToLastUserMessage`;
   `OpenAi_StringContentManifest_Parsed`; `OpenAi_ArrayContent_StillThe400_FlagOnAndOff`; `OpenAi_InlineChunkField_Ignored`;
   `Anthropic_TwoTextBlocks_SecondBlockSpanShiftedByFirstPlusNewline`; `Anthropic_ToolResultBlock_MapsToOwnEngineMessage`;
-  `Anthropic_MappedSpan_SubstringOfEngineMessageEqualsSpanText` (property test over random block layouts).
+  `Anthropic_MappedSpan_SubstringOfEngineMessageEqualsSpanText` (property test over random block layouts);
+  `BodyNamespace_OtherThanCallers_IgnoredWithWarning_StrictIs400`; `BodyNamespace_EqualToCallers_Accepted`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: offsets as chars; overlap allowed; conflict served annotated; 422 status; join
-  separator dropped; tool_result offset not reset.
+  separator dropped; tool_result offset not reset; body `namespace` honoured.
 - [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
 
 ### Task 11: Span location in the rendered prompt (S2/S3) [CPU]
@@ -645,17 +656,27 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
   ChunkCaller(bool Authenticated, string Namespace)`. With `--chunk-cache-api-keys` set: `X-API-Key` / `Bearer` must be in
   the file (constant-time compare), else 401 `authentication_error`; namespace = `ChunkNamespace.ForApiKey(key)`. Unset:
   loopback callers only (403 otherwise), namespace `ChunkNamespace.Default`, `Authenticated = true`. The same rule gates
-  store side effects of annotated inference requests (Task 15). Approved by the user (2026-11-02). Default OFF (the whole surface sits behind `--chunk-cache`); the issue is flagged security-sensitive.
+  store side effects of annotated inference requests (Task 15). Approved by the user (2026-11-02).
+  **Hardening (Task 2 review):** namespace strings never appear in responses or logs (log a per-process salted short
+  hash at most); the keys-file parser trims each key, refuses non-ASCII keys (startup error naming the line number, not the
+  key), and warns on keys shorter than 16 characters; non-admin callers see per-namespace figures only (capabilities
+  `store.*`, explain, metrics labels carry no namespace). **Maintainer decision recorded in the issue draft:**
+  `ForApiKey` is an unsalted SHA-256 prefix, so anyone holding store files can test guessed keys offline; the alternative is
+  `HMAC-SHA256(server secret, key)`, where rotating the secret or the derivation is a key-scheme bump (`chunk-key/v5`) that
+  orphans every stored entry. Default OFF (the whole surface sits behind `--chunk-cache`); the issue is flagged security-sensitive.
 
 - [ ] **Step 1: Write failing tests:** `Capabilities_MatchesFixtureShape`; `FlagOff_404`; `NoKeysConfigured_NonLoopback_403`;
   `KeysConfigured_MissingKey_401`; `KeysConfigured_ValidKey_NamespaceFromKey`; `TwoKeys_CannotSeeOrEvictEachOthersEntries`
   (key → namespace isolation across explain, shadow plan counts and evict; mutants: shared namespace, key ignored);
-  `EnabledWithoutKeys_LoopbackOnly`; `Explain_PerChunkOnlyForOwnNamespace`;
+  `EnabledWithoutKeys_LoopbackOnly`; `Explain_PerChunkOnlyForOwnNamespace`; `NamespaceNeverInResponseBodiesOrLogs`
+  (captured logger and every endpoint's body); `KeysFile_TrimsKeys_RefusesNonAscii_WarnsShortKeys`;
+  `NonAdmin_CapabilitiesShowOwnNamespaceFiguresOnly`;
   `Explain_HashListBody_Rejected`; `Endpoints_AreRateLimited`; `ReportPerChunk_UnauthenticatedGetsSummary` (inference
   response with `report: per_chunk`).
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Rerun; PASS; mutants: loopback check skipped; per-chunk leaked to anonymous; key compare not exact.
+- [ ] **Step 4:** Rerun; PASS; mutants: loopback check skipped; per-chunk leaked to anonymous; key compare not exact;
+  namespace logged; keys not trimmed; store-wide figures shown to a non-admin.
 - [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence). **G-I1 (with Tasks 6–8): stop and report.**
 
 ### Task 15: Sole-writer encode, admission and disk budget (I1b) [CPU + one GPU-lock step]
@@ -710,14 +731,19 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
   `POST /v1/chunk-cache/evict` (`mode: orphans | path | namespace | all`, `dry_run` default `true`; `path` removes K/V,
   ledger rows, the index references the server owns and sighting rows with that provenance; `namespace` / `all` remove all
   four kinds for the caller's namespace, `all` across namespaces only for a key listed as admin in the keys file). Capabilities
-  now report `store.entries`, `bytes`, `budget_bytes`, `dtype`.
+  now report `store.entries`, `bytes`, `budget_bytes`, `dtype`: per-namespace for non-admin callers, store-wide for admin.
+  The evict body's `namespace` field is honoured only for an admin key; others act on their own namespace.
+  **Per-namespace budgets:** `--chunk-store-namespace-budget <bytes>` (optional, off by default). When set, budget eviction (Task 15) evicts only the writing namespace's ledger rows, so one tenant's
+  prewarm cannot evict another's entries; when unset the shared LRU applies and the docs say so.
 
 - [ ] **Step 1: Write failing tests:** `Prewarm_TextOnly_QueuesWithoutSightings`; `Prewarm_DeniedPath_Refused`;
   `Evict_DryRunDefault_DeletesNothing`; `Evict_Orphans_KeepsLedgerAndIndexKeys`; `Evict_Path_ForgetsAllFourKinds`;
-  `Evict_Namespace_CannotTouchOtherNamespace`; `Evict_UnreadableLedger_FailsClosed`; `Capabilities_ReportsStoreFigures`.
+  `Evict_Namespace_CannotTouchOtherNamespace`; `Evict_UnreadableLedger_FailsClosed`; `Capabilities_ReportsStoreFigures`;
+  `NonAdmin_EvictBodyNamespace_Ignored`; `NamespaceBudget_PrewarmEvictsOnlyOwnRows`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Rerun; PASS; mutants: dry run ignored; cross-namespace evict; sightings kept on forget.
+- [ ] **Step 4:** Rerun; PASS; mutants: dry run ignored; cross-namespace evict; sightings kept on forget; namespace budget
+  evicts globally.
 - [ ] **Step 5:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
 
 ### Task 17: CLI revision: `--json`, deny-list, wire eligibility, server-backed writes (L1, I3) [CPU]
@@ -977,6 +1003,7 @@ model parts are Task 4b); recurrent models (Phase T); the E7 quality half.
 
 ## Self-review notes
 
+- 2026-11-02 rev 6: Task 2 review: namespace validity rule, namespace in index/lock names, server-assigned namespace, auth hardening, per-namespace figures and budgets.
 - 2026-11-02 rev 5: E4c review: Task 19 after 5b (eligibility granted, size probes, census); validation to I5.
 - 2026-11-02 rev 4: Task 7 review: Task 4b (L9 adopted), 5b re-pin and file list, Task 17/18 divergences, L3 note.
 - 2026-11-02 rev 3: Task 9 done; rulings 19–21 folded into Tasks 5b (new), 10, 11, 13, 15, 17.

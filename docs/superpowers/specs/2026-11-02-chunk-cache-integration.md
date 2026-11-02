@@ -219,7 +219,7 @@ Request level (`chunk_cache`):
 | `strict` | false | errors instead of degradation (§5.8) |
 | `min_chunk_tokens` | 32 | shorter chunks are treated as plain text |
 | `report` | `summary` | `none` / `summary` (counts). `per_chunk` only for an authenticated caller within its own namespace (§10) |
-| `namespace` | per API key | the store partition, salted into `ChunkKey` (§10) |
+| `namespace` | (server-assigned) | **not a request input.** The server assigns the namespace from the API key (`ChunkNamespace.ForApiKey`) or the default. A body value is ignored with warning `chunk_namespace_ignored` (400 when strict) unless it equals the caller's own. Valid names match `^(\|k-[0-9a-f]{16}\|[a-z0-9._-]{1,64})$` (§10) |
 
 Fields at their default values may be omitted, and the reference client omits them (`policy: exact`, `on_miss: prefill`, `report: summary`, `strict: false`, `recompute` with neither selector nor budget); a server must treat an omitted field exactly as its default.
 
@@ -370,6 +370,7 @@ Envelopes as on the existing surfaces **[verified]**. All strict errors are **40
   - `chunk_policy_unavailable` (e.g. `query_relevance` with no probe on this backend)
   - `chunk_too_many`
   - `chunk_store_unavailable` (root missing, write budget exhausted, lock timeout)
+  - `chunk_namespace_ignored` (a body `namespace` other than the caller's own)
 - **Warnings only:**
   - `chunk_ignored_too_short`
   - `chunk_not_wire_eligible` (the `chunker` named is not text-first)
@@ -572,7 +573,8 @@ README]**.
 {"input": {"properties": {"store": {"type": "string"}, "server": {"type": "string"},
    "mode": {"enum": ["orphans", "path", "namespace", "all"], "default": "orphans"},
    "path": {"type": "string", "description": "glob; mode=path: forget every entry first seen under it"},
-   "namespace": {"type": "string"}, "dry_run": {"type": "boolean", "default": true}}},
+   "namespace": {"type": "string", "description": "admin keys only; others act on their own namespace"},
+   "dry_run": {"type": "boolean", "default": true}}},
  "output": {"properties": {"evicted": {"type": "integer"}, "freed_bytes": {"type": "integer"},
    "kept_referenced": {"type": "integer"}, "dry_run": {"type": "boolean"}}}}
 ```
@@ -780,6 +782,10 @@ public sealed class ChunkCacheBodyHandler : DelegatingHandler { /* SendAsync as 
 - **Authentication and isolation.**
   - `/v1/chunk-cache/*` sits behind the same API-key auth as inference. Prewarm is a GPU and disk DoS vector, so it gets
     the inference rate limits.
+  - **Namespaces are server-assigned, never caller-chosen**, never echoed in responses or logs; non-admin callers see
+    per-namespace figures only; an optional per-namespace disk budget stops one tenant's prewarm evicting another's entries.
+    The key → namespace derivation is an unsalted SHA-256 prefix (offline-guessable by anyone holding the store); an HMAC
+    with a server secret is the maintainer's alternative, at the cost of a key-scheme bump when it changes.
   - **Namespace isolation is on by default** as soon as any API key or more than one client is configured. The namespace
     defaults to one per key and is salted into `ChunkKey`.
   - Transparent mode requires it.
