@@ -66,13 +66,15 @@ The generated tables are in `summary.md` (`uv run summarize.py`). Raw data: `res
 | naive_concat | 32768 | 0.583 / not run | 1.175 (0.78, 1.23, 1.52) / – | 0.167 / – | 3.5 / – |
 
 Italic CPU values at 16K are E1's single seed-0 run on the live dotLLM tree (7259 chunks): different contexts, trend only.
-16K Vulkan per-seed naive KL: 0.83 / 0.96 / 0.07. The seed spread is as large as on the CPU at 4K.
+16K Vulkan per-seed naive KL: 0.83 / 0.96 / 0.07. The seed spread is larger than on the CPU at 4K (0.06–0.25).
 
 **Naive vs full, paired with CPU E1 by seed (2K–8K, 9 cells):**
 - The Vulkan naive KL-to-full differs from the CPU one by −0.045 to +0.027 nats. The mean ΔKL is −0.004.
 - On average that is 8.5 % of the naive→full gap: 0.6–7.4 % at 2K and 8K, and up to 39 % at 4K seed 2, where the gap itself is only
   0.06 nats.
-- Top-1 differs by at most 2 of 64 rows. Greedy exact match against each backend's own full prefill is identical in all 9 cells.
+- Top-1 differs by at most 2 of 64 rows in every cell. That is within the (a) single-task disagreement bound (2.34 rows at
+  2K/4K, 2.54 at 8K), so the plan's "top-1 within the floor-derived tolerance" against the CPU table holds. Greedy exact match
+  against each backend's own full prefill is identical in all 9 cells.
 - With only 3 seeds per size, the bootstrap interval is descriptive. The difference is small, not a sign that Vulkan does better.
 - **E1's conclusions carry over unchanged:**
   - Naive concatenation loses clearly measurable quality, and the loss grows with the number of chunks (0.13 → 0.19 → 0.53 nats at
@@ -129,13 +131,15 @@ stay unmeasured. This is a proposal for the G0 owner; `G0-floor/README.md` was n
 | 2048 | 1.64 s (1,251) | 20.0 s (102) | 223 (9,200) | 28 (72,600) | 0.8 ms | 20 / 20 ms |
 | 4096 | 5.09 s (805) | 49.8 s (82) | 438 (9,300) | 58 (71,100) | 0.8 ms | 26 / 25 ms |
 | 8192 | 19.2 s (427) | 196 s (42) | 891 (9,200) | 113 (72,400) | 0.8 ms | 37 / 36 ms |
-| 16384 | 72.2 s (227) | 946 s (17) | 1,774 (9,200) | 231 (70,800) | 0.8 ms | 59 / 58 ms |
+| 16384 | 72.2 s (227) | *946 s (17)*, other corpus | 1,774 (9,200) | 231 (70,800) | 0.8 ms | 59 / 58 ms |
 | 32768 | 274.4 s (119; median) | not run | 3,362 (9,700) | 515 (63,600) | 0.8 ms | 102 / 135 ms |
 
 Values are medians over seeds. **32K seed 1's full prefill took 4,723 s instead of about 274 s** (seeds 0 and 2: 274.4 s and
 273.6 s). The same process's prefix-reuse suffix prefill right after it ran at normal speed (202 s), and the lock was ours, so
-this is an external stall (another process, memory pressure or a host suspend), not a property of the code. Its quality numbers
-are unaffected.
+this was a **host suspend**. The Windows System log shows Modern Standby entries and exits (Kernel-Power 506/507) between about
+03:02 and 04:16 UTC (≈ 4,450 s). That window lies inside this step, which started at about 03:01 (run start 02:43:51 UTC, plus
+17.4 min). `Stopwatch` counted through the standby. The Vulkan work survived it without a device loss, and the seed's quality
+numbers are unaffected (prefix reuse bit-exact).
 
 - **Chunk encode** (512 tokens, 336 encodes): Vulkan 1.35 s median, against 2.6 s on the CPU in the same process (3.4–3.9 s in
   E1, uncontended CPU).

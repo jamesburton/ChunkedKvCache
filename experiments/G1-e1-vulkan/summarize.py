@@ -107,7 +107,8 @@ sizes = sorted({int(r['ContextTokens']) for r in res})
 # 1. E1 table on Vulkan, next to CPU ----------------------------------------------------------------------------------------
 out.append('## 1. E1 on Vulkan next to the CPU E1 table\n')
 out.append('Mean over seeds (Vulkan: every seed run; CPU: E1-baselines `results.csv`, seeds 0-2 at 2K-8K; CPU 16K is seed 0 on a '
-           'different corpus snapshot, shown in italics for trend only). TTFT = build + first token, seconds.\n')
+           'different corpus snapshot, shown in italics for trend only). TTFT = build + first token, seconds; the Vulkan TTFT '
+           'is the median over seeds (32K seed 1 includes a host suspend).\n')
 out.append('| method | ctx | seeds (Vulkan) | top-1 Vulkan | top-1 CPU | mean KL Vulkan [95 % CI over seeds] | mean KL CPU | EM Vulkan | EM CPU | TTFT Vulkan (s) | TTFT CPU (s) |')
 out.append('|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|')
 for L in sizes:
@@ -131,7 +132,7 @@ for L in sizes:
             ct1 = ckl = cem = ctt = 'not run'
         out.append(f"| {m} | {L} | {len(v)} | {fmt(mean(float(r['Top1Agreement']) for r in v.values()), 3)} | {ct1} | "
                    f"{fmt(mean(kls))} [{fmt(lo)}, {fmt(hi)}] | {ckl} | {fmt(mean(float(r['ExactMatch']) for r in v.values()), 3)} | {cem} | "
-                   f"{fmt(mean(float(r['TtftMs']) for r in v.values()) / 1000, 3)} | {ctt} |")
+                   f"{fmt(sorted(float(r['TtftMs']) for r in v.values())[len(v) // 2] / 1000, 3)} | {ctt} |")
 out.append('')
 
 # 2. Paired naive comparison per seed ---------------------------------------------------------------------------------------

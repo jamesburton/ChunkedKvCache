@@ -2,25 +2,25 @@
 
 ## 1. E1 on Vulkan next to the CPU E1 table
 
-Mean over seeds (Vulkan: every seed run; CPU: E1-baselines `results.csv`, seeds 0-2 at 2K-8K; CPU 16K is seed 0 on a different corpus snapshot, shown in italics for trend only). TTFT = build + first token, seconds.
+Mean over seeds (Vulkan: every seed run; CPU: E1-baselines `results.csv`, seeds 0-2 at 2K-8K; CPU 16K is seed 0 on a different corpus snapshot, shown in italics for trend only). TTFT = build + first token, seconds; the Vulkan TTFT is the median over seeds (32K seed 1 includes a host suspend).
 
 | method | ctx | seeds (Vulkan) | top-1 Vulkan | top-1 CPU | mean KL Vulkan [95 % CI over seeds] | mean KL CPU | EM Vulkan | EM CPU | TTFT Vulkan (s) | TTFT CPU (s) |
 |---|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|
 | full | 2048 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 1.66 | 20 |
-| prefix_reuse | 2048 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 1.04 | 12 |
-| naive_concat | 2048 | 3 | 0.865 | 0.875 | 0.1281 [0.1018, 0.144] | 0.1308 | 0.438 | 0.438 | 0.247 | 0.247 |
-| full | 4096 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 5.12 | 49.8 |
-| prefix_reuse | 4096 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 3 | 25.3 |
-| naive_concat | 4096 | 3 | 0.901 | 0.906 | 0.1874 [0.0855, 0.2763] | 0.1738 | 1 | 1 | 0.476 | 0.388 |
+| prefix_reuse | 2048 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 1.03 | 12 |
+| naive_concat | 2048 | 3 | 0.865 | 0.875 | 0.1281 [0.1018, 0.144] | 0.1308 | 0.438 | 0.438 | 0.243 | 0.247 |
+| full | 4096 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 5.11 | 49.8 |
+| prefix_reuse | 4096 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 3.46 | 25.3 |
+| naive_concat | 4096 | 3 | 0.901 | 0.906 | 0.1874 [0.0855, 0.2763] | 0.1738 | 1 | 1 | 0.464 | 0.388 |
 | full | 8192 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 19.2 | 196 |
-| prefix_reuse | 8192 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 13.6 | 146 |
-| naive_concat | 8192 | 3 | 0.771 | 0.76 | 0.5272 [0.329, 0.6989] | 0.5495 | 0.417 | 0.417 | 0.936 | 0.602 |
+| prefix_reuse | 8192 | 3 | 1 | 1 | 0 [0, 0] | 0 | 1 | 1 | 14 | 146 |
+| naive_concat | 8192 | 3 | 0.771 | 0.76 | 0.5272 [0.329, 0.6989] | 0.5495 | 0.417 | 0.417 | 0.926 | 0.602 |
 | full | 16384 | 3 | 1 | *1* | 0 [0, 0] | *0* | 1 | *1* | 72.2 | *946* |
 | prefix_reuse | 16384 | 3 | 1 | *1* | 0 [0, 0] | *0* | 1 | *1* | 52.9 | *714* |
 | naive_concat | 16384 | 3 | 0.792 | *0.734* | 0.6209 [0.07058, 0.9621] | *0.668* | 0.25 | *0.125* | 1.83 | *1.21* |
-| full | 32768 | 3 | 1 | not run | 0 [0, 0] | not run | 1 | not run | 1.76e+03 | not run |
+| full | 32768 | 3 | 1 | not run | 0 [0, 0] | not run | 1 | not run | 275 | not run |
 | prefix_reuse | 32768 | 3 | 1 | not run | 0 [0, 0] | not run | 1 | not run | 201 | not run |
-| naive_concat | 32768 | 3 | 0.583 | not run | 1.175 [0.7799, 1.518] | not run | 0.167 | not run | 3.52 | not run |
+| naive_concat | 32768 | 3 | 0.583 | not run | 1.175 [0.7799, 1.518] | not run | 0.167 | not run | 3.5 | not run |
 
 ## 2. Naive concatenation, Vulkan vs CPU E1, paired by seed
 
