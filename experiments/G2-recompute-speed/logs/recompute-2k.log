@@ -1,0 +1,452 @@
+# provenance
+utc: 2026-11-02 08:00:45
+group: 2k-timing
+command: ChunkKvLab recompute --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --names afclaude,docagent,codesharp --corpus-dirs C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 --hashes 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938,5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7,bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb --contexts 3,3,2 --kept-dir C:\Development\ChunkedkvCache\experiments\corpus --mode kept --context 2048 --max-rows 0 --label 2k --out-dir C:\Development\ChunkedkvCache\experiments\G2-recompute-speed --repeats 3 --eval 0
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX
+gpu: AMD Radeon(TM) 8060S Graphics, Windows driver 32.0.32015.7029; vulkaninfo: apiVersion=1.4.359; deviceName=AMD Radeon(TM) 8060S Graphics; driverName=AMD proprietary driver; driverInfo=26.10.1 (LLPC)
+gpu lock: HELD name='chunk-vulkan-t4' pid=108826 age=1s reason='ChunkedkvCache G2 recompute 2k-timing (Phase G Task 4), Qwen3-4B'
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-vulkan @ b3fd24a6efbca7a01f176c87e15801b4fbdbe9bd (branch feature/chunk-reuse-vulkan); dirty files: 0
+corpus afclaude: t8-corpus-AFClaude-b3f29c30-20261101111141 = git archive b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c of C:\Development\AFClaude; expected chunk-id sha256 (symbol-512) 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+corpus docagent: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 of C:\Development\CSharpDocAgentFrameworkMCP; expected chunk-id sha256 (symbol-512) 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+corpus codesharp: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 of C:\Development\codesharp; expected chunk-id sha256 (symbol-512) bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+power requests held: ExecutionRequired, SystemRequired, DisplayRequired
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on vulkan in 2.5 s; engine 0.3.0-dev.3644.22+b3fd24a6efbca7a01f176c87e15801b4fbdbe9bd
+vulkan device: AMD Radeon(TM) 8060S Graphics; eval off (timing run: all-row logits never widened); single-pass row cap none
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), symbol-512: 74 chunks, 12744 tokens (chunk tokens median 107, max 510); Decode(Encode(file)) == file for 9/9; 0.4 s
+chunk-id sha256 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\afclaude.plans.jsonl: 16 plans, identical chunk ids
+kept task ids: 16; found 16; missing 
+contexts (first task id): src/AFClaude/FoundryTools.cs:23:48 src/AFClaude/FoundryTools.cs:31:34 src/AFClaude/Program.cs:328:38
+plans: 3 contexts, 6 tasks (kept, seed 0, 1.7 s); mean context 2045 tokens, 15.0 chunks
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +0 s] full prefill block 512 rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +2 s] full prefill block 512 rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +4 s] full prefill block 512 rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +6 s] full prefill block 2048 rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +8 s] full prefill block 2048 rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +9 s] full prefill block 2048 rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +11 s] encode (host entries: forward + readback)
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +16 s] upload host entries into resident caches
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +20 s] control tail_ordinary: 409 rows at 1636.. rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +21 s] control tail_ordinary: 409 rows at 1636.. rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +21 s] control tail_ordinary: 409 rows at 1636.. rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +22 s] control tail_qpos: 409 rows at 1635.. rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +34 s] control tail_qpos: 409 rows at 1635.. rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +45 s] control tail_qpos: 409 rows at 1635.. rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +57 s] chunk_starts 5 % (102 rows, 11 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +59 s] chunk_starts 5 % (102 rows, 11 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +61 s] chunk_starts 5 % (102 rows, 11 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +63 s] chunk_starts 5 % (102 rows, 11 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +64 s] chunk_starts 5 % (102 rows, 11 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +66 s] chunk_starts 5 % (102 rows, 11 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +68 s] chunk_starts 10 % (205 rows, 11 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +71 s] chunk_starts 10 % (205 rows, 11 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +75 s] chunk_starts 10 % (205 rows, 11 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +79 s] chunk_starts 10 % (205 rows, 11 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +82 s] chunk_starts 10 % (205 rows, 11 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +85 s] chunk_starts 10 % (205 rows, 11 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +89 s] chunk_starts 20 % (409 rows, 10 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +96 s] chunk_starts 20 % (409 rows, 10 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +103 s] chunk_starts 20 % (409 rows, 10 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +110 s] chunk_starts 20 % (409 rows, 10 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +117 s] chunk_starts 20 % (409 rows, 10 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +123 s] chunk_starts 20 % (409 rows, 10 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +130 s] random 5 % (102 rows, 98 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +132 s] random 5 % (102 rows, 98 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +134 s] random 5 % (102 rows, 98 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +136 s] random 5 % (102 rows, 98 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +139 s] random 5 % (102 rows, 98 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +143 s] random 5 % (102 rows, 98 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +146 s] random 10 % (205 rows, 181 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +150 s] random 10 % (205 rows, 181 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +154 s] random 10 % (205 rows, 181 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +158 s] random 10 % (205 rows, 181 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +165 s] random 10 % (205 rows, 181 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +171 s] random 10 % (205 rows, 181 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +177 s] random 20 % (409 rows, 325 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +184 s] random 20 % (409 rows, 325 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +191 s] random 20 % (409 rows, 325 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +199 s] random 20 % (409 rows, 325 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +210 s] random 20 % (409 rows, 325 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +222 s] random 20 % (409 rows, 325 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 tasks 1] done in 234 s; at 4.0 min
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +0 s] full prefill block 512 rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +2 s] full prefill block 512 rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +4 s] full prefill block 512 rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +5 s] full prefill block 2048 rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +7 s] full prefill block 2048 rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +9 s] full prefill block 2048 rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +11 s] encode (host entries: forward + readback)
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +16 s] upload host entries into resident caches
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +20 s] control tail_ordinary: 408 rows at 1633.. rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +20 s] control tail_ordinary: 408 rows at 1633.. rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +21 s] control tail_ordinary: 408 rows at 1633.. rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +22 s] control tail_qpos: 408 rows at 1632.. rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +33 s] control tail_qpos: 408 rows at 1632.. rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +45 s] control tail_qpos: 408 rows at 1632.. rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +57 s] chunk_starts 5 % (102 rows, 13 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +58 s] chunk_starts 5 % (102 rows, 13 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +59 s] chunk_starts 5 % (102 rows, 13 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +60 s] chunk_starts 5 % (102 rows, 13 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +61 s] chunk_starts 5 % (102 rows, 13 runs) PerRun rep 1
+[heartbeat 2026-11-02 08:05:46 UTC, +5.0 min, 5.0 min since previous]
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +62 s] chunk_starts 5 % (102 rows, 13 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +63 s] chunk_starts 10 % (204 rows, 13 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +65 s] chunk_starts 10 % (204 rows, 13 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +68 s] chunk_starts 10 % (204 rows, 13 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +70 s] chunk_starts 10 % (204 rows, 13 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +72 s] chunk_starts 10 % (204 rows, 13 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +74 s] chunk_starts 10 % (204 rows, 13 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +76 s] chunk_starts 20 % (408 rows, 12 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +80 s] chunk_starts 20 % (408 rows, 12 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +85 s] chunk_starts 20 % (408 rows, 12 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +89 s] chunk_starts 20 % (408 rows, 12 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +93 s] chunk_starts 20 % (408 rows, 12 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +97 s] chunk_starts 20 % (408 rows, 12 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +101 s] random 5 % (102 rows, 98 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +103 s] random 5 % (102 rows, 98 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +105 s] random 5 % (102 rows, 98 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +107 s] random 5 % (102 rows, 98 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +110 s] random 5 % (102 rows, 98 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +113 s] random 5 % (102 rows, 98 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +116 s] random 10 % (204 rows, 186 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +120 s] random 10 % (204 rows, 186 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +123 s] random 10 % (204 rows, 186 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +126 s] random 10 % (204 rows, 186 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +132 s] random 10 % (204 rows, 186 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +138 s] random 10 % (204 rows, 186 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +144 s] random 20 % (408 rows, 334 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +150 s] random 20 % (408 rows, 334 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +157 s] random 20 % (408 rows, 334 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +162 s] random 20 % (408 rows, 334 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +173 s] random 20 % (408 rows, 334 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p1 L 2041 chunks 14 +184 s] random 20 % (408 rows, 334 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p1 L 2041 tasks 4] done in 195 s; at 7.2 min
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +0 s] full prefill block 512 rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +2 s] full prefill block 512 rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +4 s] full prefill block 512 rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +5 s] full prefill block 2048 rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +7 s] full prefill block 2048 rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +9 s] full prefill block 2048 rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +11 s] encode (host entries: forward + readback)
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +16 s] upload host entries into resident caches
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +21 s] control tail_ordinary: 410 rows at 1638.. rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +22 s] control tail_ordinary: 410 rows at 1638.. rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +22 s] control tail_ordinary: 410 rows at 1638.. rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +23 s] control tail_qpos: 410 rows at 1637.. rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +35 s] control tail_qpos: 410 rows at 1637.. rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +46 s] control tail_qpos: 410 rows at 1637.. rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +58 s] chunk_starts 5 % (102 rows, 18 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +60 s] chunk_starts 5 % (102 rows, 18 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +62 s] chunk_starts 5 % (102 rows, 18 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +64 s] chunk_starts 5 % (102 rows, 18 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +65 s] chunk_starts 5 % (102 rows, 18 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +67 s] chunk_starts 5 % (102 rows, 18 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +69 s] chunk_starts 10 % (205 rows, 17 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +73 s] chunk_starts 10 % (205 rows, 17 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +76 s] chunk_starts 10 % (205 rows, 17 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +79 s] chunk_starts 10 % (205 rows, 17 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +83 s] chunk_starts 10 % (205 rows, 17 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +86 s] chunk_starts 10 % (205 rows, 17 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +89 s] chunk_starts 20 % (410 rows, 12 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +96 s] chunk_starts 20 % (410 rows, 12 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +102 s] chunk_starts 20 % (410 rows, 12 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +109 s] chunk_starts 20 % (410 rows, 12 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +115 s] chunk_starts 20 % (410 rows, 12 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +121 s] chunk_starts 20 % (410 rows, 12 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +127 s] random 5 % (102 rows, 96 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +129 s] random 5 % (102 rows, 96 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +131 s] random 5 % (102 rows, 96 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +133 s] random 5 % (102 rows, 96 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +136 s] random 5 % (102 rows, 96 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +139 s] random 5 % (102 rows, 96 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +142 s] random 10 % (205 rows, 188 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +145 s] random 10 % (205 rows, 188 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +149 s] random 10 % (205 rows, 188 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +152 s] random 10 % (205 rows, 188 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +158 s] random 10 % (205 rows, 188 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +164 s] random 10 % (205 rows, 188 runs) PerRun rep 2
+[heartbeat 2026-11-02 08:10:46 UTC, +10.0 min, 5.0 min since previous]
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +170 s] random 20 % (410 rows, 338 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +177 s] random 20 % (410 rows, 338 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +183 s] random 20 % (410 rows, 338 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +190 s] random 20 % (410 rows, 338 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +202 s] random 20 % (410 rows, 338 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p2 L 2048 chunks 19 +213 s] random 20 % (410 rows, 338 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p2 L 2048 tasks 1] done in 225 s; at 11.0 min
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 1.5 s
+chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\docagent.plans.jsonl: 48 plans, identical chunk ids
+kept task ids: 27; found 27; missing 
+contexts (first task id): src/DocAgent.McpServer/Ingestion/TypeScriptIngestionService.cs:94:53 src/DocAgent.McpServer/Ingestion/IncrementalSolutionIngestionService.cs:109:31 src/DocAgent.Ingestion/IncrementalIngestionEngine.cs:57:48
+plans: 3 contexts, 3 tasks (kept, seed 0, 2.0 s); mean context 2045 tokens, 17.3 chunks
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +0 s] full prefill block 512 rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +2 s] full prefill block 512 rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +4 s] full prefill block 512 rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +5 s] full prefill block 2048 rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +7 s] full prefill block 2048 rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +9 s] full prefill block 2048 rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +11 s] encode (host entries: forward + readback)
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +16 s] upload host entries into resident caches
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +20 s] control tail_ordinary: 408 rows at 1632.. rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +21 s] control tail_ordinary: 408 rows at 1632.. rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +21 s] control tail_ordinary: 408 rows at 1632.. rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +22 s] control tail_qpos: 408 rows at 1631.. rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +34 s] control tail_qpos: 408 rows at 1631.. rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +46 s] control tail_qpos: 408 rows at 1631.. rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +57 s] chunk_starts 5 % (102 rows, 12 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +59 s] chunk_starts 5 % (102 rows, 12 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +61 s] chunk_starts 5 % (102 rows, 12 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +63 s] chunk_starts 5 % (102 rows, 12 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +65 s] chunk_starts 5 % (102 rows, 12 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +66 s] chunk_starts 5 % (102 rows, 12 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +68 s] chunk_starts 10 % (204 rows, 12 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +71 s] chunk_starts 10 % (204 rows, 12 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +75 s] chunk_starts 10 % (204 rows, 12 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +79 s] chunk_starts 10 % (204 rows, 12 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +82 s] chunk_starts 10 % (204 rows, 12 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +86 s] chunk_starts 10 % (204 rows, 12 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +89 s] chunk_starts 20 % (408 rows, 11 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +96 s] chunk_starts 20 % (408 rows, 11 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +103 s] chunk_starts 20 % (408 rows, 11 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +110 s] chunk_starts 20 % (408 rows, 11 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +117 s] chunk_starts 20 % (408 rows, 11 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +123 s] chunk_starts 20 % (408 rows, 11 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +130 s] random 5 % (102 rows, 99 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +132 s] random 5 % (102 rows, 99 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +134 s] random 5 % (102 rows, 99 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +136 s] random 5 % (102 rows, 99 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +139 s] random 5 % (102 rows, 99 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +142 s] random 5 % (102 rows, 99 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +146 s] random 10 % (204 rows, 181 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +149 s] random 10 % (204 rows, 181 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +152 s] random 10 % (204 rows, 181 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +156 s] random 10 % (204 rows, 181 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +162 s] random 10 % (204 rows, 181 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +168 s] random 10 % (204 rows, 181 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +174 s] random 20 % (408 rows, 330 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +180 s] random 20 % (408 rows, 330 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +187 s] random 20 % (408 rows, 330 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +194 s] random 20 % (408 rows, 330 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +205 s] random 20 % (408 rows, 330 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +216 s] random 20 % (408 rows, 330 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 tasks 1] done in 227 s; at 14.8 min
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +0 s] full prefill block 512 rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +2 s] full prefill block 512 rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +4 s] full prefill block 512 rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +5 s] full prefill block 2048 rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +7 s] full prefill block 2048 rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +9 s] full prefill block 2048 rep 2
+[heartbeat 2026-11-02 08:15:46 UTC, +15.0 min, 5.0 min since previous]
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +11 s] encode (host entries: forward + readback)
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +17 s] upload host entries into resident caches
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +20 s] control tail_ordinary: 410 rows at 1638.. rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +21 s] control tail_ordinary: 410 rows at 1638.. rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +22 s] control tail_ordinary: 410 rows at 1638.. rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +23 s] control tail_qpos: 410 rows at 1637.. rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +34 s] control tail_qpos: 410 rows at 1637.. rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +46 s] control tail_qpos: 410 rows at 1637.. rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +57 s] chunk_starts 5 % (102 rows, 15 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +59 s] chunk_starts 5 % (102 rows, 15 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +61 s] chunk_starts 5 % (102 rows, 15 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +62 s] chunk_starts 5 % (102 rows, 15 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +64 s] chunk_starts 5 % (102 rows, 15 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +65 s] chunk_starts 5 % (102 rows, 15 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +67 s] chunk_starts 10 % (205 rows, 14 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +70 s] chunk_starts 10 % (205 rows, 14 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +73 s] chunk_starts 10 % (205 rows, 14 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +76 s] chunk_starts 10 % (205 rows, 14 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +79 s] chunk_starts 10 % (205 rows, 14 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +82 s] chunk_starts 10 % (205 rows, 14 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +85 s] chunk_starts 20 % (410 rows, 13 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +91 s] chunk_starts 20 % (410 rows, 13 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +97 s] chunk_starts 20 % (410 rows, 13 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +103 s] chunk_starts 20 % (410 rows, 13 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +109 s] chunk_starts 20 % (410 rows, 13 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +114 s] chunk_starts 20 % (410 rows, 13 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +120 s] random 5 % (102 rows, 98 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +121 s] random 5 % (102 rows, 98 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +123 s] random 5 % (102 rows, 98 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +125 s] random 5 % (102 rows, 98 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +128 s] random 5 % (102 rows, 98 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +132 s] random 5 % (102 rows, 98 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +135 s] random 10 % (205 rows, 183 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +138 s] random 10 % (205 rows, 183 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +142 s] random 10 % (205 rows, 183 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +145 s] random 10 % (205 rows, 183 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +151 s] random 10 % (205 rows, 183 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +157 s] random 10 % (205 rows, 183 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +163 s] random 20 % (410 rows, 336 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +170 s] random 20 % (410 rows, 336 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +176 s] random 20 % (410 rows, 336 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +183 s] random 20 % (410 rows, 336 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +194 s] random 20 % (410 rows, 336 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p1 L 2048 chunks 16 +205 s] random 20 % (410 rows, 336 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p1 L 2048 tasks 1] done in 216 s; at 18.4 min
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +0 s] full prefill block 512 rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +2 s] full prefill block 512 rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +4 s] full prefill block 512 rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +5 s] full prefill block 2048 rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +7 s] full prefill block 2048 rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +9 s] full prefill block 2048 rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +11 s] encode (host entries: forward + readback)
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +17 s] upload host entries into resident caches
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +21 s] control tail_ordinary: 410 rows at 1638.. rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +22 s] control tail_ordinary: 410 rows at 1638.. rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +23 s] control tail_ordinary: 410 rows at 1638.. rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +24 s] control tail_qpos: 410 rows at 1637.. rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +35 s] control tail_qpos: 410 rows at 1637.. rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +47 s] control tail_qpos: 410 rows at 1637.. rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +58 s] chunk_starts 5 % (102 rows, 21 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +60 s] chunk_starts 5 % (102 rows, 21 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +62 s] chunk_starts 5 % (102 rows, 21 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +64 s] chunk_starts 5 % (102 rows, 21 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +66 s] chunk_starts 5 % (102 rows, 21 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +68 s] chunk_starts 5 % (102 rows, 21 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +70 s] chunk_starts 10 % (205 rows, 21 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +73 s] chunk_starts 10 % (205 rows, 21 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +77 s] chunk_starts 10 % (205 rows, 21 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +80 s] chunk_starts 10 % (205 rows, 21 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +83 s] chunk_starts 10 % (205 rows, 21 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +86 s] chunk_starts 10 % (205 rows, 21 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +89 s] chunk_starts 20 % (410 rows, 17 runs) SinglePass rep 0
+[heartbeat 2026-11-02 08:20:46 UTC, +20.0 min, 5.0 min since previous]
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +96 s] chunk_starts 20 % (410 rows, 17 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +103 s] chunk_starts 20 % (410 rows, 17 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +110 s] chunk_starts 20 % (410 rows, 17 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +116 s] chunk_starts 20 % (410 rows, 17 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +122 s] chunk_starts 20 % (410 rows, 17 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +128 s] random 5 % (102 rows, 95 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +130 s] random 5 % (102 rows, 95 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +132 s] random 5 % (102 rows, 95 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +134 s] random 5 % (102 rows, 95 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +138 s] random 5 % (102 rows, 95 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +141 s] random 5 % (102 rows, 95 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +145 s] random 10 % (205 rows, 181 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +148 s] random 10 % (205 rows, 181 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +152 s] random 10 % (205 rows, 181 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +156 s] random 10 % (205 rows, 181 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +162 s] random 10 % (205 rows, 181 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +169 s] random 10 % (205 rows, 181 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +175 s] random 20 % (410 rows, 307 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +183 s] random 20 % (410 rows, 307 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +190 s] random 20 % (410 rows, 307 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +197 s] random 20 % (410 rows, 307 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +209 s] random 20 % (410 rows, 307 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p2 L 2048 chunks 22 +220 s] random 20 % (410 rows, 307 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p2 L 2048 tasks 1] done in 232 s; at 22.3 min
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), symbol-512: 7586 chunks, 1535738 tokens (chunk tokens median 157, max 512); Decode(Encode(file)) == file for 1390/1390; 14.5 s
+chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\codesharp.plans.jsonl: 60 plans, identical chunk ids
+kept task ids: 21; found 21; missing 
+contexts (first task id): src/CodeSharp.Core/Permissions/PermissionRuleSet.cs:237:45 src/CodeSharp.Tui/ImageInput/TuiImageInput.cs:129:35
+plans: 2 contexts, 2 tasks (kept, seed 0, 10.7 s); mean context 2048 tokens, 16.5 chunks
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +0 s] full prefill block 512 rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +2 s] full prefill block 512 rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +4 s] full prefill block 512 rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +5 s] full prefill block 2048 rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +7 s] full prefill block 2048 rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +9 s] full prefill block 2048 rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +11 s] encode (host entries: forward + readback)
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +17 s] upload host entries into resident caches
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +20 s] control tail_ordinary: 410 rows at 1638.. rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +21 s] control tail_ordinary: 410 rows at 1638.. rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +22 s] control tail_ordinary: 410 rows at 1638.. rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +22 s] control tail_qpos: 410 rows at 1637.. rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +34 s] control tail_qpos: 410 rows at 1637.. rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +45 s] control tail_qpos: 410 rows at 1637.. rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +57 s] chunk_starts 5 % (102 rows, 11 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +58 s] chunk_starts 5 % (102 rows, 11 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +60 s] chunk_starts 5 % (102 rows, 11 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +62 s] chunk_starts 5 % (102 rows, 11 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +64 s] chunk_starts 5 % (102 rows, 11 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +65 s] chunk_starts 5 % (102 rows, 11 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +67 s] chunk_starts 10 % (205 rows, 9 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +70 s] chunk_starts 10 % (205 rows, 9 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +73 s] chunk_starts 10 % (205 rows, 9 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +77 s] chunk_starts 10 % (205 rows, 9 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +80 s] chunk_starts 10 % (205 rows, 9 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +83 s] chunk_starts 10 % (205 rows, 9 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +86 s] chunk_starts 20 % (410 rows, 7 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +93 s] chunk_starts 20 % (410 rows, 7 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +99 s] chunk_starts 20 % (410 rows, 7 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +106 s] chunk_starts 20 % (410 rows, 7 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +111 s] chunk_starts 20 % (410 rows, 7 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +116 s] chunk_starts 20 % (410 rows, 7 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +121 s] random 5 % (102 rows, 99 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +123 s] random 5 % (102 rows, 99 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +125 s] random 5 % (102 rows, 99 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +127 s] random 5 % (102 rows, 99 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +130 s] random 5 % (102 rows, 99 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +133 s] random 5 % (102 rows, 99 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +137 s] random 10 % (205 rows, 185 runs) SinglePass rep 0
+[heartbeat 2026-11-02 08:25:46 UTC, +25.0 min, 5.0 min since previous]
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +140 s] random 10 % (205 rows, 185 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +144 s] random 10 % (205 rows, 185 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +147 s] random 10 % (205 rows, 185 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +153 s] random 10 % (205 rows, 185 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +159 s] random 10 % (205 rows, 185 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +166 s] random 20 % (410 rows, 327 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +172 s] random 20 % (410 rows, 327 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +179 s] random 20 % (410 rows, 327 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +185 s] random 20 % (410 rows, 327 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +196 s] random 20 % (410 rows, 327 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p0 L 2048 chunks 14 +207 s] random 20 % (410 rows, 327 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p0 L 2048 tasks 1] done in 219 s; at 26.4 min
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +0 s] full prefill block 512 rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +2 s] full prefill block 512 rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +4 s] full prefill block 512 rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +5 s] full prefill block 2048 rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +7 s] full prefill block 2048 rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +9 s] full prefill block 2048 rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +11 s] encode (host entries: forward + readback)
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +16 s] upload host entries into resident caches
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +21 s] control tail_ordinary: 410 rows at 1638.. rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +22 s] control tail_ordinary: 410 rows at 1638.. rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +22 s] control tail_ordinary: 410 rows at 1638.. rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +23 s] control tail_qpos: 410 rows at 1637.. rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +35 s] control tail_qpos: 410 rows at 1637.. rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +46 s] control tail_qpos: 410 rows at 1637.. rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +58 s] chunk_starts 5 % (102 rows, 17 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +60 s] chunk_starts 5 % (102 rows, 17 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +62 s] chunk_starts 5 % (102 rows, 17 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +64 s] chunk_starts 5 % (102 rows, 17 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +66 s] chunk_starts 5 % (102 rows, 17 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +68 s] chunk_starts 5 % (102 rows, 17 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +69 s] chunk_starts 10 % (205 rows, 17 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +73 s] chunk_starts 10 % (205 rows, 17 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +77 s] chunk_starts 10 % (205 rows, 17 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +81 s] chunk_starts 10 % (205 rows, 17 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +84 s] chunk_starts 10 % (205 rows, 17 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +88 s] chunk_starts 10 % (205 rows, 17 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +91 s] chunk_starts 20 % (410 rows, 16 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +99 s] chunk_starts 20 % (410 rows, 16 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +107 s] chunk_starts 20 % (410 rows, 16 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +115 s] chunk_starts 20 % (410 rows, 16 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +122 s] chunk_starts 20 % (410 rows, 16 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +129 s] chunk_starts 20 % (410 rows, 16 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +135 s] random 5 % (102 rows, 100 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +138 s] random 5 % (102 rows, 100 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +140 s] random 5 % (102 rows, 100 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +142 s] random 5 % (102 rows, 100 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +145 s] random 5 % (102 rows, 100 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +149 s] random 5 % (102 rows, 100 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +152 s] random 10 % (205 rows, 183 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +156 s] random 10 % (205 rows, 183 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +160 s] random 10 % (205 rows, 183 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +164 s] random 10 % (205 rows, 183 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +170 s] random 10 % (205 rows, 183 runs) PerRun rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +176 s] random 10 % (205 rows, 183 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +183 s] random 20 % (410 rows, 313 runs) SinglePass rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +190 s] random 20 % (410 rows, 313 runs) SinglePass rep 1
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +198 s] random 20 % (410 rows, 313 runs) SinglePass rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +205 s] random 20 % (410 rows, 313 runs) PerRun rep 0
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +216 s] random 20 % (410 rows, 313 runs) PerRun rep 1
+[heartbeat 2026-11-02 08:30:43 UTC, +30.0 min, 5.0 min since previous]
+[recompute codesharp/symbol/s0/kept/p1 L 2048 chunks 19 +227 s] random 20 % (410 rows, 313 runs) PerRun rep 2
+[recompute codesharp/symbol/s0/kept/p1 L 2048 tasks 1] done in 239 s; at 30.3 min
+recompute 2k: 8 contexts in 30.3 min -> C:\Development\ChunkedkvCache\experiments\G2-recompute-speed
+# exit code 0 after 30.7 min

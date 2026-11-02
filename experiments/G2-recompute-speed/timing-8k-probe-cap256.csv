@@ -1,0 +1,10 @@
+size,corpus,plan,context_id,context_tokens,chunks,eval_run,arm,selector,budget_pct,rows,runs,rep,ms,forward_calls,qpos_layers
+8k-probe,afclaude,0,afclaude/symbol/s0/unfiltered/p0,8188,58,0,full512,,100,8188,16,0,19295.42,16,0
+8k-probe,afclaude,0,afclaude/symbol/s0/unfiltered/p0,8188,58,0,encode_host,,0,8188,58,0,21935.81,58,0
+8k-probe,afclaude,0,afclaude/symbol/s0/unfiltered/p0,8188,58,0,upload_resident,,0,8188,58,0,3377.75,0,0
+8k-probe,afclaude,0,afclaude/symbol/s0/unfiltered/p0,8188,58,0,asm_device,,0,8188,58,0,288.66,0,0
+8k-probe,afclaude,0,afclaude/symbol/s0/unfiltered/p0,8188,58,0,asm_host,,0,8188,58,0,2210.07,0,0
+8k-probe,afclaude,0,afclaude/symbol/s0/unfiltered/p0,8188,58,0,tail_ordinary,,5,409,1,0,38299.01,2,36
+8k-probe,afclaude,0,afclaude/symbol/s0/unfiltered/p0,8188,58,0,tail_qpos,,5,409,1,0,60744.13,2,72
+8k-probe,afclaude,0,afclaude/symbol/s0/unfiltered/p0,8188,58,0,single,chunk_starts,5,409,57,0,24698.91,2,72
+8k-probe,afclaude,0,afclaude/symbol/s0/unfiltered/p0,8188,58,0,perrun,chunk_starts,5,409,57,0,19850.40,57,2052
