@@ -1,0 +1,23 @@
+# provenance
+utc: 2026-11-01 21:43:39
+command: ChunkKvLab e4 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141 --name afclaude --chunker symbol --chunk 512 --seed 0 --count 100 --context 2048 --mode kept --contexts 6 --max-minutes 30 --threads 16 --expect-hash 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938 --out C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4b\raw\afclaude-symbol-s0-kept-related.csv --kept C:\Development\ChunkedkvCache\experiments\corpus\afclaude.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\afclaude.plans.jsonl --context-kind related --related-fraction 0.5 --arms drop_required,chunk_starts,query,graph,hybrid_query,oracle_def_fill --budgets 5,10,15,20 --light-arms oracle_def_fill --light-budgets 5,20 --shard 0/1
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1); 2 jobs in parallel x 16 threads
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ 20b4da786c13ffeba6f90d0d2302b88e843f0c66 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-AFClaude-b3f29c30-20261101111141 = git archive b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c src of C:\Development\AFClaude; source repo HEAD b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c, dirty files now: 1; expected chunk-id sha256 (symbol-512) 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.8 s; engine 0.3.0-dev.3628.22+20b4da786c13ffeba6f90d0d2302b88e843f0c66
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), symbol-512: 74 chunks, 12744 tokens (chunk tokens median 107, max 510); Decode(Encode(file)) == file for 9/9; 0.9 s
+chunk-id sha256 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+graph: 514 edges in 2.7 s (offline cost); mapping-mismatch chunks 0
+kept task ids: 16; found 16; missing 
+contexts (first task id): src/AFClaude/FoundryTools.cs:23:48 src/AFClaude/FoundryTools.cs:31:34 src/AFClaude/Program.cs:328:38 src/AFClaude/Program.cs:292:39 src/AFClaude/Program.cs:163:41 src/AFClaude/Program.cs:291:40
+plans: 6 contexts, 10 tasks (kept, related contexts fraction 0.5, seed 0, 1.0 s); mean context 2046 tokens, 16.0 chunks
+arms drop_required,chunk_starts,query,graph,hybrid_query,oracle_def_fill; budgets 5,10,15,20 % (light arms oracle_def_fill at 5,20 %); definition window 16; shard 0/1
+[afclaude/symbol/s0/kept-related/p0 L 2048 chunks 21 tasks 1] 467 s (full 38.2 s, encode 23.9 s, dev 0.0 s, query 17.2 s, 19 distinct selections); query edges/targets 7/0; in-context edges 5; related distractors 10/20 (hop 1: 10); ref EM 1/1; at 7.9 min
+[afclaude/symbol/s0/kept-related/p1 L 2046 chunks 11 tasks 4] 1165 s (full 31.4 s, encode 20.1 s, dev 0.0 s, query 79.4 s, 44 distinct selections); query edges/targets 9/1 15/1 11/3 16/3; in-context edges 13; related distractors 10/10 (hop 1: 10); ref EM 4/4; at 27.3 min
+[afclaude/symbol/s0/kept-related/p2 L 2047 chunks 15 tasks 1] 367 s (full 27.2 s, encode 20.8 s, dev 0.0 s, query 13.9 s, 17 distinct selections); query edges/targets 21/3; in-context edges 18; related distractors 13/14 (hop 1: 13); ref EM 1/1; at 33.4 min
+time cap 30 min reached after 3 contexts of this shard
+e4 afclaude/symbol/s0/kept shard 0/1: 3 contexts in 33.4 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4b\raw\afclaude-symbol-s0-kept-related.csv

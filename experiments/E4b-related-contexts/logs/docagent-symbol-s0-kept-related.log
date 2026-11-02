@@ -1,0 +1,24 @@
+# provenance
+utc: 2026-11-01 21:37:38
+command: ChunkKvLab e4 --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 --name docagent --chunker symbol --chunk 512 --seed 0 --count 100 --context 2048 --mode kept --contexts 6 --max-minutes 30 --threads 16 --expect-hash 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7 --out C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4b\raw\docagent-symbol-s0-kept-related.csv --kept C:\Development\ChunkedkvCache\experiments\corpus\docagent.validation.csv --plans-jsonl C:\Development\ChunkedkvCache\experiments\corpus\docagent.plans.jsonl --context-kind related --related-fraction 0.5 --arms drop_required,chunk_starts,query,graph,hybrid_query,oracle_def_fill --budgets 5,10,15,20 --light-arms oracle_def_fill --light-budgets 5,20 --shard 0/1
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX; CPU only (deviceId -1); 2 jobs in parallel x 16 threads
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-kv-reuse @ 20b4da786c13ffeba6f90d0d2302b88e843f0c66 (branch feature/chunk-kv-reuse); dirty files: 0
+corpus: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 src of C:\Development\CSharpDocAgentFrameworkMCP; source repo HEAD 6683823880bc2a7d62708907c725d9eaedf3a016, dirty files now: 0; expected chunk-id sha256 (symbol-512) 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) in 0.6 s; engine 0.3.0-dev.3628.22+20b4da786c13ffeba6f90d0d2302b88e843f0c66
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 2.9 s
+chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+graph: 3772 edges in 3.0 s (offline cost); mapping-mismatch chunks 0
+kept task ids: 27; found 27; missing 
+contexts (first task id): src/DocAgent.McpServer/Ingestion/TypeScriptIngestionService.cs:94:53 src/DocAgent.McpServer/Ingestion/IncrementalSolutionIngestionService.cs:109:31 src/DocAgent.Ingestion/IncrementalIngestionEngine.cs:57:48 src/DocAgent.Ingestion/IncrementalIngestionEngine.cs:186:31 src/DocAgent.McpServer/Ingestion/IncrementalSolutionIngestionService.cs:322:57 src/DocAgent.McpServer/Ingestion/IncrementalSolutionIngestionService.cs:143:35
+plans: 6 contexts, 7 tasks (kept, related contexts fraction 0.5, seed 0, 1.2 s); mean context 2046 tokens, 18.8 chunks
+arms drop_required,chunk_starts,query,graph,hybrid_query,oracle_def_fill; budgets 5,10,15,20 % (light arms oracle_def_fill at 5,20 %); definition window 16; shard 0/1
+[docagent/symbol/s0/kept-related/p0 L 2045 chunks 26 tasks 1] 531 s (full 28.9 s, encode 29.0 s, dev 0.0 s, query 21.3 s, 18 distinct selections); query edges/targets 7/0; in-context edges 34; related distractors 13/25 (hop 1: 13); ref EM 0/1; at 9.0 min
+[docagent/symbol/s0/kept-related/p1 L 2044 chunks 13 tasks 1] 547 s (full 33.8 s, encode 25.5 s, dev 0.0 s, query 22.0 s, 19 distinct selections); query edges/targets 15/1; in-context edges 3; related distractors 6/12 (hop 1: 6); ref EM 1/1; at 18.1 min
+[docagent/symbol/s0/kept-related/p2 L 2046 chunks 21 tasks 1] 406 s (full 31.9 s, encode 27.4 s, dev 0.0 s, query 21.4 s, 18 distinct selections); query edges/targets 8/0; in-context edges 33; related distractors 10/20 (hop 1: 10); ref EM 0/1; at 24.9 min
+[docagent/symbol/s0/kept-related/p3 L 2044 chunks 20 tasks 1] 437 s (full 28.2 s, encode 21.4 s, dev 0.0 s, query 21.5 s, 19 distinct selections); query edges/targets 14/1; in-context edges 17; related distractors 10/19 (hop 1: 10); ref EM 1/1; at 32.2 min
+time cap 30 min reached after 4 contexts of this shard
+e4 docagent/symbol/s0/kept shard 0/1: 4 contexts in 32.2 min -> C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\e4b\raw\docagent-symbol-s0-kept-related.csv

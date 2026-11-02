@@ -9,7 +9,8 @@ raw results, logs and provenance.
 
 1. **The core hypothesis is not supported.** A reference-graph selector (Roslyn: definitions the query uses, their chunk
    starts, cross-chunk edges, imports) does **not** beat the best existing selector (ProphetKV-like query relevance) at equal
-   recompute budget. With symbol chunks it is not distinguishable from it at 10–20 % (differences +0.02 to −0.01 of the
+   recompute budget, on random contexts (E4) or on contexts drawn from the calling file's dependency neighbourhood (E4b,
+   section at the end). With symbol chunks it is not distinguishable from it at 10–20 % (differences +0.02 to −0.01 of the
    naive→full gap; CIs admit losses up to 0.11) and is worse at 5 % and with fixed 512-token chunks (E4). Graph + query
    relevance (Hybrid) is the best runnable arm from 10 % up: both chunkers pooled 0.78 / 0.87 / 0.90 vs 0.74 / 0.83 / 0.86
    at 10 / 15 / 20 % (symbol only: 0.75 / 0.84 / 0.89 vs 0.70 / 0.80 / 0.83), within noise; on fixed chunks it is within
@@ -46,6 +47,7 @@ raw results, logs and provenance.
 | graph | Roslyn reference graph | 0.25–0.41 s per 100K tokens warm; edges sparse between random context chunks (codesharp: 3 in 112 contexts) | `experiments/graph-build.md` |
 | E3 | per-layer K/V deviation by token role | deviation grows with depth (×6.5–8.4 to layer 20) but is diffuse; chunk starts 3–10× the mean; definition/use sites no excess once position is controlled → E5 not run | `experiments/E3-layer-deviation` |
 | **E4** | **structure-aware selection** | **graph ≈ query relevance (symbol, 10–20 %), worse at 5 % and with fixed chunks; Hybrid best but not significantly; 95/20 bar holds for fixed chunks only** | `experiments/E4-structure-aware` |
+| E4b | E4 arms on related-chunk contexts (Phase S Task 1) | more structure (edges ×1.5–2.4, query targets 64 % vs 45 %) but the same verdict: Graph does not beat QR (−0.10 at 5 %, n.s. 10–20 %); Hybrid +0.04–0.10 n.s. from 10 %, −0.07 at 5 % | `experiments/E4b-related-contexts` |
 
 ## E4: quality versus budget
 
@@ -117,8 +119,8 @@ with negligible selection overhead"; the Task 11 brief sharpens it to the best b
   Hybrid(Dev) at 5 / 20 % on symbol seed 0 only), chosen in a fixed order so all cells share definitions; see the E4 README "Run".
 - **Seeds re-sample distractors and order around the same call sites**; they are not independent task sets. Per-context
   re-validation drops different tasks per seed and chunker.
-- **Contexts are random distractors**, the hardest case for a graph. Contexts built from a dependency neighbourhood would
-  carry more in-context edges; not tested (the plan's generator draws distractors at random).
+- **Contexts are random distractors**, the hardest case for a graph. Contexts built from a dependency neighbourhood carry
+  more in-context edges; tested afterwards in E4b (section below), with the same verdict.
 - **One model** (Qwen3-4B-Instruct-2507). Llama-3.1-8B was deferred: on CPU it does not fit the time budget.
 - **Recompute is one fixed token set for all layers** (no CacheBlend gradual filtering) with one `Forward` per contiguous run;
   wall times are relative CPU costs, not a serving TTFT.
@@ -146,3 +148,32 @@ with negligible selection overhead"; the Task 11 brief sharpens it to the best b
 5. If the graph idea is revisited, test it where it should be strongest: contexts assembled from a dependency neighbourhood,
    longer contexts (8K+, where E2 showed query relevance pulling away), and the definition signal used to choose **which chunks
    to include or fully re-encode**, not which tokens to recompute.
+
+## E4b: related-chunk contexts (Phase S Task 1, after G2)
+
+Recommendation 5's first test, run as the first task of the Phase S plan
+(`docs/superpowers/plans/2026-11-01-phase-s-store-cli-e4b.md`). Same kept call sites, arms, budgets and statistics as E4, but
+each context is the required chunk plus distractors of which half come from files within two reference-graph hops of the
+calling file (use/call/definition edges; imports and the masked call's own edge excluded), the rest random; every cell is
+re-validated. 3 corpora × 2 chunkers × 3 seeds, 58 valid instances / 12 clusters; E4's rows are the random-context control
+(one E4 context reproduced exactly at the new commit). Details: `experiments/E4b-related-contexts/README.md`.
+
+- **Structure goes up:** in-context cross-chunk edges per context 8.9 vs 6.1 (symbol) and 5.0 vs 2.1 (fixed); valid
+  instances whose query references a stale context chunk 64 % vs 45 %; graph-picked share of the graph arm's budget 54 / 31 /
+  20 / 15 % vs 38 / 23 / 16 / 12 % at 5 / 10 / 15 / 20 %.
+- **The verdict does not change. Graph does not beat QR at equal budget:** pooled Graph − QR −0.10 [−0.19, −0.05] at 5 %, +0.06,
+  +0.02, −0.02 at 10 / 15 / 20 % (CIs ∋ 0, admitting losses up to 0.20); worse at every budget with fixed chunks (−0.08
+  [−0.35, −0.03] at 20 %).
+- **Hybrid(QR) stays the best runnable arm from 10 %, not significantly:** 0.87 / 0.90 / 0.94 of the gap vs QR 0.77 / 0.84 /
+  0.90 (+0.10 [−0.01, +0.34], +0.07 [−0.05, +0.23], +0.04 [−0.01, +0.12]); −0.07 [−0.14, −0.02] at 5 %; within ±0.04 of QR
+  with fixed chunks. On the 55 instances valid in both kinds, Hybrid − QR is +0.11 / +0.09 / +0.04 at 10 / 15 / 20 % on related
+  contexts against +0.06 / +0.04 / +0.06 on random ones: the extra structure buys at most a few hundredths, within noise
+  (the one CI clearing 0, +0.09 [+0.01, +0.26] at 15 %, is one of ≈ 40 unadjusted comparisons).
+- **Where it helps:** only where the query has targets (n = 37): Hybrid − QR +0.15 [−0.02, +0.48] at 10 %, EM 4/0; elsewhere
+  the graph's lower tiers displace chunk starts (−0.08 [−0.15, −0.04] at 10 % without targets).
+- 95 / 20 bar: fixed chunks QR and Hybrid EM 0.96 at 20 % (point estimate, 28 instances); symbol 0.93 best: not met.
+- Caveats: re-validation drops 22 % of related instances (a neighbourhood often answers without the required chunk), hop-2
+  files were rarely needed, AFClaude contexts are ≈ 74 % related (small corpus), 246 min CPU wall (over the 3 h budget).
+
+The Phase S recipe is unchanged: fixed-size chunks, chunk starts as the static default, query relevance (or Hybrid) when a
+query is known, the reference graph as an optional cheap signal, never alone and not at 5 %.
