@@ -1,0 +1,10 @@
+size,corpus,plan,context_id,context_tokens,chunks,eval_run,arm,selector,budget_pct,rows,runs,rep,ms,forward_calls,qpos_layers,qpos_tiled_layers
+b-32k,codesharp,0,codesharp/symbol/s0/unfiltered/p0,32768,170,0,full256,,100,32768,128,0,304893.41,128,0,0
+b-32k,codesharp,0,codesharp/symbol/s0/unfiltered/p0,32768,170,0,encode_host,,0,32768,170,0,101298.34,170,0,0
+b-32k,codesharp,0,codesharp/symbol/s0/unfiltered/p0,32768,170,0,upload_resident,,0,32768,170,0,14802.77,0,0,0
+b-32k,codesharp,0,codesharp/symbol/s0/unfiltered/p0,32768,170,0,asm_device,,0,32768,170,0,1193.02,0,0,0
+b-32k,codesharp,0,codesharp/symbol/s0/unfiltered/p0,32768,170,0,asm_host,,0,32768,170,0,9630.10,0,0,0
+b-32k,codesharp,0,codesharp/symbol/s0/unfiltered/p0,32768,170,0,tail_ordinary,,5,128,1,0,2482.62,1,0,0
+b-32k,codesharp,0,codesharp/symbol/s0/unfiltered/p0,32768,170,0,tail_qpos,,5,128,1,0,391.19,1,36,36
+b-32k,codesharp,0,codesharp/symbol/s0/unfiltered/p0,32768,170,0,single,chunk_starts,5,1638,166,0,3332.35,13,468,468
+b-32k,codesharp,0,codesharp/symbol/s0/unfiltered/p0,32768,170,0,perrun,chunk_starts,5,1638,166,0,21096.58,166,5976,5976

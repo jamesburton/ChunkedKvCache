@@ -1,5 +1,143 @@
 # G2: single-pass selective recompute on Vulkan, and does chunk reuse beat full prefill? (Phase G Task 4)
 
+## G2b: tiled ATTN_QPOS kernel (dotLLM #1540 / PR #1541) — reuse with recompute now beats full prefill
+
+**Result in one line:** with the tiled per-query-position attention, chunk reuse with single-pass selective recompute beats full prefill
+**at every measured budget (5–20 %) and size (2K–32K) when the chunks are device-resident**:
+- Speedups grow with context: ~4–8× at 2K, ~9–20× at 8K, ~13–37× at 16K; 61–67× at 32K (5 %).
+- **Host-write entries** (the Phase S store's read path) still win: 1.5–1.8× at 2K, 3.7–4.8× at 8K, 6.7–10× at 16K.
+- **Cold reuse** (encode + readback before the request) loses at 2K / 8K (0.22× / 0.5×) and roughly breaks even from 16K (1.1–1.2×).
+- **Numerics are unchanged:**
+  - Tiled vs the old reference kernel, on the same contexts and forward shape: pair (d) K 9.4e-4 vs 8.9e-4, KL 2.73e-4 for both.
+  - Quality vs Vulkan full prefill and the comparison with E4 match G2 to within a task or two.
+- The old G2 sections below (Part 1) measured the reference kernel and stay as they were.
+
+**Build and kernel.**
+- Merge: dotLLM `feature/chunk-reuse-vulkan-tiled` = `feature/chunk-reuse-vulkan` (`bac190ab`) plus a merge of
+  `perf/vulkan-attn-qpos-tiled` @ `9ddf5f00` (PR #1541, before merge). The merge is `1421f319`.
+- Our commits on top:
+  - `9236e053`: the recomputer refuses a model without ATTN_QPOS up front (`SupportsQueryPositionAttention`); the tests know about the
+    tiled kernel; new tiled-vs-reference test.
+  - `7bef8f38`: the lab logs the kernel and a `qpos_tiled_layers` column.
+- **Measured commit:** `9ddf5f00`'s kernel. The later `3ebc0959` (regenerated scalar GQA blobs; `*_qpos` blobs unchanged) and the dev merge
+  of #1541 were not re-measured.
+- The `ref` arms set `DOTLLM_VULKAN_ATTN_QPOS=ref`, which loads the old #1534 kernel only.
+- Every timed recompute arm records `qpos_tiled_layers` = 36 × forwards (tiled) or 0 (ref), so the routing is verified per row of the CSVs.
+- **Every single-pass forward is capped at 128 rows**, so each GPU submit stays short (≤ ~0.3 s for recompute submits; full prefill uses
+  512-row blocks, 256 at 32K).
+
+### Tests (synthetic model, `logs/g2b-unit-tests.log`)
+
+- ChunkReuse + query-position suite:
+  - Tiled: 307 / 308 pass, 1 skipped (their benchmark).
+  - `DOTLLM_VULKAN_ATTN_QPOS=ref`: 306 / 308 pass, 2 skipped (benchmark; our tiled-vs-ref test).
+- **Two of our tests had pinned the reference kernel's plain-F32 exactness.** They are now kernel-aware: tight when the reference kernel ran,
+  the cross-kernel 1e-2 when the tiled one did.
+  - All positions recomputed vs the CPU full prefill: 1e-4 (reference) or 1e-2 (tiled).
+  - Row 0 and single-vs-per-run at L-1 (the per-run tail row takes the ordinary kernel): same pattern.
+- **Tiled vs the CPU on the synthetic model:** 1.8e-3 (the reference kernel gave 5e-6). Tiled vs the Vulkan full prefill: 2.6e-3.
+- **New test:** tiled vs reference kernel on a scattered selection, within 1e-2, with the routing checked through
+  `AttentionQueryPositionsTiledCount`.
+
+### Speed (timing groups, 3 repeats, median over contexts of the per-context median; every arm `qpos_tiled_layers` > 0)
+
+Warm TTFT = device-copy assembly (incl. RoPE shift) + single-pass recompute, chunk_starts selection; ratio = full prefill / TTFT.
+
+| ctx (contexts) | full prefill | 5 % | 10 % | 20 % | host-write entries (5–20 %) | cold: encode + host write (5–20 %) |
+|---|---:|---|---|---|---|---|
+| 2K (8) | 1.56 s | 0.20 s (**7.8×**) | 0.27 s (**5.9×**) | 0.38 s (**4.1×**) | 1.5–1.8× | 0.22× |
+| 8K (2) | 19.7 s | 1.00 s (**19.7×**) | 1.33 s (**14.9×**) | 2.10 s (**9.4×**) | 3.8–4.8× | 0.48–0.50× |
+| 16K (1) | 71.0 s | 1.94 s (**36.6×**) | not run | 5.01 s (**14.2×**) | 7.0–10.0× | 1.13–1.19× |
+| 32K (1, 1 repeat) | 305 s (256-row blocks; G1's 512-row prefill of another 32K context: 274 s) | 4.5 s (**67×**; 61× against 274 s) | not run | not run | 21–24× (5 %) | 2.4–2.7× (5 %) |
+
+**Repeat runs (the 2K and 8K timing groups were rerun because of the disclosed GPU overlap; `timing-b-{2k,8k}-r2.csv`):**
+- The **reuse side reproduces.** Warm TTFT at 2K: 0.25 / 0.33 / 0.46 s at 5 / 10 / 20 %, against 0.20 / 0.27 / 0.38 s. At 8K: 0.98 / 1.32 / 2.12 s,
+  against 1.00 / 1.33 / 2.10 s.
+- The reruns were noisier: from 21:59 UTC another session's full Debug unit-test run (`chunk-cache` worktree, `testhost` PID 9368) ran
+  alongside, holding neither lock.
+  - At 8K it inflated one context's full prefill to 31 s, against 19 s.
+  - Its speedups (2K 4.0–7.4×, 8K 11.7–25.7×) are therefore not used. The first-run figures above are the primary ones.
+- The first run had dotllm-97's ~60 short unit tests at an unknown time, but its repeat spreads were ≤ 1.16 on every recompute and
+  full-prefill arm. The exceptions were a few assembly repeats (up to 4.3×, one repeat each; the medians absorb them).
+
+- **The attention-kernel control flips.** The same 128 rows recomputed one row inside the cache (ATTN_QPOS) are now **faster** than as the
+  tail through the ordinary kernel:
+
+  | ctx | tiled ATTN_QPOS | ordinary flash-coopmat tail |
+  |---|---:|---:|
+  | 2K | 74 ms | 177 ms |
+  | 8K | 145 ms | 655 ms |
+  | 16K | 226 ms | 1.25 s |
+
+  The old reference kernel took 3.3 s (2K) to 18.5 s (8K) for the same rows.
+- **Same-build A/B (`ref` arm, 2K, afclaude, chunk_starts 5 %):**
+  - Single pass: 1.34 s (ref) vs 0.11 s (tiled), 12× faster.
+  - 102-row control: 2.53 s vs ~0.07 s.
+- **Random selections cost the same as chunk_starts in the single pass** (within ~10 %).
+- **Per-run is now the slow mode:** 2.5–5× slower than the single pass for chunk_starts, and 17–34× for random selections, which need one
+  forward per ~1.25 rows. Only the single pass makes reuse pay.
+- **Where the time goes at 20 %:**
+  - The recompute is ~75 % of TTFT at 2K and 8K (0.29 / 0.38 s; 1.59 / 2.10 s); assembly is the rest.
+  - At 2K, host-write assembly (0.77 s) is now the largest cost when entries are not device-resident.
+  - Encode + readback (6 s at 2K, 36 s at 8K, 52 s at 16K) is what keeps cold reuse from winning. G1's `ReadRows` request still matters
+    for the store's write path.
+
+### Break-even (with the tiled kernel)
+
+Reuse is not near any break-even with warm entries: 20 % recompute at 2K costs 0.29 s of a 1.48 s budget (full prefill − assembly).
+- **Highest budget that still breaks even at 2K:** the recompute is ~linear in rows at ~0.7 ms per row (0.11 s / 102 rows → 0.29 s /
+  410 rows). It would take ~2,000 rows, essentially the whole context, so at 2K reuse with recompute wins for any budget up to ~100 %.
+  This is an extrapolation.
+- **With host-write assembly at 2K:** break-even near ~95 % (0.77 s assembly + 0.7 ms per row against 1.56 s). Also an extrapolation.
+
+### Numerics (2K eval, 20 contexts / 28 tasks, and 8K eval, 2 contexts; 128-row batches)
+
+| pair | 2K tiled | 2K ref (5 contexts, same shape) | 8K tiled | floor |
+|---|---|---|---|---|
+| (d) Vulkan prefill in 128-row blocks vs all positions single-pass in 128-row batches over a cache one row longer | K 7.9e-4 / V 1.5e-3 (20 contexts); same 5 contexts: 9.4e-4 / 1.8e-3; KL 2.65e-4, top-1 0.997, \|Δ NLL\| ≤ 0.031, EM 28/28 | K 8.9e-4 / V 1.7e-3; KL 2.73e-4 | K 6.3e-4 / V 1.2e-3; KL 2.7e-4 | G2 (d) at 512 rows: 5.0e-4 / 9.5e-4, KL 2.6e-4 |
+| per-run vs single pass, per recomputed row | ≤ 0.80× (b, 64) all-layer, ≤ 1.03× worst layer | — | ≤ 0.2× (b, 64) whole cache | (b, 64) |
+| CPU per-run vs Vulkan single pass (random 10 %, 6 contexts / 10 tasks) | K/V 1.12× / 1.09× of (a); KL 4.0e-3 | — | — | (a) |
+
+- **Pair (d) at 128 rows sits ~1.6–2.4× the (b, 2048) floor on means, with heavy p99 tails (up to ~20×).** The reference kernel shows the
+  same at this shape on the same contexts (K 8.9e-4 vs 9.4e-4; p99 ratio 20.8 vs 20.3). So the tail belongs to the 128-row pair, not to
+  the tiled kernel. Logits are unaffected: KL 2.7e-4 either way, the same as G2's 512-row (d).
+- **The tiled kernel adds nothing measurable to the recompute numerics:** every K/V and logits figure is within a few % of the reference
+  kernel at the same shape.
+
+### Quality (2K, 28 tasks, single pass, tiled; vs Vulkan full prefill)
+
+| arm | KL vs full | top-1 | masked-call NLL (full 0.43) | EM (full 28) |
+|---|---:|---:|---:|---:|
+| naive | 0.372 | 0.827 | 4.86 | 5 |
+| chunk_starts 5 / 10 / 20 % | 0.112 / 0.116 / 0.068 | 0.93 / 0.94 / 0.96 | 1.79 / 1.92 / 0.99 | 18 / 17 / 24 |
+| random 5 / 10 / 20 % | 0.337 / 0.326 / 0.281 | 0.84 / 0.84 / 0.85 | 4.27 / 4.11 / 3.42 | 8 / 6 / 11 |
+
+- Same tasks and selections as E4 (CPU): arm means within 0.04 nats, except random 20 % (−0.11). EM within 1 task, except random 20 %
+  (+3).
+- The kernel does not change quality. What limits reuse now is quality, not speed:
+  - Even at 20 %, chunk_starts gets 24 of 28 masked calls (full prefill: 28), and random 11.
+  - Better selectors (query relevance, hybrid; Task 5 probe) are the next lever. At 8K the KL to full is 0.19–0.37 for chunk_starts
+    (5 unvalidated tasks).
+
+### Verdict
+
+**Yes: with the tiled kernel, reuse with single-pass recompute beats full prefill on this iGPU** at every measured budget (5–20 %) and size
+(2K–32K), when the chunks are device-resident (4–37×). With host-written entries it also wins (1.5–10×). Only cold reuse loses at 2K / 8K.
+The remaining gap to full-prefill quality (EM 24 / 28 at 20 % with the best structural selector) is now the binding constraint, not speed.
+
+Caveats:
+- Seed 0; 8 / 2 / 1 / 1 contexts; medians without bootstrap intervals.
+- 16K and 32K are one context each (32K: one repeat).
+- The tiled kernel was measured at `9ddf5f00` before its merge.
+- **Overlap (disclosed by dotllm-97):** their #1540 agent ran ~60 short GPU unit tests during the first G2b timing groups, without the lock.
+  Rerunning 2K and 8K reproduced the reuse timings. The reruns were themselves overlapped by another session's unit-test run, and their
+  full-prefill times are inflated, so the first run stays primary.
+- No machine misbehaviour during G2b (no heartbeat gaps, no resets).
+
+---
+
+# Part 1: G2 with the reference ATTN_QPOS kernel (dotLLM #1534), as measured before #1540
+
 **Result in one line:** single-pass selective recompute on Vulkan is correct, but it is **slow**. It matches the per-run loop and the CPU
 within the floors, and its attention kernel adds no more error than a 512-vs-2048-row batching change. With the current per-query-position
 attention, **chunk reuse with recompute roughly ties full prefill at the smallest budget on the smallest context, and loses everywhere

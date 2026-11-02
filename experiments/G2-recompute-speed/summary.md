@@ -17,7 +17,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (410 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 508 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 11.40 s: 22.4×. ATTN_QPOS total 15.1 µs per (row × visible key) over 36 layers; the ordinary tail 1.2 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 1.66 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 1.66 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -43,7 +43,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 189 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 3.75 s: 19.8×. ATTN_QPOS total 14.8 µs per (row × visible key) over 36 layers; the ordinary tail 1.5 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 1.65 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 1.65 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -64,7 +64,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 183 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 3.28 s: 17.9×. ATTN_QPOS total 12.9 µs per (row × visible key) over 36 layers; the ordinary tail 1.4 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 1.63 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 1.63 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -84,7 +84,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 684 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 18.51 s: 27.0×. ATTN_QPOS total 17.8 µs per (row × visible key) over 36 layers; the ordinary tail 5.3 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 19.12 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 19.12 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -109,7 +109,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (64 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 876 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 68.44 s: 78.1×. ATTN_QPOS total 65.4 µs per (row × visible key) over 36 layers; the ordinary tail 13.7 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 68.63 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 68.63 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -129,7 +129,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (64 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 687 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 19.62 s: 28.5×. ATTN_QPOS total 18.7 µs per (row × visible key) over 36 layers; the ordinary tail 10.7 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 68.46 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 68.46 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -148,7 +148,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (64 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 712 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 19.72 s: 27.7×. ATTN_QPOS total 18.8 µs per (row × visible key) over 36 layers; the ordinary tail 11.1 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 68.70 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 68.70 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -167,7 +167,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (409 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 38.30 s; one row earlier [L-k-1, L-1) (ATTN_QPOS) 60.74 s: 1.6×. ATTN_QPOS total 18.6 µs per (row × visible key) over 36 layers; the ordinary tail 93.6 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 19.30 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 19.30 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -190,7 +190,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 177 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 74 ms: 0.4×. ATTN_QPOS total 0.3 µs per (row × visible key) over 36 layers; the ordinary tail 1.4 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 1.56 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 1.56 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -200,6 +200,32 @@ Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row bloc
 | random | 5 % | 102 | 98 | 106 ms | 1 | 1.87 s | 17.66× | 196 ms | 7.94× | 196 ms | 7.94× | 873 ms | 1.78× | 6.98 s | 0.22× |
 | random | 10 % | 205 | 183 | 165 ms | 2 | 3.53 s | 21.43× | 255 ms | 6.10× | 255 ms | 6.10× | 932 ms | 1.67× | 7.04 s | 0.22× |
 | random | 20 % | 410 | 328 | 280 ms | 4 | 6.27 s | 22.34× | 371 ms | 4.20× | 371 ms | 4.20× | 1.05 s | 1.49× | 7.16 s | 0.22× |
+
+## Speed, b-2k-r2 (8 contexts, median L 2048, median 15 symbol chunks)
+
+Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
+
+| arm | median | [min, max] | rep | tok/s |
+|---|---:|---|---:|---:|
+| full512 | 1.84 s | [1.61 s, 2.77 s] | 1.49 | 1,110 |
+| full2048 | 1.89 s | [1.67 s, 2.73 s] | 1.24 | 1,082 |
+| encode_host | 7.63 s | [5.97 s, 10.15 s] | — | 268 |
+| upload_resident | 1.69 s | [1.06 s, 2.88 s] | — | 1,214 |
+| asm_host | 1.18 s | [696 ms, 2.10 s] | 2.18 | 1,731 |
+| asm_device | 133 ms | [87 ms, 192 ms] | 2.03 | 15,431 |
+
+**Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 181 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 82 ms: 0.5×. ATTN_QPOS total 0.3 µs per (row × visible key) over 36 layers; the ordinary tail 1.4 ms per row.
+
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 1.84 s.
+
+| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| chunk_starts | 5 % | 102 | 14 | 118 ms | 1 | 376 ms | 3.18× | 251 ms | 7.35× | 251 ms | 7.35× | 1.30 s | 1.42× | 8.93 s | 0.21× |
+| chunk_starts | 10 % | 205 | 14 | 196 ms | 2 | 653 ms | 3.33× | 329 ms | 5.61× | 329 ms | 5.61× | 1.38 s | 1.34× | 9.01 s | 0.20× |
+| chunk_starts | 20 % | 410 | 12 | 325 ms | 4 | 800 ms | 2.46× | 457 ms | 4.03× | 457 ms | 4.03× | 1.51 s | 1.22× | 9.14 s | 0.20× |
+| random | 5 % | 102 | 98 | 117 ms | 1 | 2.03 s | 17.38× | 250 ms | 7.38× | 250 ms | 7.38× | 1.30 s | 1.42× | 8.93 s | 0.21× |
+| random | 10 % | 205 | 183 | 190 ms | 2 | 3.78 s | 19.91× | 323 ms | 5.72× | 323 ms | 5.72× | 1.37 s | 1.34× | 9.00 s | 0.20× |
+| random | 20 % | 410 | 328 | 334 ms | 4 | 7.51 s | 22.50× | 467 ms | 3.95× | 467 ms | 3.95× | 1.52 s | 1.22× | 9.15 s | 0.20× |
 
 ## Speed, b-2k-ref (1 contexts, median L 2045, median 12 symbol chunks)
 
@@ -215,7 +241,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (102 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 173 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 2.53 s: 14.7×. ATTN_QPOS total 12.4 µs per (row × visible key) over 36 layers; the ordinary tail 1.7 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 1.55 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 1.55 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -236,7 +262,7 @@ Median over contexts of the per-context median over repeats; [min, max] over con
 
 **Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 655 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 145 ms: 0.2×. ATTN_QPOS total 0.1 µs per (row × visible key) over 36 layers; the ordinary tail 5.1 ms per row.
 
-Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, 19.73 s.
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 19.73 s.
 
 | selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -246,6 +272,75 @@ Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row bloc
 | random | 5 % | 410 | 388 | 507 ms | 4 | 13.77 s | 27.17× | 1.02 s | 19.33× | 1.02 s | 19.33× | 4.09 s | 4.82× | 39.76 s | 0.50× |
 | random | 10 % | 819 | 735 | 946 ms | 7 | 27.17 s | 28.71× | 1.46 s | 13.51× | 1.46 s | 13.51× | 4.53 s | 4.35× | 40.20 s | 0.49× |
 | random | 20 % | 1638 | 1304 | 1.70 s | 13 | 51.77 s | 30.50× | 2.21 s | 8.92× | 2.21 s | 8.92× | 5.28 s | 3.73× | 40.95 s | 0.48× |
+
+## Speed, b-8k-r2 (2 contexts, median L 8190, median 62 symbol chunks)
+
+Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
+
+| arm | median | [min, max] | rep | tok/s |
+|---|---:|---|---:|---:|
+| full512 | 25.18 s | [19.31 s, 31.05 s] | 1.62 | 325 |
+| full2048 | 25.13 s | [19.63 s, 30.62 s] | 1.12 | 326 |
+| encode_host | 35.42 s | [33.36 s, 37.48 s] | — | 231 |
+| upload_resident | 10.87 s | [6.38 s, 15.36 s] | — | 753 |
+| asm_host | 4.22 s | [4.04 s, 4.41 s] | 1.39 | 1,939 |
+| asm_device | 482 ms | [464 ms, 500 ms] | 1.10 | 16,994 |
+
+**Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 659 ms; one row earlier [L-k-1, L-1) (ATTN_QPOS) 152 ms: 0.2×. ATTN_QPOS total 0.1 µs per (row × visible key) over 36 layers; the ordinary tail 5.1 ms per row.
+
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 25.13 s.
+
+| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| chunk_starts | 5 % | 410 | 61 | 496 ms | 4 | 2.37 s | 4.78× | 978 ms | 25.68× | 978 ms | 25.68× | 4.72 s | 5.32× | 40.14 s | 0.63× |
+| chunk_starts | 10 % | 819 | 56 | 842 ms | 7 | 3.51 s | 4.17× | 1.32 s | 18.98× | 1.32 s | 18.98× | 5.07 s | 4.96× | 40.49 s | 0.62× |
+| chunk_starts | 20 % | 1638 | 52 | 1.64 s | 13 | 4.50 s | 2.75× | 2.12 s | 11.84× | 2.12 s | 11.84× | 5.86 s | 4.29× | 41.29 s | 0.61× |
+| random | 5 % | 410 | 388 | 517 ms | 4 | 14.59 s | 28.22× | 999 ms | 25.15× | 999 ms | 25.15× | 4.74 s | 5.30× | 40.17 s | 0.63× |
+| random | 10 % | 819 | 735 | 888 ms | 7 | 29.46 s | 33.18× | 1.37 s | 18.35× | 1.37 s | 18.35× | 5.11 s | 4.92× | 40.54 s | 0.62× |
+| random | 20 % | 1638 | 1304 | 1.67 s | 13 | 49.95 s | 29.94× | 2.15 s | 11.69× | 2.15 s | 11.69× | 5.89 s | 4.26× | 41.32 s | 0.61× |
+
+## Speed, b-16k (1 contexts, median L 16384, median 91 symbol chunks)
+
+Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
+
+| arm | median | [min, max] | rep | tok/s |
+|---|---:|---|---:|---:|
+| full512 | 70.97 s | [70.97 s, 70.97 s] | 1.05 | 231 |
+| encode_host | 52.47 s | [52.47 s, 52.47 s] | — | 312 |
+| upload_resident | 9.05 s | [9.05 s, 9.05 s] | — | 1,811 |
+| asm_host | 5.93 s | [5.93 s, 5.93 s] | 1.01 | 2,765 |
+| asm_device | 750 ms | [750 ms, 750 ms] | 1.08 | 21,859 |
+
+**Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 1.25 s; one row earlier [L-k-1, L-1) (ATTN_QPOS) 226 ms: 0.2×. ATTN_QPOS total 0.1 µs per (row × visible key) over 36 layers; the ordinary tail 9.8 ms per row.
+
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 70.97 s.
+
+| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| chunk_starts | 5 % | 819 | 86 | 1.19 s | 7 | 6.00 s | 5.04× | 1.94 s | 36.59× | 1.94 s | 36.59× | 7.12 s | 9.97× | 59.59 s | 1.19× |
+| chunk_starts | 20 % | 3277 | 75 | 4.26 s | 26 | 9.03 s | 2.12× | 5.01 s | 14.17× | 5.01 s | 14.17× | 10.18 s | 6.97× | 62.65 s | 1.13× |
+| random | 5 % | 819 | 774 | 1.29 s | 7 | 43.32 s | 33.69× | 2.04 s | 34.87× | 2.04 s | 34.87× | 7.21 s | 9.84× | 59.68 s | 1.19× |
+| random | 20 % | 3277 | 2594 | 4.70 s | 26 | 146.07 s | 31.09× | 5.45 s | 13.03× | 5.45 s | 13.03× | 10.63 s | 6.68× | 63.10 s | 1.12× |
+
+## Speed, b-32k (1 contexts, median L 32768, median 170 symbol chunks)
+
+Median over contexts of the per-context median over repeats; [min, max] over contexts; "rep" = worst max/min ratio over a context's repeats.
+
+| arm | median | [min, max] | rep | tok/s |
+|---|---:|---|---:|---:|
+| full256 | 304.89 s | [304.89 s, 304.89 s] | — | 107 |
+| encode_host | 101.30 s | [101.30 s, 101.30 s] | — | 323 |
+| upload_resident | 14.80 s | [14.80 s, 14.80 s] | — | 2,214 |
+| asm_host | 9.63 s | [9.63 s, 9.63 s] | — | 3,403 |
+| asm_device | 1.19 s | [1.19 s, 1.19 s] | — | 27,466 |
+
+**Attention-kernel control** (128 contiguous rows, one forward each, same matmul shape): as the tail [L-k, L) (ordinary kernel) 2.48 s; one row earlier [L-k-1, L-1) (ATTN_QPOS) 391 ms: 0.2×. ATTN_QPOS total 0.1 µs per (row × visible key) over 36 layers; the ordinary tail 19.4 ms per row.
+
+Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, 304.89 s.
+
+| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | TTFT host = asm(host)+single | speedup | cold = encode(host)+asm(host)+single | speedup |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| chunk_starts | 5 % | 1638 | 166 | 3.33 s | 13 | 21.10 s | 6.33× | 4.53 s | 67.37× | 4.53 s | 67.37× | 12.96 s | 23.52× | 114.26 s | 2.67× |
 
 ## Numerics and quality, 2k-eval
 

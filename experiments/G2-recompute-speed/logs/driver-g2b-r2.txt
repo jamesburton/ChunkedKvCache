@@ -1,0 +1,6 @@
+[gpu-lock] acquired by 'chunk-vulkan-t4b' (pid 25708): ChunkedkvCache G2 recompute b-2k-timing-r2 (Phase G Task 4), Qwen3-4B
+start b-2k-timing-r2 (b-2k-r2)
+b-2k-timing-r2: exit 0 in 13.7 min
+[gpu-lock] acquired by 'chunk-vulkan-t4b' (pid 27064): ChunkedkvCache G2 recompute b-8k-timing-r2 (Phase G Task 4), Qwen3-4B
+start b-8k-timing-r2 (b-8k-r2)
+b-8k-timing-r2: exit 0 in 21.0 min

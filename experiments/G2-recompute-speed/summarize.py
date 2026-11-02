@@ -72,18 +72,17 @@ def speed(label):
     p()
     p('| arm | median | [min, max] | rep | tok/s |')
     p('|---|---:|---|---:|---:|')
-    for arm in ['full512', 'full2048', 'encode_host', 'upload_resident', 'asm_host', 'asm_device']:
+    for arm in ['full256', 'full512', 'full2048', 'encode_host', 'upload_resident', 'asm_host', 'asm_device']:
         key = (arm, '', 100 if arm.startswith('full') else 0)
         if key not in per:
             continue
         m, lo, hi, _ = stat(key)
         p(f'| {arm} | {fmt_ms(m)} | [{fmt_ms(lo)}, {fmt_ms(hi)}] | {spread(key)} | {L / (m / 1000):,.0f} |')
     p()
-    if ('full512', '', 100) not in per:
+    fulls = [stat((a, '', 100))[0] for a in ('full256', 'full512', 'full2048') if (a, '', 100) in per]
+    if not fulls:
         return
-    full = stat(('full512', '', 100))[0]
-    full2 = stat(('full2048', '', 100))[0] if ('full2048', '', 100) in per else float('nan')
-    best_full = min(x for x in (full, full2) if x == x)
+    best_full = min(fulls)
     asm_d = stat(('asm_device', '', 0))[0]
     ups = stat(('upload_resident', '', 0))[0] if ('upload_resident', '', 0) in per else float('nan')
     asm_h = stat(('asm_host', '', 0))[0]
@@ -99,7 +98,7 @@ def speed(label):
           f'(ordinary kernel) {fmt_ms(o)}; one row earlier [L-k-1, L-1) (ATTN_QPOS) {fmt_ms(q)}: {q / o:.1f}×. ATTN_QPOS total '
           f'{q * 1000 / keys:.1f} µs per (row × visible key) over 36 layers; the ordinary tail {o / k_rows:.1f} ms per row.')
         p()
-    p(f'Full prefill reference for the TTFT ratios: the faster of 512- and 2048-row blocks, {fmt_ms(best_full)}.')
+    p(f'Full prefill reference for the TTFT ratios: the fastest full-prefill block size measured, {fmt_ms(best_full)}.')
     p()
     p('| selector | budget | rows | runs (per-run forwards) | single-pass | forwards | per-run | per-run / single | '
       'TTFT warm = asm(device)+single | speedup vs full | best arm TTFT warm = asm(device)+min(single, per-run) | speedup | '
@@ -236,7 +235,7 @@ for label in ['2k', '2k-cap128', '2k-profile', '8k', '16k-first', '16k-rerun-par
     speed(label)
 PAIRS = [('d_vk2048_vs_qpos', 'b_vk512_vs_vk2048'), ('d_vk128_vs_qpos', 'b_vk512_vs_vk2048'), ('d_vk512_vs_qpos128', 'b_vk512_vs_vk2048'), ('d_vk512_vs_qpos', 'b_vk512_vs_vk2048'),
          ('perrun_vs_single', 'b_vk512_vs_vk64'), ('a_cpuperrun', 'a_cpu_vs_vk512')]
-for label in ['b-2k', 'b-2k-ref', 'b-8k', 'b-16k', 'b-32k']:
+for label in ['b-2k', 'b-2k-r2', 'b-2k-ref', 'b-8k', 'b-8k-r2', 'b-16k', 'b-32k']:
     if label == 'b-2k':
         p('# Part 2: G2b (tiled ATTN_QPOS, dotLLM #1540 / PR #1541; 128-row cap)')
         p()
