@@ -29,7 +29,8 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 ## Global Constraints
 
 - **Preconditions.** Phase S Task 7 (CLI, uncommitted in `chunk-cache` at plan time) is committed and reviewed before any
-  Lane L or T task starts. E4c (`experiments/E4c-text-first-chunks/`) runs independently; only Task 19 waits for it.
+  Lane L or T task starts. E4c (`experiments/E4c-text-first-chunks/`) is reviewed (`review-e4c-report.md`): `lines-512` wire eligibility granted on
+  correctness, quality not validated (validation moves to Phase I5).
 - **Worktrees and branches** (never switch branches in the shared `C:\Development\dotLLM` checkout):
   - Lane L and T: `C:\Development\dotLLM\.claude\worktrees\chunk-cache`, branch `feature/chunk-cache`.
   - Vulkan backend and tiled kernel: `chunk-vulkan` worktree, branches `feature/chunk-reuse-vulkan` (`bac190ab`) and
@@ -105,7 +106,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 | C client | 6 (its review fixes run in parallel with everything else) → (7 ∥ 8); no dependency on any store task (L or I1b), so it may ship first (user-approved) | `chunk-client` | CPU; fully parallel with L and S |
 | S server (we implement, dotllm-97 / user file and merge) | 9 (done, `38c0314b`) → 10 → 11 → 13 → 14; 12 parallel with 10–11 in worktree `chunk-server-lineage` (separate files: `DotLLM.Engine/PromptCache/*`); 15 → 16 after Lane L Task 4 is merged into the server branch | `chunk-server` | CPU (Task 15 has one GPU-lock step) |
 | T tooling | 17 → 18, after Tasks 4, 5, 6 and the Task 16 endpoint contract | `chunk-cache` | CPU |
-| gated | 19 (E4c), 20 (tiled kernel, GPU), 21 (release doc), 23 (E10, GPU, after the tiled kernel supports the dtypes) | various | see each |
+| gated | 19 (after 5b; E4c eligibility granted), 20 (tiled kernel, GPU), 21 (release doc), 23 (E10, GPU, after the tiled kernel supports the dtypes) | various | see each |
 | PR split | 22 (Vulkan wiring PRs), any time after Task 20; docs plus local branches only | `chunk-vulkan` + new worktrees off `dev` | CPU (re-verification GPU steps under the lock) |
 
 **Gates (stop and report to the user):**
@@ -113,7 +114,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   dotllm-97.
 - **G-I1, after Tasks 6–14:** I1a wire and client contract done; the user decides on issues / PRs for Lane S and the client.
 - **G-I2, after Tasks 15–18:** I1b store and I3 tooling done; the CodeSharp handoff (Appendix A) may be sent with approval.
-- **G-E4c:** Task 19 runs only on E4c's outcome. **G-tiled:** Task 20 needs the G2b result and a GPU slot via the user.
+- **G-E4c: passed for eligibility** (correctness); Task 19 runs after Task 5b. Quality validation is a Phase I5 gate. **G-tiled:** Task 20 needs the G2b result and a GPU slot via the user.
 - **G-REL:** Task 21 produces the release doc; the user does the account setup; nothing is pushed by us.
 - **G-D, G-I5:** later phases at the end of this plan, each with its own gate.
 
@@ -300,7 +301,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   public static class WireChunking
   {
       public static IReadOnlySet<string> Eligible { get; }          // {"symbol-512"}
-      public static IReadOnlySet<string> PendingE4c { get; }        // {"lines-512"}; moves to Eligible in Task 19
+      public static IReadOnlySet<string> PendingE4c { get; }        // {"lines-512"}; moves to Eligible in Task 19 (after 5b)
       public static bool IsWireChunker(string chunkerName);         // Eligible.Contains
       public static string Hash(string text);                       // "sha256:" + lowercase hex of UTF-8
       public static RoundTripReport VerifyRoundTrip(IReadOnlyList<Chunk> chunks, ITokenizer tokenizer);
@@ -738,7 +739,7 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
   rejected with a message naming the new one.
 
 - [ ] **Step 1: Write failing tests:** `EachVerb_Json_MatchesSchema` (schemas from §7.2 as JSON Schema files under
-  `tests/.../Fixtures/v1/schemas/`); `Build_DeniedFiles_CountedNotChunked`; `Build_Lines512_IsPendingE4c_RefusedWithoutLab`;
+  `tests/.../Fixtures/v1/schemas/`); `Build_DeniedFiles_CountedNotChunked`; `Build_ChunkerNotInEligible_RefusedWithoutLab` (`fixed-512`; `lines-512` once Task 19 has run);
   `Build_Encode_CallsPrewarm_NeverPut`; `Evict_WithoutServerOrOffline_Exit2`; `Offline_SecondWriter_ExitsNonZeroWithinTimeout`
   (Review Focus); `Select_HashEqualsWireHash`; `Json_Error_IsObjectOnStdout_NonZeroExit`; `ApiKey_FromEnvOnly`;
   `ServerBacked_IndexNamedByServerModel`; `MaxEncodeTokens_CountsTokens`; `Evict_OldModeName_RejectedWithHint`.
@@ -783,21 +784,31 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
 - [ ] **Step 4:** Rerun; PASS; mutants: tool output re-shaped; dry-run default false.
 - [ ] **Step 5:** Add a Claude Code `.mcp.json` example to `docs/CHUNK_CACHE.md`; commit. **G-I2: stop and report.**
 
-### Task 19: `lines-512` on the wire (gate G-E4c) [CPU]
+### Task 19: `lines-512` on the wire (eligibility granted; after Task 5b) [CPU]
 
-Runs only after E4c's README states its outcome (§5.11).
+E4c review (`.superpowers/sdd/2026-11-01-phase-s/review-e4c-report.md`): wire eligibility is **granted on correctness**
+(0 / 3,996 round-trip failures, by construction; 15 / 15 mutants killed); **quality is not validated**, so `auto_validated`
+stays `[]` and validation is Phase I5's (§5.11). The chunker is renamed `LinesChunker` / `lines-512` in Task 5.
 
 **Files:**
-- Modify (dotLLM): `Corpus/WireChunking.cs`, server `ChunkCacheEndpoint.cs` capabilities, `chunk-cost-model.json`
-  (validated table); CLI and MCP chunker enums
-- Test: `WireChunkingTests`, `ChunkCacheEndpointTests`
+- Modify (dotLLM): `Corpus/LinesChunker.cs` (size probes), `Corpus/WireChunking.cs`, server `ChunkCacheEndpoint.cs`
+  capabilities (`wire_chunkers`), CLI and MCP chunker enums
+- Test: `tests/DotLLM.Tests.Unit/ChunkReuse/LinesChunkerTests.cs` (the renamed `TextFirstFixedChunkerTests`),
+  `WireChunkingTests`, `ChunkCacheEndpointTests`
 
-- [ ] **Step 1:** Read the E4c README. If text-first fixed chunks match id-sliced ones within the CIs: write failing tests
-  `Lines512_IsWireEligible` and `Capabilities_ListLines512`; otherwise write `Lines512_StaysPending` and update
-  §2 / §5.5 wording in `docs/CHUNK_CACHE.md` ("bar unmet for every wire-eligible chunker").
-- [ ] **Step 2:** Run; expected FAIL. **Step 3:** Move the name (or not) and add the enum value. **Step 4:** PASS; mutant:
-  list not updated in capabilities.
-- [ ] **Step 5:** `auto_validated` stays `[]` until Phase I5 runs QR on the GPU; commit; report to the user.
+- [ ] **Step 1: Write failing tests:** `SizeProbes_UseChunkTokenization` (a piece whose raw `EncodeRaw` count fits but whose
+  `ChunkTokenization.Encode` count does not is cut earlier); `NearLimit_SpecialSpelling_StaysWithinLimitAndRoundTrips` (a
+  `<think>` spelling straddling the 512-token boundary); `Codesharp_CompactionSummaryValidation57_ThinkTag_RoundTrips` (the
+  file text from the frozen corpus as a fixture); `Lines512_IsWireEligible`; `Capabilities_ListLines512`;
+  `AutoValidated_StaysEmpty`.
+- [ ] **Step 2:** Run; expected FAIL.
+- [ ] **Step 3:** Switch every size probe in `LinesChunker` to `ChunkTokenization.Encode` (Task 5b); move `lines-512` from
+  `PendingE4c` to `Eligible`; add the enum values.
+- [ ] **Step 4:** Rerun; PASS; mutants: probes on bare `EncodeRaw`; list not updated in capabilities; `auto_validated`
+  populated.
+- [ ] **Step 5:** Rerun the round-trip census (`ChunkKvLab roundtrip`, three frozen corpora, `lines-512` and `symbol-512`)
+  under the new tokenisation; record counts and chunk-id hashes beside Task 5b's re-pin in `experiments/corpus.md`
+  (expected 0 failures); commit; write the issue draft; report to the user.
 
 ### Task 20: Speed checkpoint with the tiled kernel; cost-model calibration (gate G-tiled) [GPU-lock]
 
@@ -919,7 +930,11 @@ Each item keeps the Global Constraints (TDD, mutants, review, CPU-vs-Vulkan sepa
 ## Phase I5: applied reuse (later; gate G-I5)
 
 **Gate G-I5:** engine assembly into the server's paged / quantised / multi-slot KV (L5, dotLLM session), #1540 merged to
-`dev`, a Vulkan QR probe (Phase G Task 5), and E4c for fixed chunks. Planned separately when those hold. Scope: segmented
+`dev`, a Vulkan QR probe (Phase G Task 5), and `lines-512` quality validation (below). Planned separately when those hold.
+**Validation tasks (E4c follow-up, §5.11):** (1) finish the 9 missing E4c contexts; (2) same-context comparison: chunk
+the same context text both ways (`lines-512` vs the reference chunking) and compare on the same call sites; (3) the
+query-before-context arm. Pass = non-inferiority: lower 95 % CI bound of the gap-recovered difference vs the reference
+≥ −0.10, on ≥ 30 matched instances; only then does a (chunker × selector × budget) cell enter `auto_validated`. Scope: segmented
 tokenisation for applied policies (§5.3 item 7); approximate snapshot rows (uses Task 12); `balanced` / `fast`; `auto` gates
 (validated table entries only after an E4-style measurement on the model and backend; cost model from Task 20); TTFT and
 accuracy metrics of §12.5. The default stays `exact`.
@@ -945,6 +960,7 @@ model parts are Task 4b); recurrent models (Phase T); the E7 quality half.
 
 ## Self-review notes
 
+- 2026-11-02 rev 5: E4c review: Task 19 after 5b (eligibility granted, size probes, census); validation to I5.
 - 2026-11-02 rev 4: Task 7 review: Task 4b (L9 adopted), 5b re-pin and file list, Task 17/18 divergences, L3 note.
 - 2026-11-02 rev 3: Task 9 done; rulings 19–21 folded into Tasks 5b (new), 10, 11, 13, 15, 17.
 - Spec coverage: L1 Tasks 15, 17; L2 Task 3; L3 Task 4; L4 Task 1; L5 gate G-I5; L6 Task 5; L7 Task 12; L8 Task 2; L9 Task 4b

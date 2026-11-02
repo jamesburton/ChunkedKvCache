@@ -69,8 +69,8 @@ Evidence labels:
      - fixed chunk starts reach EM 0.91;
      - symbol chunks reach 0.81 (E4) and at best 0.93 (E4b).
    - One model; small, clustered samples.
-   - **E4's fixed chunks were token-id slices, which the wire cannot carry** (§5.3, item 4). The quality of wire-eligible
-     fixed chunks is unmeasured until E4c.
+   - **E4's fixed chunks were token-id slices, which are not guaranteed to round-trip on the wire** (§5.3, item 4). The
+     quality of wire-eligible `lines-512` chunks is not yet validated (§5.11).
 4. **Recompute is currently slower than full prefill.** G2 measured Vulkan with Qwen3-4B **[verified, G2 README as revised]**.
 
    | ctx | naive assembly vs full prefill | with recompute (reuse TTFT vs full prefill) |
@@ -242,16 +242,17 @@ Fields at their default values may be omitted, and the reference client omits th
    - **`SymbolChunker` qualifies** (each chunk's text goes through `EncodeRaw` alone) **[verified]**, **except** the pieces
      of an over-long single line, which it cuts as token slices. `build` marks those pieces wire-ineligible.
    - **`FixedSizeChunker` (`fixed-512`) does not qualify.** It tokenises the whole file and slices the ids
-     (`Corpus/FixedSizeChunker.cs:41`) **[verified]**. Its chunk text `Decode(slice)` need not re-encode to the slice:
-     - pre-tokenisation can split differently at the cut;
-     - a cut inside a multi-byte character decodes to U+FFFD.
+     (`Corpus/FixedSizeChunker.cs:41`) **[verified]**. Its chunk text `Decode(slice)` is **not guaranteed to round-trip**
+     to the slice: measured 2 / 3,972 failures (1 in 2,518 cuts), both at cuts inside a multi-byte UTF-8 character
+     (E4c review); the rate depends on corpus and tokenizer. Pre-tokenisation can also split differently at a cut. The
+     text-first-only rule stays: rare is not never.
    - **The wire chunker is `lines-512`:** accumulate whole lines up to 512 tokens (tokenising each candidate piece
      alone), and split an over-long line at a character boundary. It exists as `TextFirstFixedChunker` (`fixed-text-512`,
      used by E4c) and is renamed `lines-512` in Phase I (user decision, 2026-11-02).
    - **`build` asserts the round trip.** For every chunk it checks `EncodeRaw(MarkUntrustedSpecials(text)) == ids` (item 6)
      and flags or drops the rest.
-   - **Fixed-size chunks on the wire are blocked on E4c** (§5.11). E4's quality numbers for fixed chunks come from
-     id-sliced chunks and do not transfer until E4c measures text-first fixed chunks.
+   - **`lines-512` is wire-eligible** (E4c review: correctness, 0 / 3,996 round-trip failures). Its **quality is not
+     validated**: E4's fixed-chunk numbers come from id-sliced chunks and do not transfer; validation is §5.11, in I5.
 5. **Spans are located in the rendered prompt** (blocking item B3).
    - **How.** The server renders the chat template with each chunk span replaced by a unique placeholder, then checks that
      the rendered output contains the placeholder intact and that the text around it is what the template produced for
@@ -304,7 +305,7 @@ Fields at their default values may be omitted, and the reference client omits th
 |---|---|
 | **`exact`** (default) | output identical to the unannotated request (§5.3, items 7–8). Annotations are used for counts and, under the admission rules, for background encode |
 | `shadow` | as `exact`, plus the server computes the reuse plan without using it: hits, misses, predicted rows, predicted TTFT from the cost model. Use it to measure hit rates on real traffic |
-| `balanced` | reuse with recompute. Selector: `query_relevance` if the probe exists on the backend, else `chunk_starts`. Budget 20 %. **Below the 95 / 20 bar** with `chunk_starts`, and with symbol chunks under any selector (§2.3); the response says which applied. The only configuration that met the bar (QR on fixed chunks) is blocked on E4c and on a GPU probe |
+| `balanced` | reuse with recompute. Selector: `query_relevance` if the probe exists on the backend, else `chunk_starts`. Budget 20 %. **Below the 95 / 20 bar** with `chunk_starts`, and with symbol chunks under any selector (§2.3); the response says which applied. The only configuration that met the bar (QR on id-sliced fixed chunks) needs `lines-512` validation (§5.11) and a GPU probe |
 | `fast` | chunk starts at 5 %, or naive with `budget: 0`. Documented as lossy |
 | `auto` | **opt-in only.** Reuse is applied when both gates pass; otherwise `exact` is applied, with a reason |
 
@@ -423,7 +424,7 @@ The response carries a top-level `chunk_cache` object:
 ```
 
 - `selectors` lists only what runs on the active backend (`query_relevance` appears once a probe exists).
-- `wire_chunkers` lists text-first chunkers (`lines-512` after E4c).
+- `wire_chunkers` lists text-first chunkers (`symbol-512`, `lines-512`).
 - A 404 means "no convention: strip annotations".
 - **Versioning.** Additive fields keep `v: 1`; a change of meaning (hash rule, span units, positioning) bumps `v`. Store
   format changes are invisible on the wire, because they change `ChunkKey`.
@@ -443,17 +444,20 @@ reached:
 
 For scale: at F32, a 100K-token session's worth of misses is about 28 GB.
 
-### 5.11 Required experiment E4c (blocks fixed-size chunks on the wire)
+### 5.11 E4c: eligibility vs validation of text-first fixed chunks
 
-- **Scheduled by the controller; not run here.**
-- **Run:** re-run one E4 fixed-chunk cell (one corpus, 3 seeds, QR and chunk starts, 10 % and 20 %) with **text-first**
-  fixed chunks (`lines-512`, §5.3 item 4).
-- **Compare** it with E4's id-sliced fixed chunks on the same call sites: gap recovered, EM, and the 95 / 20 bar.
-- **Extra arm:** QR with the query placed **before** the context (the agent-loop layout, §5.6).
-- **Outcomes:**
-  - if text-first fixed chunks match id-sliced ones within the CIs, `lines-512` becomes wire-eligible and enters
-    `auto_validated` for QR at 20 %;
-  - if not, the bar is unmet for every wire-eligible chunker, and `balanced` stays documented as below the bar.
+Two separate questions:
+- **Eligibility (wire correctness): granted.** E4c's round-trip census found 0 / 3,996 failures for `lines-512` (by
+  construction; 15 / 15 mutants), so `lines-512` may be used on the wire and listed in `wire_chunkers`.
+- **Validation (quality): open, moved to Phase I5.** E4c ran one fixed-chunk cell (QR and chunk starts, 10 % and 20 %, plus
+  the query-before-context arm) but 9 contexts are missing and the comparison was not on the same context text.
+  - **Remaining work:** finish the 9 missing contexts; a **same-context** comparison (chunk the same context text both
+    ways, `lines-512` vs the reference chunking, same call sites); the query-before-context arm (§5.6).
+  - **Pass rule (non-inferiority):** the lower 95 % CI bound of the gap-recovered difference vs the reference chunking is
+    ≥ −0.10, on ≥ 30 matched instances.
+  - **Outcomes:** pass → that (chunker × selector × budget) cell may enter `auto_validated`; fail → the 95 / 20 bar is
+    unmet for every wire-eligible chunker and `balanced` stays documented as below the bar. Until then `auto_validated` is
+    empty.
 
 ## 6. Transparent mode
 
@@ -507,7 +511,7 @@ MCP tool in v1.
 {"input": {"required": ["path"], "properties": {
    "store": {"type": "string"}, "server": {"type": "string"},
    "path": {"type": "string", "description": ".sln/.slnx/.csproj or folder"},
-   "chunker": {"enum": ["symbol-512"], "default": "symbol-512", "description": "lines-512 after E4c"},
+   "chunker": {"enum": ["symbol-512"], "default": "symbol-512", "description": "lines-512 is wire-eligible; not quality-validated"},
    "configuration": {"type": "string", "default": "Release"},
    "encode": {"type": "boolean", "default": false, "description": "queue all missing chunks via the server's prewarm"},
    "max_encode_tokens": {"type": "integer"}}},
@@ -958,7 +962,7 @@ Measured on replayed recorded sessions, with 3 session sets and bootstrap interv
 | plumbing loss | annotations dropped by the re-hash, template, cap or mutator checks / registered spans | < 5 %, every drop attributed |
 | `exact` neutrality | output and `cached_tokens` with the path installed vs without | identical |
 | TTFT (after #1540, opt-in) | full prefill / applied reuse, Vulkan | report, with the prediction error |
-| accuracy (after E4c, opt-in) | scripted, checkable tasks, `balanced` vs `exact` | ≥ 95 % at ≤ 20 % recompute |
+| accuracy (after §5.11 validation, opt-in) | scripted, checkable tasks, `balanced` vs `exact` | ≥ 95 % at ≤ 20 % recompute |
 | overhead | handler and decorator time; store bytes per session | < 5 ms; report |
 
 ### 12.6 Test plan
@@ -1016,7 +1020,7 @@ decorator position; CRLF; the guard cannot cut at spans.
 | I2 | `DotLLM.ChunkCache.Client` (.NET) | I1a contract | NuGet via the dotLLM release path; permissive licence |
 | I3 | `chunkcache` CLI (Phase S Task 7, revised by L1 and L6) + MCP server (§7.2) | I1b | tool package |
 | I4 | CodeSharp spike, `exact` / `shadow` | I1–I3; CodeSharp B3 + B9 built first (`shadow` hit rates may run before) | CodeSharp branch |
-| I5 | applied reuse (`balanced`, `fast`, `auto` gates) | **engine work L5**, **dotLLM #1540**, a Vulkan QR probe, **E4c** for fixed chunks | report to the user |
+| I5 | applied reuse (`balanced`, `fast`, `auto` gates) | **engine work L5**, **dotLLM #1540**, a Vulkan QR probe, **`lines-512` validation** (§5.11) | report to the user |
 | I6 | compact F16 / Q8_0 rows, direct-to-device loading, cold-disk TTFT | the dotLLM Vulkan owner | — |
 | I7 | transparent mode; Claude Code recipe | I1b, namespaces | docs |
 
