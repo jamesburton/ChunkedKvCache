@@ -172,7 +172,8 @@ re-validated. 3 corpora × 2 chunkers × 3 seeds, 58 valid instances / 12 cluste
 - **Where it helps:** only where the query has targets (n = 37): Hybrid − QR +0.15 [−0.02, +0.48] at 10 %, EM 4/0; elsewhere
   the graph's lower tiers displace chunk starts (−0.08 [−0.15, −0.04] at 10 % without targets).
 - 95 / 20 bar: fixed chunks QR and Hybrid EM 0.96 at 20 % (point estimate, 28 instances); symbol 0.93 best: not met.
-- Caveats: re-validation drops 22 % of related instances (a neighbourhood often answers without the required chunk), hop-2
+- Caveats: re-validation drops 22 % of related instances (11 of 16 because full prefill itself misses the call in the
+  crowded neighbourhood, 5 because the context answers without the required chunk), hop-2
   files were rarely needed, AFClaude contexts are ≈ 74 % related (small corpus), 246 min CPU wall (over the 3 h budget).
 
 The Phase S recipe is unchanged: fixed-size chunks, chunk starts as the static default, query relevance (or Hybrid) when a

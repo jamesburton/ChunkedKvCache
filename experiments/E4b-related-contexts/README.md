@@ -36,10 +36,8 @@ fixed chunks; Hybrid is ahead by +0.04 to +0.10 from 10 % (point estimates sligh
 behind at 5 %. E4's conclusion stands for related contexts: the reference graph is at best a small add-on to query relevance,
 not a replacement.
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="../E4-structure-aware/figures/gap-dark.png"><img alt="E4 (random contexts) gap-recovered curves for comparison" src="../E4-structure-aware/figures/gap-light.png"></picture>
-
-(The figure is E4's random-context curve, for orientation; E4b's numbers are in the tables below and in `curves.csv`, set
-`related-valid|<chunker>|pooled`.)
+No figure: the numbers are in the tables below and in `curves.csv` (sets `related-valid|<chunker>|pooled`, and the random
+control `random-valid|…`).
 
 ## Why
 
@@ -152,10 +150,12 @@ The QR-vs-Graph order changes with the seed on symbol chunks, as in E4.
 Per corpus (`summary.md`, "Structure per context"): codesharp gains the most edges with fixed chunks (5.8 vs 0.1) but
 symbol codesharp contexts still have none in 55 % of cases (median 0); DocAgent symbol contexts rise to 15.0 edges.
 
-Validity drops because a neighbourhood also helps the model without the required chunk (EM without it: up to 0.29 per
-cell, vs ≤ 0.44 in E4's DocAgent/fixed) and because full prefill fails more often in a crowded neighbourhood (full EM 0.50
-on DocAgent symbol seed 0). The kept-valid related set is therefore selected toward instances where the neighbourhood does
-not already give the answer away; it is not a random sample of "related" instances.
+Validity drops mainly because **full prefill misses the masked call more often in a neighbourhood context**: of the 16
+invalid related instances, 11 fail because full prefill does not reproduce the call (full EM 0.50–0.86 in ten of 18 cells;
+E4: 5 of 88) and 5 because the context without the required chunk already solves it (E4: 8 of the 65 instances with a
+`drop_required` row); none fails on the NLL margin alone. Related distractors are plausible competitors (similar names and
+signatures), which confuses even full prefill. The related-valid set is therefore selected toward instances the model still
+solves in a crowded neighbourhood; it is not a random sample of "related" instances.
 
 ## Run
 
@@ -194,7 +194,7 @@ file self-edges, unshuffled order, hop rewrite) are killed by fixture and assert
 
 - **Small, clustered samples**: 58 valid instances from 17 call sites in 12 definition files; per-corpus cells have 2–6
   clusters. Only pooled statements are worth reading; per-corpus tables are in `summary.md`.
-- **Selection by re-validation** (above): related contexts lose 22 % of instances, not at random.
+- **Selection by re-validation** (above): related contexts lose 22 % of instances, not at random (mostly full-prefill misses).
 - **Hop 2 is barely exercised** (hop-1 files filled the related half), and AFClaude's contexts are ≈ 74 % related because the
   rest of that 9-file corpus is exhausted. A "neighbourhood" is a property of these three repos.
 - **Same call sites, different contexts**: the cross-kind comparison pairs (task, chunker, seed) across two different
