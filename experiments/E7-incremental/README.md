@@ -5,16 +5,24 @@ symbol (one member per chunk) versus fixed-size 512-token chunking, and what sha
 
 **Answer (codesharp, 300 edits).**
 
-- **Symbol chunking re-encodes about one method per edit:**
-  - mean **254 tokens**, median 234 (p10 77, p90 487, max 779)
-  - one chunk in 291 of 300 edits, two chunks in the other 9
-- **Fixed-512 re-encodes everything from the edit point to the end of the file**, because almost every edit changes the
-  file's token count:
-  - mean **6,590 tokens**, median 842 (p10 265, p90 9,266, max 95,407)
-  - a heavy tail from long files: one 136K-token file accounts for the largest costs
-- **Ratio of means, fixed / symbol: 25.9×** (95 % CI 4.6–56.3, bootstrap over files).
-  - Median of the per-edit ratios: 4.8×.
+- **Symbol chunking re-encodes about one method per edit:** median **234 tokens** (p10 77, p90 487, max 779).
+  - One chunk in 291 of 300 edits, two chunks in the other 9.
+- **Fixed-512 re-encodes everything from the edit point to the end of the file**, because 298 of 300 edits change the
+  file's token count: median **842 tokens** (p10 265, p90 9,266, max 95,407).
+- **Fixed / symbol, typical edit:**
+  - **ratio of medians** (842 / 234): **3.6×** (95 % CI 3.0–5.4)
+  - **median of the per-edit ratios**: **4.8×** (95 % CI 3.3–6.9)
   - Fixed re-encodes more than symbol in 271 of 300 edits.
+  - CIs are from a bootstrap over files.
+- **Estimated CPU time per median edit:** about **5 s with symbol chunks against about 17 s with fixed chunks**, at about
+  20 ms per token for Qwen3-4B. This is not a wall-clock measurement.
+- **The mean is driven by one file.** Means are symbol 254 and fixed 6,590 tokens, a ratio of 25.9× (CI 4.6–56.3).
+  - `src/CodeSharp.Tui/TuiApp.cs` (136K tokens) holds 30 of the 300 edits (10 %), but **81 % of all fixed re-encoded
+    tokens**.
+  - It is the only edited file over 32K tokens.
+  - **Without it, the ratio of means is 5.6×** (symbol 244, fixed 1,378; 270 edits).
+  - The 25.9× and its wide CI mostly reflect how often the bootstrap draws that one file. Use them only as an
+    outlier-driven upper figure.
 - **Hit rate in the edited file** (share of its chunks still valid):
   - symbol: mean 0.87, median 0.91
   - fixed: mean 0.44, median 0.50
@@ -29,8 +37,10 @@ cross-chunk quality of the reused cache; that is E4's question. Measured on CPU,
   - `ChunkIndex` (`src/DotLLM.ChunkReuse/Store/ChunkIndex.cs`)
   - lab command `ChunkKvLab e7` (`benchmarks/ChunkKvLab/E7Command.cs`)
   - run script [`run.ps1`](run.ps1), summariser [`summarize.py`](summarize.py)
-  - log [`logs/e7-codesharp.log`](logs/e7-codesharp.log), per-edit rows [`raw/codesharp.csv`](raw/codesharp.csv), tables
-    [`summary.md`](summary.md)
+  - log [`logs/e7-codesharp.log`](logs/e7-codesharp.log), per-edit rows [`raw/codesharp.csv`](raw/codesharp.csv)
+    (SHA-256 `a67f242e34a8a96b41c7bba601dc0ffb25cbebfc1464dcee6021614a3dcdafa9`), tables [`summary.md`](summary.md)
+  - The run used `6aa4832d`. The later review-fix commit `6ec51265` changes `ChunkIndex` (path normalisation, load
+    validation, eviction helpers) but not the diff/status semantics that E7 measures, so the CSV was not regenerated.
 - **Corpus:** the frozen codesharp snapshot from [`../corpus.md`](../corpus.md)
   (`git archive` of `8e2adbd8`, `src`, 1,390 files). Both chunkings reproduced their pinned chunk-id hashes:
   - symbol-512 `bf397403…`: 7,586 chunks, 1,535,738 tokens
@@ -87,12 +97,28 @@ Paired comparison (bootstrap that resamples files, 10,000 resamples, 95 % percen
 | symbol mean | 254 | 230–278 |
 | fixed mean | 6,590 | 1,121–14,918 |
 | fixed − symbol (mean paired difference) | 6,335 | 881–14,645 |
-| fixed / symbol (ratio of means) | 25.9 | 4.6–56.3 |
+| **fixed / symbol (ratio of medians, 842 / 234)** | **3.59** | 3.00–5.37 |
+| **fixed / symbol (median of per-edit ratios)** | **4.83** | 3.28–6.86 |
+| fixed / symbol (ratio of means; outlier-driven, see below) | 25.9 | 4.6–56.3 |
 
-The fixed mean and its wide CI come from a few long files. `src/CodeSharp.Tui/TuiApp.cs` is 136K tokens, and its five
-worst edits re-encode 89K–95K tokens each with fixed chunks, against 114–496 tokens with symbol chunks. 30 of the 300 edits
-fall in files over 32K tokens. The median is the more typical figure: 842 against 234 tokens, and 4.8× for the median
-per-edit ratio.
+**One file dominates the means.** `src/CodeSharp.Tui/TuiApp.cs` (136K tokens) is the only edited file over 32K tokens.
+- Edit sites are uniform over methods, and that file holds about 10 % of the 2,698 sites, so it received 30 of the 300
+  edits.
+- Its five worst edits re-encode 89K–95K tokens each with fixed chunks, against 114–496 tokens with symbol chunks.
+- It accounts for **81 % of all fixed re-encoded tokens**.
+
+Without it (270 edits):
+
+| quantity | value |
+|---|---:|
+| symbol mean | 244 |
+| fixed mean | 1,378 |
+| ratio of means | **5.6×** |
+| ratio of medians | 3.3× |
+| median per-edit ratio | 4.0× |
+
+With one cluster carrying 81 % of the fixed mass, the CI of the ratio of means mostly reflects how often the bootstrap
+draws that file (0, 1 or more times). It is not an informative interval.
 
 ### By edit kind
 
@@ -115,12 +141,26 @@ per-edit ratio.
 | symbol | 11 | 1.03 / 1 / 2 | 0.869 / 0.909 | 0.852 / 0.903 | 0.99983 |
 | fixed | 5 | 13.4 / 2 / 187 | 0.440 / 0.500 | 0.493 / 0.521 | 0.99569 |
 
+**Denominators:**
+- The edited-file token hit rate divides by the file's whole-file token count after the edit.
+- Symbol chunks are tokenised one chunk at a time, so their token sum is slightly larger. Over the corpus it is 1,535,738
+  against 1,530,303 for whole-file tokenisation, a difference of 0.4 %. The symbol token hit rate is therefore a slight
+  underestimate.
+- The whole-corpus column divides by each chunker's own corpus total.
+
 ### Where symbol chunking is not "exactly the method"
 
 - **Methods over 512 tokens** are split into several chunks at statement boundaries. This applied to 44 of the 300 edits.
   - For those, symbol chunking re-encodes only the touched pieces: mean 407 of 787 method tokens.
-  - 9 edits re-encoded 2 chunks. The likely cause is that the greedy re-split moved one boundary inside a long method; this
-    was not checked edit by edit.
+- **9 edits re-encoded 2 chunks.** Seven of them are inserts (+10 tokens). The method sizes were 391, 505, 508, 525, 595,
+  602, 661, 765 and 782 tokens, and three causes cover them:
+  - **The 512-token cap was crossed.** Two methods of 505 and 508 tokens went over 512 after the insert, so their chunk was
+    split into two.
+  - **A glued header pushed the chunk over the cap.** The 391-token method's chunk also carries the file header (usings,
+    namespace and type declaration are glued to the first member), so it was already close to 512.
+  - **A boundary moved inside a long method.** For the methods over 512 tokens, the greedy re-split moved one boundary.
+- **Symbol re-encodes more than the method's own tokens in 180 of 300 edits.** Usually the excess is just the edit's token
+  delta. The largest excess, 387 tokens, is a glued file header.
 - **Fixed was cheaper in 25 of 300 edits** (and equal in 4). Each of these re-encoded one fixed chunk: the last, partly
   filled chunk of the file, which is smaller than the edited method's symbol chunk (for example 31 against 175 tokens).
 
@@ -130,18 +170,30 @@ Re-chunking and re-keying one edited file takes these times per edit (median / p
 - symbol: 9.2 / 486 ms (Roslyn parse plus per-chunk tokenisation; the slow tail is the 136K-token file)
 - fixed: 3.3 / 108 ms
 
-Building the whole index from scratch took 5.0 s (symbol) and 1.6 s (fixed) for 1.5 M tokens. Only one process was running.
-The CPU was shared with other sessions' builds.
+Building the whole index from scratch took 5.0 s (symbol) and 1.6 s (fixed) for 1.5 M tokens. This was one E7 process,
+on a CPU shared with other sessions' builds.
 
 ## What this means
 
 - **For a cache that lives across edits, symbol chunking re-encodes roughly the edited method and nothing else.**
-  - That is 254 tokens on average, about the method's own size.
-  - Fixed-size chunking re-encodes from the edit point to the end of the file: a median 3.6× more tokens, and 26× more on
-    average because of long files.
-- **Rough time cost on CPU.** With the store probe's CPU encode rate for Qwen3-4B (about 10–12 s per 512-token chunk, so
-  about 20 ms per token, measured on a contended CPU, [`../store/README.md`](../store/README.md)), the mean edit costs
-  about **5 s with symbol chunks and about 2 minutes with fixed chunks**. This is an estimate, not a measurement.
+  - That is a median of 234 tokens, about the method's own size (median 237).
+  - Fixed-size chunking re-encodes from the edit point to the end of the file.
+  - For a typical edit, fixed re-encodes **3.6× more tokens (ratio of medians), or 4.8× (median per-edit ratio)**.
+  - On average it is 5.6× more without the one 136K-token file, and 26× with it.
+- **Rough time cost on CPU (estimate, not measured).** The store probe's CPU encode rate for Qwen3-4B is about 10–12 s per
+  512-token chunk, so about 20 ms per token; it was measured on a contended CPU ([`../store/README.md`](../store/README.md)).
+  At that rate:
+
+  | edit | symbol | fixed |
+  |---|---:|---:|
+  | median edit | about 5 s | about 17 s |
+  | mean edit, 270 edits without TuiApp.cs | about 5 s | about 28 s |
+  | mean edit, all 300 | about 5 s | about 2.2 min |
+- **The fixed-512 cost is structural.** Slicing a file's token stream into fixed lengths means that any change in token
+  count re-keys every chunk after the edit. This happened in 298 of 300 edits, so the result is nearly arithmetic.
+  - Symbol chunks are also smaller: median 157 tokens against 512.
+  - **Untested middle ground:** fixed-size chunks that realign at member or line boundaries, or content-defined
+    boundaries (a rolling hash, which needs no parser), would keep the tail of the file stable.
 - **This complements the G2 default of fixed-size chunks.** G2 chose fixed-size chunks for *query-time quality and speed*.
   E7 is about *maintenance cost under edits*, and on that axis the symbol chunker wins clearly.
   - A store could index with symbol chunks and still assemble contexts in fixed-size order. The two choices are

@@ -95,6 +95,27 @@ def main():
                            ("fixed / symbol (ratio of means)", ratio, "{:.2f}")):
         lo, hi = cluster_bootstrap(rows, fn)
         print(f"| {label} | {fmt.format(fn(rows))} | {fmt.format(lo)} .. {fmt.format(hi)} |")
+    def med_ratio(rs):
+        return q([r["fixed_reencoded_tokens"] for r in rs], .5) / q([r["symbol_reencoded_tokens"] for r in rs], .5)
+
+    def per_edit_ratio(rs):
+        return q([r["fixed_reencoded_tokens"] / r["symbol_reencoded_tokens"] for r in rs], .5)
+
+    for label, fn in (("fixed / symbol (ratio of medians)", med_ratio),
+                      ("fixed / symbol (median of per-edit ratios)", per_edit_ratio)):
+        lo, hi = cluster_bootstrap(rows, fn)
+        print(f"| {label} | {fn(rows):.2f} | {lo:.2f} .. {hi:.2f} |")
+    fixed_by_file = defaultdict(float)
+    for r in rows:
+        fixed_by_file[r["file"]] += r["fixed_reencoded_tokens"]
+    top = max(fixed_by_file, key=fixed_by_file.get)
+    rest = [r for r in rows if r["file"] != top]
+    top_n = len(rows) - len(rest)
+    top_tokens = max(r["file_tokens_after"] for r in rows if r["file"] == top)
+    print(f"\nLargest contributor: `{top}` ({top_tokens:.0f} tokens), {top_n}/{len(rows)} edits, "
+          f"{fixed_by_file[top] / sum(fixed_by_file.values()):.3f} of all fixed re-encoded tokens. Without it "
+          f"({len(rest)} edits): symbol mean {mean_of('symbol')(rest):.0f}, fixed mean {mean_of('fixed')(rest):.0f}, "
+          f"ratio of means {ratio(rest):.2f}, ratio of medians {med_ratio(rest):.2f}, median per-edit ratio {per_edit_ratio(rest):.2f}.")
     wins = sum(r["fixed_reencoded_tokens"] > r["symbol_reencoded_tokens"] for r in rows)
     ties = sum(r["fixed_reencoded_tokens"] == r["symbol_reencoded_tokens"] for r in rows)
     print(f"\nPer edit: fixed re-encodes more than symbol in {wins}/{len(rows)}, the same in {ties}, "

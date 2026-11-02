@@ -25,6 +25,10 @@ Rows: 300 edits (3 seeds x 100), 198 distinct files, 290 distinct methods.
 | fixed mean re-encoded tokens | 6590 | 1121 .. 14918 |
 | fixed - symbol (mean of paired differences) | 6335 | 881 .. 14645 |
 | fixed / symbol (ratio of means) | 25.90 | 4.58 .. 56.33 |
+| fixed / symbol (ratio of medians) | 3.59 | 3.00 .. 5.37 |
+| fixed / symbol (median of per-edit ratios) | 4.83 | 3.28 .. 6.86 |
+
+Largest contributor: `src/CodeSharp.Tui/TuiApp.cs` (136393 tokens), 30/300 edits, 0.812 of all fixed re-encoded tokens. Without it (270 edits): symbol mean 244, fixed mean 1378, ratio of means 5.65, ratio of medians 3.34, median per-edit ratio 4.03.
 
 Per edit: fixed re-encodes more than symbol in 271/300, the same in 4, less in 25.
 
