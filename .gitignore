@@ -482,3 +482,6 @@ $RECYCLE.BIN/
 *.swp
 
 .superpowers/
+
+# docs/release holds issue drafts and release plans (not build output)
+!docs/release/
