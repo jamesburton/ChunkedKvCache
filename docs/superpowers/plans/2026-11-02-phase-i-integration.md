@@ -209,7 +209,10 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 4:** Rerun; PASS; mutants: namespace not hashed; default namespace hashed as null-skip collapsing to v3.
 - [ ] **Step 5:** Commit both repos.
 
-### Task 3: Server ledger and ownership-aware orphans (L2) [CPU]
+### Task 3: Server ledger and ownership-aware orphans (L2) [CPU] — DONE (pending its small fix round)
+
+**Status:** done on `feature/chunk-cache` `37c6d3b8` (merges `9c99ed6a`, `d1f6a069`); review
+`.superpowers/sdd/2026-11-01-phase-s/review-phase-i-task3-report.md`. Its server-side consequences are in Tasks 15–17.
 
 **Files:**
 - Create (dotLLM): `src/DotLLM.ChunkReuse/Store/ServerLedger.cs`
@@ -723,15 +726,26 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
   and responses carry `chunk_store_unavailable` as a warning. Warnings `chunk_encode_queued` / `chunk_encode_skipped`.
   `on_miss: "encode"` is accepted in I1 as "queue now, bypassing only the seen-twice rule" (the request itself is still served
   `exact`; encode-then-assemble needs I5).
+- **Ledger rules (Task 3 review):** (a) if the ledger is unreadable at startup, the server **never** falls back to an empty
+  ledger (and never saves over the file); `LedgerUnreadableException` is not handled as an ordinary `IOException`: writes
+  stay disabled with a clear startup error naming the file (inference still runs; responses warn `chunk_store_unavailable`).
+  (b) Write order per entry: `Put` the entry file, then `Record` the ledger row and `Save`, all inside **one** store-lock
+  scope. (c) Budget eviction and `ServerLedger.Remove` delete an entry **file** only when no index references its key
+  (content-addressed keys can be shared with CLI indexes); otherwise only the ledger row goes.
 
 - [ ] **Step 1: Write failing tests:** `SeenOnce_NotQueued_SeenTwice_Queued`; `VolatileAndNoStore_NeverQueued`;
   `BudgetRequired_StartupFailsWithoutIt`; `OverBudget_EvictsLruLedgerRows_NeverIndexOnlyEntries`;
   `CannotFree_StopsEncoding_Warns`; `EncodesOnlyWhenIdle` (fake scheduler); `CrashMidPut_NoLoadableEntry_LedgerConsistentOnReload`
   and `DiskFull_PutFails_IsMissAndWarning` (Review Focus); `SecondServerSameRoot_FailsFast`; `IndexOnly_AdHocTextNeverStored`;
-  `EntriesTaggedWithServerBackend`; `OnMissEncode_QueuesFirstSighting_ServesExact`.
+  `EntriesTaggedWithServerBackend`; `OnMissEncode_QueuesFirstSighting_ServesExact`;
+  `UnreadableLedgerAtStartup_WritesDisabled_FileUntouched` (byte-identical ledger after startup and a request);
+  `PutRecordSave_InOneLockScope` (a second lock holder never observes a file without its row after the scope);
+  `BudgetEviction_KeyAlsoInCliIndex_KeepsFile_RemovesRowOnly`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
-- [ ] **Step 4:** Rerun; PASS; mutants: seen-once admitted; eviction ignores the budget; ledger written before the file.
+- [ ] **Step 4:** Rerun; PASS; mutants: seen-once admitted; eviction ignores the budget; ledger written before the file;
+  unreadable ledger replaced by an empty one and saved; `LedgerUnreadableException` caught as `IOException`; lock released
+  between `Put` and `Save`; evicted file deleted despite an index reference.
 - [ ] **Step 5 [GPU-lock]:** `VulkanServer_CpuWrittenStore_NoHits` (GPU-gated integration: a store encoded by a CPU server
   gives `hit: 0` in `shadow` on a Vulkan server for the same request). Coordinate the slot through the user.
 - [ ] **Step 6:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
@@ -747,7 +761,9 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
   `source.path` is given; returns `requested, already_stored, queued, queued_tokens, refused, refused_reasons`) and
   `POST /v1/chunk-cache/evict` (`mode: orphans | path | namespace | all`, `dry_run` default `true`; `path` removes K/V,
   ledger rows, the index references the server owns and sighting rows with that provenance; `namespace` / `all` remove all
-  four kinds for the caller's namespace, `all` across namespaces only for a key listed as admin in the keys file). Capabilities
+  four kinds for the caller's namespace, `all` across namespaces only for a key listed as admin in the keys file). Forget
+  (`path` / `namespace` / `all`) also clears the matching sighting rows; removing the rows and saving suffices (no
+  "forgotten" marker). File deletion follows Task 15 rule (c). Capabilities
   now report `store.entries`, `bytes`, `budget_bytes`, `dtype`: per-namespace for non-admin callers, store-wide for admin.
   The evict body's `namespace` field is honoured only for an admin key; others act on their own namespace.
   **Per-namespace budgets:** `--chunk-store-namespace-budget <bytes>` (optional, off by default). When set, budget eviction (Task 15) evicts only the writing namespace's ledger rows, so one tenant's
@@ -756,7 +772,7 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
 - [ ] **Step 1: Write failing tests:** `Prewarm_TextOnly_QueuesWithoutSightings`; `Prewarm_DeniedPath_Refused`;
   `Evict_DryRunDefault_DeletesNothing`; `Evict_Orphans_KeepsLedgerAndIndexKeys`; `Evict_Path_ForgetsAllFourKinds`;
   `Evict_Namespace_CannotTouchOtherNamespace`; `Evict_UnreadableLedger_FailsClosed`; `Capabilities_ReportsStoreFigures`;
-  `NonAdmin_EvictBodyNamespace_Ignored`; `NamespaceBudget_PrewarmEvictsOnlyOwnRows`.
+  `NonAdmin_EvictBodyNamespace_Ignored`; `NamespaceBudget_PrewarmEvictsOnlyOwnRows`; `Forget_ClearsSightings_NoMarker`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: dry run ignored; cross-namespace evict; sightings kept on forget; namespace budget
@@ -777,6 +793,8 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
 - Produces: every verb accepts `--json` and prints exactly the §7.2 output object (snake_case) on stdout, diagnostics on stderr.
   `build` deny-lists paths, marks `VerifyRoundTrip` failures and token-slice pieces wire-ineligible
   (`wire_ineligible_chunks`), refuses non-wire chunkers unless `--lab`, and with `--encode` calls `prewarm` on `--server`.
+  The CLI **never writes the ledger**. `evict --all-for-model --apply` (and any applying evict) is refused while a server owns
+  the store unless the CLI runs `--offline` and can take the ownership lock. `status --strict` fails on an unreadable ledger.
   `evict` and `prewarm` require `--server`; `--offline` lets `build --encode` and `evict` write directly while holding the
   store lock, and fails if a server ledger shows a live owner (lock held). `select` returns `hash` = `WireChunking.Hash` of the
   LF text and, when `--server` is given, `stored` from posting the selected texts as one `explain` request (text only; no
@@ -803,7 +821,9 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
 
 - [ ] **Step 1: Write failing tests:** `EachVerb_Json_MatchesSchema` (schemas from §7.2 as JSON Schema files under
   `tests/.../Fixtures/v1/schemas/`); `Build_DeniedFiles_CountedNotChunked`; `Build_ChunkerNotInEligible_RefusedWithoutLab` (`fixed-512`; `lines-512` once Task 19 has run);
-  `Build_Encode_CallsPrewarm_NeverPut`; `Evict_WithoutServerOrOffline_Exit2`; `Offline_SecondWriter_ExitsNonZeroWithinTimeout`
+  `Build_Encode_CallsPrewarm_NeverPut`; `Evict_WithoutServerOrOffline_Exit2`; `EvictAllForModelApply_ServerOwnsStore_Refused`;
+  `Offline_EvictApply_NeedsOwnershipLock`; `Cli_NeverWritesLedger` (ledger bytes unchanged after every verb);
+  `StatusStrict_UnreadableLedger_Fails`; `Offline_SecondWriter_ExitsNonZeroWithinTimeout`
   (Review Focus); `Select_HashEqualsWireHash`; `Json_Error_IsObjectOnStdout_NonZeroExit`; `ApiKey_FromEnvOnly`;
   `ServerBacked_IndexNamedByServerModel`; `MaxEncodeTokens_CountsTokens`; `Evict_OldModeName_RejectedWithHint`;
   `Build_ControlTokenSpellingTree_EligibilityUsesChunkTokenization` and `Compare_QueryWithThinkTag_UsesChunkTokenization`
@@ -1026,6 +1046,7 @@ model parts are Task 4b); recurrent models (Phase T); the E7 quality half.
 
 ## Self-review notes
 
+- 2026-11-02 rev 8: Task 3 done (`37c6d3b8`); ledger rules into Tasks 15–17.
 - 2026-11-02 rev 7: Task 5/5b done (`4bf908b7`, merged `9c99ed6a`); Task 19 trimmed; Task 17 and 13 additions from the Task 5 review.
 - 2026-11-02 rev 6: Task 2 review: namespace validity rule, namespace in index/lock names, server-assigned namespace, auth hardening, per-namespace figures and budgets.
 - 2026-11-02 rev 5: E4c review: Task 19 after 5b (eligibility granted, size probes, census); validation to I5.
