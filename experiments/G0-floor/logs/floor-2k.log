@@ -1,0 +1,537 @@
+# provenance
+utc: 2026-11-01 23:13:17
+command: ChunkKvLab floor --model C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf --names afclaude,docagent,codesharp --corpus-dirs C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016,C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016 --hashes 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938,5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7,bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb --contexts 7,7,6 --kept-dir C:\Development\ChunkedkvCache\experiments\corpus --mode kept --context 2048 --ref-block 512 --blocks 2048,96,64,8,1 --label 2k --out-dir C:\Development\ChunkedkvCache\experiments\G0-floor
+hardware: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S (16C/32T), RAM 127.1 GB; STRIX
+gpu: AMD Radeon(TM) 8060S Graphics, Windows driver 32.0.32015.7029; vulkaninfo: apiVersion=1.4.359; deviceName=AMD Radeon(TM) 8060S Graphics; driverName=AMD proprietary driver; driverInfo=26.10.1 (LLPC)
+gpu lock: HELD name='chunk-vulkan-t2' pid=74200 age=1s reason='ChunkedkvCache G0 floor 2k (Phase G Task 2): CPU vs Vulkan prefill floor, Qwen3-4B'
+os: Microsoft Windows 11 Pro 10.0.26200
+dotnet sdk: 10.0.401
+dotLLM worktree: C:\Development\dotLLM\.claude\worktrees\chunk-vulkan @ 2feffbafe7d5dc4d60869caf9d7e841c700c43d4 (branch feature/chunk-reuse-vulkan); dirty files: 0
+corpus afclaude: t8-corpus-AFClaude-b3f29c30-20261101111141 = git archive b3f29c30a2e25b3053d1d9adc8eb4068cde1ca2c of C:\Development\AFClaude; expected chunk-id sha256 (symbol-512) 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+corpus docagent: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = git archive 6683823880bc2a7d62708907c725d9eaedf3a016 of C:\Development\CSharpDocAgentFrameworkMCP; expected chunk-id sha256 (symbol-512) 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+corpus codesharp: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 of C:\Development\codesharp; expected chunk-id sha256 (symbol-512) bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
+# end provenance
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on vulkan in 5.2 s; engine 0.3.0-dev.3644.9+2feffbafe7d5dc4d60869caf9d7e841c700c43d4
+vulkan device: AMD Radeon(TM) 8060S Graphics
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on cpu in 1.0 s; engine 0.3.0-dev.3644.9+2feffbafe7d5dc4d60869caf9d7e841c700c43d4
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), symbol-512: 74 chunks, 12744 tokens (chunk tokens median 107, max 510); Decode(Encode(file)) == file for 9/9; 1.2 s
+chunk-id sha256 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\afclaude.plans.jsonl: 16 plans, identical chunk ids
+kept task ids: 16; found 16; missing 
+contexts (first task id): src/AFClaude/FoundryTools.cs:23:48 src/AFClaude/FoundryTools.cs:31:34 src/AFClaude/Program.cs:328:38 src/AFClaude/Program.cs:292:39 src/AFClaude/Program.cs:163:41 src/AFClaude/Program.cs:291:40 src/AFClaude/Program.cs:427:35
+plans: 7 contexts, 13 tasks (kept, seed 0, 3.8 s); mean context 2043 tokens, 16.0 chunks
+[floor afclaude/symbol/s0/kept/p0 L 2045 +0 s] vulkan prefill block 512 (reference)
+[floor afclaude/symbol/s0/kept/p0 L 2045 +2 s] vulkan reference evaluation blocks
+[floor afclaude/symbol/s0/kept/p0 L 2045 +3 s] read back the vulkan reference
+[floor afclaude/symbol/s0/kept/p0 L 2045 +9 s] vulkan prefill block 512 (vk512-rerun)
+[floor afclaude/symbol/s0/kept/p0 L 2045 +11 s] read back and compare c_vk512_rerun
+[floor afclaude/symbol/s0/kept/p0 L 2045 +19 s] evaluation blocks vk512-rerun
+[floor afclaude/symbol/s0/kept/p0 L 2045 +20 s] vulkan prefill block 2048 (vk2048)
+[floor afclaude/symbol/s0/kept/p0 L 2045 +22 s] read back and compare b_vk512_vs_vk2048
+[floor afclaude/symbol/s0/kept/p0 L 2045 +29 s] evaluation blocks vk2048
+[floor afclaude/symbol/s0/kept/p0 L 2045 +30 s] vulkan prefill block 96 (vk96)
+[floor afclaude/symbol/s0/kept/p0 L 2045 +34 s] read back and compare b_vk512_vs_vk96
+[floor afclaude/symbol/s0/kept/p0 L 2045 +39 s] evaluation blocks vk96
+[floor afclaude/symbol/s0/kept/p0 L 2045 +40 s] vulkan prefill block 64 (vk64)
+[floor afclaude/symbol/s0/kept/p0 L 2045 +44 s] read back and compare b_vk512_vs_vk64
+[floor afclaude/symbol/s0/kept/p0 L 2045 +51 s] evaluation blocks vk64
+[floor afclaude/symbol/s0/kept/p0 L 2045 +52 s] vulkan prefill block 8 (vk8)
+[floor afclaude/symbol/s0/kept/p0 L 2045 +64 s] read back and compare b_vk512_vs_vk8
+[floor afclaude/symbol/s0/kept/p0 L 2045 +70 s] evaluation blocks vk8
+[floor afclaude/symbol/s0/kept/p0 L 2045 +71 s] vulkan prefill block 1 (vk1)
+[floor afclaude/symbol/s0/kept/p0 L 2045 +127 s] read back and compare b_vk512_vs_vk1
+[floor afclaude/symbol/s0/kept/p0 L 2045 +133 s] evaluation blocks vk1
+[floor afclaude/symbol/s0/kept/p0 L 2045 +134 s] cpu prefill block 512
+[floor afclaude/symbol/s0/kept/p0 L 2045 +170 s] read back and compare a_cpu_vs_vk512
+[floor afclaude/symbol/s0/kept/p0 L 2045 +170 s] cpu evaluation blocks
+[floor afclaude/symbol/s0/kept/p0 L 2045 tasks 1] done in 176 s; at 3.1 min
+[floor afclaude/symbol/s0/kept/p1 L 2041 +0 s] vulkan prefill block 512 (reference)
+[floor afclaude/symbol/s0/kept/p1 L 2041 +2 s] vulkan reference evaluation blocks
+[floor afclaude/symbol/s0/kept/p1 L 2041 +4 s] read back the vulkan reference
+[floor afclaude/symbol/s0/kept/p1 L 2041 +10 s] vulkan prefill block 512 (vk512-rerun)
+[floor afclaude/symbol/s0/kept/p1 L 2041 +12 s] read back and compare c_vk512_rerun
+[floor afclaude/symbol/s0/kept/p1 L 2041 +20 s] evaluation blocks vk512-rerun
+[floor afclaude/symbol/s0/kept/p1 L 2041 +23 s] vulkan prefill block 2048 (vk2048)
+[floor afclaude/symbol/s0/kept/p1 L 2041 +26 s] read back and compare b_vk512_vs_vk2048
+[floor afclaude/symbol/s0/kept/p1 L 2041 +32 s] evaluation blocks vk2048
+[floor afclaude/symbol/s0/kept/p1 L 2041 +35 s] vulkan prefill block 96 (vk96)
+[floor afclaude/symbol/s0/kept/p1 L 2041 +39 s] read back and compare b_vk512_vs_vk96
+[floor afclaude/symbol/s0/kept/p1 L 2041 +46 s] evaluation blocks vk96
+[floor afclaude/symbol/s0/kept/p1 L 2041 +49 s] vulkan prefill block 64 (vk64)
+[floor afclaude/symbol/s0/kept/p1 L 2041 +53 s] read back and compare b_vk512_vs_vk64
+[floor afclaude/symbol/s0/kept/p1 L 2041 +60 s] evaluation blocks vk64
+[floor afclaude/symbol/s0/kept/p1 L 2041 +63 s] vulkan prefill block 8 (vk8)
+[floor afclaude/symbol/s0/kept/p1 L 2041 +74 s] read back and compare b_vk512_vs_vk8
+[floor afclaude/symbol/s0/kept/p1 L 2041 +80 s] evaluation blocks vk8
+[floor afclaude/symbol/s0/kept/p1 L 2041 +83 s] vulkan prefill block 1 (vk1)
+[floor afclaude/symbol/s0/kept/p1 L 2041 +138 s] read back and compare b_vk512_vs_vk1
+[floor afclaude/symbol/s0/kept/p1 L 2041 +145 s] evaluation blocks vk1
+[floor afclaude/symbol/s0/kept/p1 L 2041 +148 s] cpu prefill block 512
+[floor afclaude/symbol/s0/kept/p1 L 2041 +178 s] read back and compare a_cpu_vs_vk512
+[floor afclaude/symbol/s0/kept/p1 L 2041 +178 s] cpu evaluation blocks
+[floor afclaude/symbol/s0/kept/p1 L 2041 tasks 4] done in 201 s; at 6.5 min
+[floor afclaude/symbol/s0/kept/p2 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor afclaude/symbol/s0/kept/p2 L 2048 +2 s] vulkan reference evaluation blocks
+[floor afclaude/symbol/s0/kept/p2 L 2048 +3 s] read back the vulkan reference
+[floor afclaude/symbol/s0/kept/p2 L 2048 +9 s] vulkan prefill block 512 (vk512-rerun)
+[floor afclaude/symbol/s0/kept/p2 L 2048 +11 s] read back and compare c_vk512_rerun
+[floor afclaude/symbol/s0/kept/p2 L 2048 +17 s] evaluation blocks vk512-rerun
+[floor afclaude/symbol/s0/kept/p2 L 2048 +18 s] vulkan prefill block 2048 (vk2048)
+[floor afclaude/symbol/s0/kept/p2 L 2048 +21 s] read back and compare b_vk512_vs_vk2048
+[floor afclaude/symbol/s0/kept/p2 L 2048 +26 s] evaluation blocks vk2048
+[floor afclaude/symbol/s0/kept/p2 L 2048 +27 s] vulkan prefill block 96 (vk96)
+[floor afclaude/symbol/s0/kept/p2 L 2048 +31 s] read back and compare b_vk512_vs_vk96
+[floor afclaude/symbol/s0/kept/p2 L 2048 +37 s] evaluation blocks vk96
+[floor afclaude/symbol/s0/kept/p2 L 2048 +38 s] vulkan prefill block 64 (vk64)
+[floor afclaude/symbol/s0/kept/p2 L 2048 +42 s] read back and compare b_vk512_vs_vk64
+[floor afclaude/symbol/s0/kept/p2 L 2048 +48 s] evaluation blocks vk64
+[floor afclaude/symbol/s0/kept/p2 L 2048 +49 s] vulkan prefill block 8 (vk8)
+[floor afclaude/symbol/s0/kept/p2 L 2048 +61 s] read back and compare b_vk512_vs_vk8
+[floor afclaude/symbol/s0/kept/p2 L 2048 +67 s] evaluation blocks vk8
+[floor afclaude/symbol/s0/kept/p2 L 2048 +68 s] vulkan prefill block 1 (vk1)
+[floor afclaude/symbol/s0/kept/p2 L 2048 +149 s] read back and compare b_vk512_vs_vk1
+[floor afclaude/symbol/s0/kept/p2 L 2048 +156 s] evaluation blocks vk1
+[floor afclaude/symbol/s0/kept/p2 L 2048 +157 s] cpu prefill block 512
+[floor afclaude/symbol/s0/kept/p2 L 2048 +185 s] read back and compare a_cpu_vs_vk512
+[floor afclaude/symbol/s0/kept/p2 L 2048 +186 s] cpu evaluation blocks
+[floor afclaude/symbol/s0/kept/p2 L 2048 tasks 1] done in 191 s; at 9.7 min
+[floor afclaude/symbol/s0/kept/p3 L 2040 +0 s] vulkan prefill block 512 (reference)
+[floor afclaude/symbol/s0/kept/p3 L 2040 +2 s] vulkan reference evaluation blocks
+[floor afclaude/symbol/s0/kept/p3 L 2040 +3 s] read back the vulkan reference
+[floor afclaude/symbol/s0/kept/p3 L 2040 +9 s] vulkan prefill block 512 (vk512-rerun)
+[floor afclaude/symbol/s0/kept/p3 L 2040 +11 s] read back and compare c_vk512_rerun
+[floor afclaude/symbol/s0/kept/p3 L 2040 +17 s] evaluation blocks vk512-rerun
+[floor afclaude/symbol/s0/kept/p3 L 2040 +18 s] vulkan prefill block 2048 (vk2048)
+[floor afclaude/symbol/s0/kept/p3 L 2040 +20 s] read back and compare b_vk512_vs_vk2048
+[floor afclaude/symbol/s0/kept/p3 L 2040 +25 s] evaluation blocks vk2048
+[floor afclaude/symbol/s0/kept/p3 L 2040 +26 s] vulkan prefill block 96 (vk96)
+[floor afclaude/symbol/s0/kept/p3 L 2040 +30 s] read back and compare b_vk512_vs_vk96
+[floor afclaude/symbol/s0/kept/p3 L 2040 +35 s] evaluation blocks vk96
+[floor afclaude/symbol/s0/kept/p3 L 2040 +35 s] vulkan prefill block 64 (vk64)
+[floor afclaude/symbol/s0/kept/p3 L 2040 +39 s] read back and compare b_vk512_vs_vk64
+[floor afclaude/symbol/s0/kept/p3 L 2040 +46 s] evaluation blocks vk64
+[floor afclaude/symbol/s0/kept/p3 L 2040 +47 s] vulkan prefill block 8 (vk8)
+[floor afclaude/symbol/s0/kept/p3 L 2040 +59 s] read back and compare b_vk512_vs_vk8
+[floor afclaude/symbol/s0/kept/p3 L 2040 +66 s] evaluation blocks vk8
+[floor afclaude/symbol/s0/kept/p3 L 2040 +66 s] vulkan prefill block 1 (vk1)
+[floor afclaude/symbol/s0/kept/p3 L 2040 +157 s] read back and compare b_vk512_vs_vk1
+[floor afclaude/symbol/s0/kept/p3 L 2040 +163 s] evaluation blocks vk1
+[floor afclaude/symbol/s0/kept/p3 L 2040 +164 s] cpu prefill block 512
+[floor afclaude/symbol/s0/kept/p3 L 2040 +193 s] read back and compare a_cpu_vs_vk512
+[floor afclaude/symbol/s0/kept/p3 L 2040 +194 s] cpu evaluation blocks
+[floor afclaude/symbol/s0/kept/p3 L 2040 tasks 1] done in 200 s; at 13.0 min
+[floor afclaude/symbol/s0/kept/p4 L 2043 +0 s] vulkan prefill block 512 (reference)
+[floor afclaude/symbol/s0/kept/p4 L 2043 +2 s] vulkan reference evaluation blocks
+[floor afclaude/symbol/s0/kept/p4 L 2043 +3 s] read back the vulkan reference
+[floor afclaude/symbol/s0/kept/p4 L 2043 +11 s] vulkan prefill block 512 (vk512-rerun)
+[floor afclaude/symbol/s0/kept/p4 L 2043 +14 s] read back and compare c_vk512_rerun
+[floor afclaude/symbol/s0/kept/p4 L 2043 +21 s] evaluation blocks vk512-rerun
+[floor afclaude/symbol/s0/kept/p4 L 2043 +22 s] vulkan prefill block 2048 (vk2048)
+[floor afclaude/symbol/s0/kept/p4 L 2043 +24 s] read back and compare b_vk512_vs_vk2048
+[floor afclaude/symbol/s0/kept/p4 L 2043 +31 s] evaluation blocks vk2048
+[floor afclaude/symbol/s0/kept/p4 L 2043 +32 s] vulkan prefill block 96 (vk96)
+[floor afclaude/symbol/s0/kept/p4 L 2043 +36 s] read back and compare b_vk512_vs_vk96
+[floor afclaude/symbol/s0/kept/p4 L 2043 +42 s] evaluation blocks vk96
+[floor afclaude/symbol/s0/kept/p4 L 2043 +44 s] vulkan prefill block 64 (vk64)
+[floor afclaude/symbol/s0/kept/p4 L 2043 +47 s] read back and compare b_vk512_vs_vk64
+[floor afclaude/symbol/s0/kept/p4 L 2043 +53 s] evaluation blocks vk64
+[floor afclaude/symbol/s0/kept/p4 L 2043 +55 s] vulkan prefill block 8 (vk8)
+[floor afclaude/symbol/s0/kept/p4 L 2043 +66 s] read back and compare b_vk512_vs_vk8
+[floor afclaude/symbol/s0/kept/p4 L 2043 +73 s] evaluation blocks vk8
+[floor afclaude/symbol/s0/kept/p4 L 2043 +75 s] vulkan prefill block 1 (vk1)
+[floor afclaude/symbol/s0/kept/p4 L 2043 +152 s] read back and compare b_vk512_vs_vk1
+[floor afclaude/symbol/s0/kept/p4 L 2043 +157 s] evaluation blocks vk1
+[floor afclaude/symbol/s0/kept/p4 L 2043 +159 s] cpu prefill block 512
+[floor afclaude/symbol/s0/kept/p4 L 2043 +188 s] read back and compare a_cpu_vs_vk512
+[floor afclaude/symbol/s0/kept/p4 L 2043 +188 s] cpu evaluation blocks
+[floor afclaude/symbol/s0/kept/p4 L 2043 tasks 2] done in 199 s; at 16.3 min
+[floor afclaude/symbol/s0/kept/p5 L 2046 +0 s] vulkan prefill block 512 (reference)
+[floor afclaude/symbol/s0/kept/p5 L 2046 +2 s] vulkan reference evaluation blocks
+[floor afclaude/symbol/s0/kept/p5 L 2046 +3 s] read back the vulkan reference
+[floor afclaude/symbol/s0/kept/p5 L 2046 +8 s] vulkan prefill block 512 (vk512-rerun)
+[floor afclaude/symbol/s0/kept/p5 L 2046 +10 s] read back and compare c_vk512_rerun
+[floor afclaude/symbol/s0/kept/p5 L 2046 +17 s] evaluation blocks vk512-rerun
+[floor afclaude/symbol/s0/kept/p5 L 2046 +17 s] vulkan prefill block 2048 (vk2048)
+[floor afclaude/symbol/s0/kept/p5 L 2046 +20 s] read back and compare b_vk512_vs_vk2048
+[floor afclaude/symbol/s0/kept/p5 L 2046 +25 s] evaluation blocks vk2048
+[floor afclaude/symbol/s0/kept/p5 L 2046 +26 s] vulkan prefill block 96 (vk96)
+[floor afclaude/symbol/s0/kept/p5 L 2046 +29 s] read back and compare b_vk512_vs_vk96
+[floor afclaude/symbol/s0/kept/p5 L 2046 +34 s] evaluation blocks vk96
+[floor afclaude/symbol/s0/kept/p5 L 2046 +35 s] vulkan prefill block 64 (vk64)
+[floor afclaude/symbol/s0/kept/p5 L 2046 +39 s] read back and compare b_vk512_vs_vk64
+[floor afclaude/symbol/s0/kept/p5 L 2046 +45 s] evaluation blocks vk64
+[floor afclaude/symbol/s0/kept/p5 L 2046 +46 s] vulkan prefill block 8 (vk8)
+[floor afclaude/symbol/s0/kept/p5 L 2046 +58 s] read back and compare b_vk512_vs_vk8
+[floor afclaude/symbol/s0/kept/p5 L 2046 +64 s] evaluation blocks vk8
+[floor afclaude/symbol/s0/kept/p5 L 2046 +65 s] vulkan prefill block 1 (vk1)
+[floor afclaude/symbol/s0/kept/p5 L 2046 +148 s] read back and compare b_vk512_vs_vk1
+[floor afclaude/symbol/s0/kept/p5 L 2046 +154 s] evaluation blocks vk1
+[floor afclaude/symbol/s0/kept/p5 L 2046 +155 s] cpu prefill block 512
+[floor afclaude/symbol/s0/kept/p5 L 2046 +184 s] read back and compare a_cpu_vs_vk512
+[floor afclaude/symbol/s0/kept/p5 L 2046 +185 s] cpu evaluation blocks
+[floor afclaude/symbol/s0/kept/p5 L 2046 tasks 1] done in 190 s; at 19.5 min
+[floor afclaude/symbol/s0/kept/p6 L 2040 +0 s] vulkan prefill block 512 (reference)
+[floor afclaude/symbol/s0/kept/p6 L 2040 +2 s] vulkan reference evaluation blocks
+[floor afclaude/symbol/s0/kept/p6 L 2040 +4 s] read back the vulkan reference
+[floor afclaude/symbol/s0/kept/p6 L 2040 +9 s] vulkan prefill block 512 (vk512-rerun)
+[floor afclaude/symbol/s0/kept/p6 L 2040 +12 s] read back and compare c_vk512_rerun
+[floor afclaude/symbol/s0/kept/p6 L 2040 +19 s] evaluation blocks vk512-rerun
+[floor afclaude/symbol/s0/kept/p6 L 2040 +22 s] vulkan prefill block 2048 (vk2048)
+[floor afclaude/symbol/s0/kept/p6 L 2040 +24 s] read back and compare b_vk512_vs_vk2048
+[floor afclaude/symbol/s0/kept/p6 L 2040 +33 s] evaluation blocks vk2048
+[floor afclaude/symbol/s0/kept/p6 L 2040 +36 s] vulkan prefill block 96 (vk96)
+[floor afclaude/symbol/s0/kept/p6 L 2040 +40 s] read back and compare b_vk512_vs_vk96
+[floor afclaude/symbol/s0/kept/p6 L 2040 +47 s] evaluation blocks vk96
+[floor afclaude/symbol/s0/kept/p6 L 2040 +49 s] vulkan prefill block 64 (vk64)
+[floor afclaude/symbol/s0/kept/p6 L 2040 +53 s] read back and compare b_vk512_vs_vk64
+[floor afclaude/symbol/s0/kept/p6 L 2040 +58 s] evaluation blocks vk64
+[floor afclaude/symbol/s0/kept/p6 L 2040 +61 s] vulkan prefill block 8 (vk8)
+[floor afclaude/symbol/s0/kept/p6 L 2040 +73 s] read back and compare b_vk512_vs_vk8
+[floor afclaude/symbol/s0/kept/p6 L 2040 +78 s] evaluation blocks vk8
+[floor afclaude/symbol/s0/kept/p6 L 2040 +81 s] vulkan prefill block 1 (vk1)
+[floor afclaude/symbol/s0/kept/p6 L 2040 +171 s] read back and compare b_vk512_vs_vk1
+[floor afclaude/symbol/s0/kept/p6 L 2040 +177 s] evaluation blocks vk1
+[floor afclaude/symbol/s0/kept/p6 L 2040 +179 s] cpu prefill block 512
+[floor afclaude/symbol/s0/kept/p6 L 2040 +206 s] read back and compare a_cpu_vs_vk512
+[floor afclaude/symbol/s0/kept/p6 L 2040 +206 s] cpu evaluation blocks
+[floor afclaude/symbol/s0/kept/p6 L 2040 tasks 3] done in 221 s; at 23.2 min
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 1.0 s
+chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\docagent.plans.jsonl: 48 plans, identical chunk ids
+kept task ids: 27; found 27; missing 
+contexts (first task id): src/DocAgent.McpServer/Ingestion/TypeScriptIngestionService.cs:94:53 src/DocAgent.McpServer/Ingestion/IncrementalSolutionIngestionService.cs:109:31 src/DocAgent.Ingestion/IncrementalIngestionEngine.cs:57:48 src/DocAgent.Ingestion/IncrementalIngestionEngine.cs:186:31 src/DocAgent.McpServer/Ingestion/IncrementalSolutionIngestionService.cs:322:57 src/DocAgent.McpServer/Ingestion/IncrementalSolutionIngestionService.cs:143:35 src/DocAgent.Ingestion/IncrementalIngestionEngine.cs:88:30
+plans: 7 contexts, 9 tasks (kept, seed 0, 3.5 s); mean context 2047 tokens, 16.1 chunks
+[floor docagent/symbol/s0/kept/p0 L 2040 +0 s] vulkan prefill block 512 (reference)
+[floor docagent/symbol/s0/kept/p0 L 2040 +2 s] vulkan reference evaluation blocks
+[floor docagent/symbol/s0/kept/p0 L 2040 +2 s] read back the vulkan reference
+[floor docagent/symbol/s0/kept/p0 L 2040 +8 s] vulkan prefill block 512 (vk512-rerun)
+[floor docagent/symbol/s0/kept/p0 L 2040 +10 s] read back and compare c_vk512_rerun
+[floor docagent/symbol/s0/kept/p0 L 2040 +14 s] evaluation blocks vk512-rerun
+[floor docagent/symbol/s0/kept/p0 L 2040 +15 s] vulkan prefill block 2048 (vk2048)
+[floor docagent/symbol/s0/kept/p0 L 2040 +17 s] read back and compare b_vk512_vs_vk2048
+[floor docagent/symbol/s0/kept/p0 L 2040 +22 s] evaluation blocks vk2048
+[floor docagent/symbol/s0/kept/p0 L 2040 +23 s] vulkan prefill block 96 (vk96)
+[floor docagent/symbol/s0/kept/p0 L 2040 +26 s] read back and compare b_vk512_vs_vk96
+[floor docagent/symbol/s0/kept/p0 L 2040 +32 s] evaluation blocks vk96
+[floor docagent/symbol/s0/kept/p0 L 2040 +33 s] vulkan prefill block 64 (vk64)
+[floor docagent/symbol/s0/kept/p0 L 2040 +37 s] read back and compare b_vk512_vs_vk64
+[floor docagent/symbol/s0/kept/p0 L 2040 +42 s] evaluation blocks vk64
+[floor docagent/symbol/s0/kept/p0 L 2040 +43 s] vulkan prefill block 8 (vk8)
+[floor docagent/symbol/s0/kept/p0 L 2040 +55 s] read back and compare b_vk512_vs_vk8
+[floor docagent/symbol/s0/kept/p0 L 2040 +61 s] evaluation blocks vk8
+[floor docagent/symbol/s0/kept/p0 L 2040 +62 s] vulkan prefill block 1 (vk1)
+[floor docagent/symbol/s0/kept/p0 L 2040 +136 s] read back and compare b_vk512_vs_vk1
+[floor docagent/symbol/s0/kept/p0 L 2040 +141 s] evaluation blocks vk1
+[floor docagent/symbol/s0/kept/p0 L 2040 +142 s] cpu prefill block 512
+[floor docagent/symbol/s0/kept/p0 L 2040 +172 s] read back and compare a_cpu_vs_vk512
+[floor docagent/symbol/s0/kept/p0 L 2040 +172 s] cpu evaluation blocks
+[floor docagent/symbol/s0/kept/p0 L 2040 tasks 1] done in 178 s; at 26.2 min
+[floor docagent/symbol/s0/kept/p1 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor docagent/symbol/s0/kept/p1 L 2048 +2 s] vulkan reference evaluation blocks
+[floor docagent/symbol/s0/kept/p1 L 2048 +2 s] read back the vulkan reference
+[floor docagent/symbol/s0/kept/p1 L 2048 +8 s] vulkan prefill block 512 (vk512-rerun)
+[floor docagent/symbol/s0/kept/p1 L 2048 +10 s] read back and compare c_vk512_rerun
+[floor docagent/symbol/s0/kept/p1 L 2048 +16 s] evaluation blocks vk512-rerun
+[floor docagent/symbol/s0/kept/p1 L 2048 +17 s] vulkan prefill block 2048 (vk2048)
+[floor docagent/symbol/s0/kept/p1 L 2048 +19 s] read back and compare b_vk512_vs_vk2048
+[floor docagent/symbol/s0/kept/p1 L 2048 +25 s] evaluation blocks vk2048
+[floor docagent/symbol/s0/kept/p1 L 2048 +26 s] vulkan prefill block 96 (vk96)
+[floor docagent/symbol/s0/kept/p1 L 2048 +29 s] read back and compare b_vk512_vs_vk96
+[floor docagent/symbol/s0/kept/p1 L 2048 +35 s] evaluation blocks vk96
+[floor docagent/symbol/s0/kept/p1 L 2048 +36 s] vulkan prefill block 64 (vk64)
+[floor docagent/symbol/s0/kept/p1 L 2048 +39 s] read back and compare b_vk512_vs_vk64
+[floor docagent/symbol/s0/kept/p1 L 2048 +46 s] evaluation blocks vk64
+[floor docagent/symbol/s0/kept/p1 L 2048 +47 s] vulkan prefill block 8 (vk8)
+[floor docagent/symbol/s0/kept/p1 L 2048 +59 s] read back and compare b_vk512_vs_vk8
+[floor docagent/symbol/s0/kept/p1 L 2048 +64 s] evaluation blocks vk8
+[floor docagent/symbol/s0/kept/p1 L 2048 +64 s] vulkan prefill block 1 (vk1)
+[floor docagent/symbol/s0/kept/p1 L 2048 +136 s] read back and compare b_vk512_vs_vk1
+[floor docagent/symbol/s0/kept/p1 L 2048 +142 s] evaluation blocks vk1
+[floor docagent/symbol/s0/kept/p1 L 2048 +143 s] cpu prefill block 512
+[floor docagent/symbol/s0/kept/p1 L 2048 +172 s] read back and compare a_cpu_vs_vk512
+[floor docagent/symbol/s0/kept/p1 L 2048 +172 s] cpu evaluation blocks
+[floor docagent/symbol/s0/kept/p1 L 2048 tasks 1] done in 178 s; at 29.2 min
+[floor docagent/symbol/s0/kept/p2 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor docagent/symbol/s0/kept/p2 L 2048 +2 s] vulkan reference evaluation blocks
+[floor docagent/symbol/s0/kept/p2 L 2048 +3 s] read back the vulkan reference
+[floor docagent/symbol/s0/kept/p2 L 2048 +8 s] vulkan prefill block 512 (vk512-rerun)
+[floor docagent/symbol/s0/kept/p2 L 2048 +10 s] read back and compare c_vk512_rerun
+[floor docagent/symbol/s0/kept/p2 L 2048 +17 s] evaluation blocks vk512-rerun
+[floor docagent/symbol/s0/kept/p2 L 2048 +18 s] vulkan prefill block 2048 (vk2048)
+[floor docagent/symbol/s0/kept/p2 L 2048 +20 s] read back and compare b_vk512_vs_vk2048
+[floor docagent/symbol/s0/kept/p2 L 2048 +25 s] evaluation blocks vk2048
+[floor docagent/symbol/s0/kept/p2 L 2048 +26 s] vulkan prefill block 96 (vk96)
+[floor docagent/symbol/s0/kept/p2 L 2048 +30 s] read back and compare b_vk512_vs_vk96
+[floor docagent/symbol/s0/kept/p2 L 2048 +36 s] evaluation blocks vk96
+[floor docagent/symbol/s0/kept/p2 L 2048 +37 s] vulkan prefill block 64 (vk64)
+[floor docagent/symbol/s0/kept/p2 L 2048 +41 s] read back and compare b_vk512_vs_vk64
+[floor docagent/symbol/s0/kept/p2 L 2048 +47 s] evaluation blocks vk64
+[floor docagent/symbol/s0/kept/p2 L 2048 +48 s] vulkan prefill block 8 (vk8)
+[floor docagent/symbol/s0/kept/p2 L 2048 +60 s] read back and compare b_vk512_vs_vk8
+[floor docagent/symbol/s0/kept/p2 L 2048 +66 s] evaluation blocks vk8
+[floor docagent/symbol/s0/kept/p2 L 2048 +67 s] vulkan prefill block 1 (vk1)
+[floor docagent/symbol/s0/kept/p2 L 2048 +141 s] read back and compare b_vk512_vs_vk1
+[floor docagent/symbol/s0/kept/p2 L 2048 +147 s] evaluation blocks vk1
+[floor docagent/symbol/s0/kept/p2 L 2048 +148 s] cpu prefill block 512
+[floor docagent/symbol/s0/kept/p2 L 2048 +177 s] read back and compare a_cpu_vs_vk512
+[floor docagent/symbol/s0/kept/p2 L 2048 +178 s] cpu evaluation blocks
+[floor docagent/symbol/s0/kept/p2 L 2048 tasks 1] done in 183 s; at 32.2 min
+[floor docagent/symbol/s0/kept/p3 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor docagent/symbol/s0/kept/p3 L 2048 +2 s] vulkan reference evaluation blocks
+[floor docagent/symbol/s0/kept/p3 L 2048 +3 s] read back the vulkan reference
+[floor docagent/symbol/s0/kept/p3 L 2048 +8 s] vulkan prefill block 512 (vk512-rerun)
+[floor docagent/symbol/s0/kept/p3 L 2048 +10 s] read back and compare c_vk512_rerun
+[floor docagent/symbol/s0/kept/p3 L 2048 +17 s] evaluation blocks vk512-rerun
+[floor docagent/symbol/s0/kept/p3 L 2048 +18 s] vulkan prefill block 2048 (vk2048)
+[floor docagent/symbol/s0/kept/p3 L 2048 +20 s] read back and compare b_vk512_vs_vk2048
+[floor docagent/symbol/s0/kept/p3 L 2048 +26 s] evaluation blocks vk2048
+[floor docagent/symbol/s0/kept/p3 L 2048 +27 s] vulkan prefill block 96 (vk96)
+[floor docagent/symbol/s0/kept/p3 L 2048 +30 s] read back and compare b_vk512_vs_vk96
+[floor docagent/symbol/s0/kept/p3 L 2048 +38 s] evaluation blocks vk96
+[floor docagent/symbol/s0/kept/p3 L 2048 +39 s] vulkan prefill block 64 (vk64)
+[floor docagent/symbol/s0/kept/p3 L 2048 +43 s] read back and compare b_vk512_vs_vk64
+[floor docagent/symbol/s0/kept/p3 L 2048 +50 s] evaluation blocks vk64
+[floor docagent/symbol/s0/kept/p3 L 2048 +51 s] vulkan prefill block 8 (vk8)
+[floor docagent/symbol/s0/kept/p3 L 2048 +63 s] read back and compare b_vk512_vs_vk8
+[floor docagent/symbol/s0/kept/p3 L 2048 +70 s] evaluation blocks vk8
+[floor docagent/symbol/s0/kept/p3 L 2048 +71 s] vulkan prefill block 1 (vk1)
+[floor docagent/symbol/s0/kept/p3 L 2048 +144 s] read back and compare b_vk512_vs_vk1
+[floor docagent/symbol/s0/kept/p3 L 2048 +150 s] evaluation blocks vk1
+[floor docagent/symbol/s0/kept/p3 L 2048 +151 s] cpu prefill block 512
+[floor docagent/symbol/s0/kept/p3 L 2048 +180 s] read back and compare a_cpu_vs_vk512
+[floor docagent/symbol/s0/kept/p3 L 2048 +180 s] cpu evaluation blocks
+[floor docagent/symbol/s0/kept/p3 L 2048 tasks 1] done in 185 s; at 35.3 min
+[floor docagent/symbol/s0/kept/p4 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor docagent/symbol/s0/kept/p4 L 2048 +2 s] vulkan reference evaluation blocks
+[floor docagent/symbol/s0/kept/p4 L 2048 +2 s] read back the vulkan reference
+[floor docagent/symbol/s0/kept/p4 L 2048 +7 s] vulkan prefill block 512 (vk512-rerun)
+[floor docagent/symbol/s0/kept/p4 L 2048 +10 s] read back and compare c_vk512_rerun
+[floor docagent/symbol/s0/kept/p4 L 2048 +16 s] evaluation blocks vk512-rerun
+[floor docagent/symbol/s0/kept/p4 L 2048 +17 s] vulkan prefill block 2048 (vk2048)
+[floor docagent/symbol/s0/kept/p4 L 2048 +19 s] read back and compare b_vk512_vs_vk2048
+[floor docagent/symbol/s0/kept/p4 L 2048 +25 s] evaluation blocks vk2048
+[floor docagent/symbol/s0/kept/p4 L 2048 +26 s] vulkan prefill block 96 (vk96)
+[floor docagent/symbol/s0/kept/p4 L 2048 +29 s] read back and compare b_vk512_vs_vk96
+[floor docagent/symbol/s0/kept/p4 L 2048 +35 s] evaluation blocks vk96
+[floor docagent/symbol/s0/kept/p4 L 2048 +36 s] vulkan prefill block 64 (vk64)
+[floor docagent/symbol/s0/kept/p4 L 2048 +39 s] read back and compare b_vk512_vs_vk64
+[floor docagent/symbol/s0/kept/p4 L 2048 +45 s] evaluation blocks vk64
+[floor docagent/symbol/s0/kept/p4 L 2048 +46 s] vulkan prefill block 8 (vk8)
+[floor docagent/symbol/s0/kept/p4 L 2048 +58 s] read back and compare b_vk512_vs_vk8
+[floor docagent/symbol/s0/kept/p4 L 2048 +64 s] evaluation blocks vk8
+[floor docagent/symbol/s0/kept/p4 L 2048 +66 s] vulkan prefill block 1 (vk1)
+[floor docagent/symbol/s0/kept/p4 L 2048 +153 s] read back and compare b_vk512_vs_vk1
+[floor docagent/symbol/s0/kept/p4 L 2048 +159 s] evaluation blocks vk1
+[floor docagent/symbol/s0/kept/p4 L 2048 +160 s] cpu prefill block 512
+[floor docagent/symbol/s0/kept/p4 L 2048 +187 s] read back and compare a_cpu_vs_vk512
+[floor docagent/symbol/s0/kept/p4 L 2048 +187 s] cpu evaluation blocks
+[floor docagent/symbol/s0/kept/p4 L 2048 tasks 1] done in 192 s; at 38.5 min
+[floor docagent/symbol/s0/kept/p5 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor docagent/symbol/s0/kept/p5 L 2048 +2 s] vulkan reference evaluation blocks
+[floor docagent/symbol/s0/kept/p5 L 2048 +3 s] read back the vulkan reference
+[floor docagent/symbol/s0/kept/p5 L 2048 +9 s] vulkan prefill block 512 (vk512-rerun)
+[floor docagent/symbol/s0/kept/p5 L 2048 +11 s] read back and compare c_vk512_rerun
+[floor docagent/symbol/s0/kept/p5 L 2048 +17 s] evaluation blocks vk512-rerun
+[floor docagent/symbol/s0/kept/p5 L 2048 +19 s] vulkan prefill block 2048 (vk2048)
+[floor docagent/symbol/s0/kept/p5 L 2048 +21 s] read back and compare b_vk512_vs_vk2048
+[floor docagent/symbol/s0/kept/p5 L 2048 +27 s] evaluation blocks vk2048
+[floor docagent/symbol/s0/kept/p5 L 2048 +29 s] vulkan prefill block 96 (vk96)
+[floor docagent/symbol/s0/kept/p5 L 2048 +32 s] read back and compare b_vk512_vs_vk96
+[floor docagent/symbol/s0/kept/p5 L 2048 +39 s] evaluation blocks vk96
+[floor docagent/symbol/s0/kept/p5 L 2048 +41 s] vulkan prefill block 64 (vk64)
+[floor docagent/symbol/s0/kept/p5 L 2048 +44 s] read back and compare b_vk512_vs_vk64
+[floor docagent/symbol/s0/kept/p5 L 2048 +50 s] evaluation blocks vk64
+[floor docagent/symbol/s0/kept/p5 L 2048 +51 s] vulkan prefill block 8 (vk8)
+[floor docagent/symbol/s0/kept/p5 L 2048 +63 s] read back and compare b_vk512_vs_vk8
+[floor docagent/symbol/s0/kept/p5 L 2048 +69 s] evaluation blocks vk8
+[floor docagent/symbol/s0/kept/p5 L 2048 +71 s] vulkan prefill block 1 (vk1)
+[floor docagent/symbol/s0/kept/p5 L 2048 +162 s] read back and compare b_vk512_vs_vk1
+[floor docagent/symbol/s0/kept/p5 L 2048 +168 s] evaluation blocks vk1
+[floor docagent/symbol/s0/kept/p5 L 2048 +170 s] cpu prefill block 512
+[floor docagent/symbol/s0/kept/p5 L 2048 +200 s] read back and compare a_cpu_vs_vk512
+[floor docagent/symbol/s0/kept/p5 L 2048 +201 s] cpu evaluation blocks
+[floor docagent/symbol/s0/kept/p5 L 2048 tasks 2] done in 212 s; at 42.1 min
+[floor docagent/symbol/s0/kept/p6 L 2047 +0 s] vulkan prefill block 512 (reference)
+[floor docagent/symbol/s0/kept/p6 L 2047 +2 s] vulkan reference evaluation blocks
+[floor docagent/symbol/s0/kept/p6 L 2047 +3 s] read back the vulkan reference
+[floor docagent/symbol/s0/kept/p6 L 2047 +8 s] vulkan prefill block 512 (vk512-rerun)
+[floor docagent/symbol/s0/kept/p6 L 2047 +10 s] read back and compare c_vk512_rerun
+[floor docagent/symbol/s0/kept/p6 L 2047 +17 s] evaluation blocks vk512-rerun
+[floor docagent/symbol/s0/kept/p6 L 2047 +19 s] vulkan prefill block 2048 (vk2048)
+[floor docagent/symbol/s0/kept/p6 L 2047 +21 s] read back and compare b_vk512_vs_vk2048
+[floor docagent/symbol/s0/kept/p6 L 2047 +28 s] evaluation blocks vk2048
+[floor docagent/symbol/s0/kept/p6 L 2047 +30 s] vulkan prefill block 96 (vk96)
+[floor docagent/symbol/s0/kept/p6 L 2047 +33 s] read back and compare b_vk512_vs_vk96
+[floor docagent/symbol/s0/kept/p6 L 2047 +41 s] evaluation blocks vk96
+[floor docagent/symbol/s0/kept/p6 L 2047 +43 s] vulkan prefill block 64 (vk64)
+[floor docagent/symbol/s0/kept/p6 L 2047 +46 s] read back and compare b_vk512_vs_vk64
+[floor docagent/symbol/s0/kept/p6 L 2047 +53 s] evaluation blocks vk64
+[floor docagent/symbol/s0/kept/p6 L 2047 +55 s] vulkan prefill block 8 (vk8)
+[floor docagent/symbol/s0/kept/p6 L 2047 +67 s] read back and compare b_vk512_vs_vk8
+[floor docagent/symbol/s0/kept/p6 L 2047 +74 s] evaluation blocks vk8
+[floor docagent/symbol/s0/kept/p6 L 2047 +76 s] vulkan prefill block 1 (vk1)
+[floor docagent/symbol/s0/kept/p6 L 2047 +149 s] read back and compare b_vk512_vs_vk1
+[floor docagent/symbol/s0/kept/p6 L 2047 +155 s] evaluation blocks vk1
+[floor docagent/symbol/s0/kept/p6 L 2047 +157 s] cpu prefill block 512
+[floor docagent/symbol/s0/kept/p6 L 2047 +187 s] read back and compare a_cpu_vs_vk512
+[floor docagent/symbol/s0/kept/p6 L 2047 +188 s] cpu evaluation blocks
+[floor docagent/symbol/s0/kept/p6 L 2047 tasks 2] done in 202 s; at 45.4 min
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-codesharp-8e2adbd8-20261101111016: 1390 files (0 excluded), symbol-512: 7586 chunks, 1535738 tokens (chunk tokens median 157, max 512); Decode(Encode(file)) == file for 1390/1390; 23.8 s
+chunk-id sha256 bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\codesharp.plans.jsonl: 60 plans, identical chunk ids
+kept task ids: 21; found 21; missing 
+contexts (first task id): src/CodeSharp.Core/Permissions/PermissionRuleSet.cs:237:45 src/CodeSharp.Tui/ImageInput/TuiImageInput.cs:129:35 src/CodeSharp.Tools/Orchestration/DispatchAgentTool.cs:517:87 src/CodeSharp.Tui/TuiApp.cs:9175:31 src/CodeSharp.Skills/Agents/Foreign/ForeignSkillLoader.cs:143:61 src/CodeSharp.Tui/TuiApp.cs:3018:62
+plans: 6 contexts, 6 tasks (kept, seed 0, 22.4 s); mean context 2048 tokens, 15.3 chunks
+[floor codesharp/symbol/s0/kept/p0 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor codesharp/symbol/s0/kept/p0 L 2048 +2 s] vulkan reference evaluation blocks
+[floor codesharp/symbol/s0/kept/p0 L 2048 +3 s] read back the vulkan reference
+[floor codesharp/symbol/s0/kept/p0 L 2048 +8 s] vulkan prefill block 512 (vk512-rerun)
+[floor codesharp/symbol/s0/kept/p0 L 2048 +11 s] read back and compare c_vk512_rerun
+[floor codesharp/symbol/s0/kept/p0 L 2048 +16 s] evaluation blocks vk512-rerun
+[floor codesharp/symbol/s0/kept/p0 L 2048 +17 s] vulkan prefill block 2048 (vk2048)
+[floor codesharp/symbol/s0/kept/p0 L 2048 +19 s] read back and compare b_vk512_vs_vk2048
+[floor codesharp/symbol/s0/kept/p0 L 2048 +25 s] evaluation blocks vk2048
+[floor codesharp/symbol/s0/kept/p0 L 2048 +26 s] vulkan prefill block 96 (vk96)
+[floor codesharp/symbol/s0/kept/p0 L 2048 +30 s] read back and compare b_vk512_vs_vk96
+[floor codesharp/symbol/s0/kept/p0 L 2048 +36 s] evaluation blocks vk96
+[floor codesharp/symbol/s0/kept/p0 L 2048 +37 s] vulkan prefill block 64 (vk64)
+[floor codesharp/symbol/s0/kept/p0 L 2048 +40 s] read back and compare b_vk512_vs_vk64
+[floor codesharp/symbol/s0/kept/p0 L 2048 +45 s] evaluation blocks vk64
+[floor codesharp/symbol/s0/kept/p0 L 2048 +46 s] vulkan prefill block 8 (vk8)
+[floor codesharp/symbol/s0/kept/p0 L 2048 +58 s] read back and compare b_vk512_vs_vk8
+[floor codesharp/symbol/s0/kept/p0 L 2048 +65 s] evaluation blocks vk8
+[floor codesharp/symbol/s0/kept/p0 L 2048 +66 s] vulkan prefill block 1 (vk1)
+[floor codesharp/symbol/s0/kept/p0 L 2048 +141 s] read back and compare b_vk512_vs_vk1
+[floor codesharp/symbol/s0/kept/p0 L 2048 +147 s] evaluation blocks vk1
+[floor codesharp/symbol/s0/kept/p0 L 2048 +148 s] cpu prefill block 512
+[floor codesharp/symbol/s0/kept/p0 L 2048 +175 s] read back and compare a_cpu_vs_vk512
+[floor codesharp/symbol/s0/kept/p0 L 2048 +175 s] cpu evaluation blocks
+[floor codesharp/symbol/s0/kept/p0 L 2048 tasks 1] done in 180 s; at 49.2 min
+[floor codesharp/symbol/s0/kept/p1 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor codesharp/symbol/s0/kept/p1 L 2048 +2 s] vulkan reference evaluation blocks
+[floor codesharp/symbol/s0/kept/p1 L 2048 +2 s] read back the vulkan reference
+[floor codesharp/symbol/s0/kept/p1 L 2048 +7 s] vulkan prefill block 512 (vk512-rerun)
+[floor codesharp/symbol/s0/kept/p1 L 2048 +9 s] read back and compare c_vk512_rerun
+[floor codesharp/symbol/s0/kept/p1 L 2048 +14 s] evaluation blocks vk512-rerun
+[floor codesharp/symbol/s0/kept/p1 L 2048 +15 s] vulkan prefill block 2048 (vk2048)
+[floor codesharp/symbol/s0/kept/p1 L 2048 +17 s] read back and compare b_vk512_vs_vk2048
+[floor codesharp/symbol/s0/kept/p1 L 2048 +22 s] evaluation blocks vk2048
+[floor codesharp/symbol/s0/kept/p1 L 2048 +23 s] vulkan prefill block 96 (vk96)
+[floor codesharp/symbol/s0/kept/p1 L 2048 +26 s] read back and compare b_vk512_vs_vk96
+[floor codesharp/symbol/s0/kept/p1 L 2048 +31 s] evaluation blocks vk96
+[floor codesharp/symbol/s0/kept/p1 L 2048 +32 s] vulkan prefill block 64 (vk64)
+[floor codesharp/symbol/s0/kept/p1 L 2048 +35 s] read back and compare b_vk512_vs_vk64
+[floor codesharp/symbol/s0/kept/p1 L 2048 +40 s] evaluation blocks vk64
+[floor codesharp/symbol/s0/kept/p1 L 2048 +41 s] vulkan prefill block 8 (vk8)
+[floor codesharp/symbol/s0/kept/p1 L 2048 +53 s] read back and compare b_vk512_vs_vk8
+[floor codesharp/symbol/s0/kept/p1 L 2048 +60 s] evaluation blocks vk8
+[floor codesharp/symbol/s0/kept/p1 L 2048 +61 s] vulkan prefill block 1 (vk1)
+[floor codesharp/symbol/s0/kept/p1 L 2048 +120 s] read back and compare b_vk512_vs_vk1
+[floor codesharp/symbol/s0/kept/p1 L 2048 +127 s] evaluation blocks vk1
+[floor codesharp/symbol/s0/kept/p1 L 2048 +128 s] cpu prefill block 512
+[floor codesharp/symbol/s0/kept/p1 L 2048 +156 s] read back and compare a_cpu_vs_vk512
+[floor codesharp/symbol/s0/kept/p1 L 2048 +156 s] cpu evaluation blocks
+[floor codesharp/symbol/s0/kept/p1 L 2048 tasks 1] done in 162 s; at 51.9 min
+[floor codesharp/symbol/s0/kept/p2 L 2046 +0 s] vulkan prefill block 512 (reference)
+[floor codesharp/symbol/s0/kept/p2 L 2046 +2 s] vulkan reference evaluation blocks
+[floor codesharp/symbol/s0/kept/p2 L 2046 +2 s] read back the vulkan reference
+[floor codesharp/symbol/s0/kept/p2 L 2046 +8 s] vulkan prefill block 512 (vk512-rerun)
+[floor codesharp/symbol/s0/kept/p2 L 2046 +10 s] read back and compare c_vk512_rerun
+[floor codesharp/symbol/s0/kept/p2 L 2046 +16 s] evaluation blocks vk512-rerun
+[floor codesharp/symbol/s0/kept/p2 L 2046 +16 s] vulkan prefill block 2048 (vk2048)
+[floor codesharp/symbol/s0/kept/p2 L 2046 +19 s] read back and compare b_vk512_vs_vk2048
+[floor codesharp/symbol/s0/kept/p2 L 2046 +25 s] evaluation blocks vk2048
+[floor codesharp/symbol/s0/kept/p2 L 2046 +26 s] vulkan prefill block 96 (vk96)
+[floor codesharp/symbol/s0/kept/p2 L 2046 +29 s] read back and compare b_vk512_vs_vk96
+[floor codesharp/symbol/s0/kept/p2 L 2046 +34 s] evaluation blocks vk96
+[floor codesharp/symbol/s0/kept/p2 L 2046 +35 s] vulkan prefill block 64 (vk64)
+[floor codesharp/symbol/s0/kept/p2 L 2046 +38 s] read back and compare b_vk512_vs_vk64
+[floor codesharp/symbol/s0/kept/p2 L 2046 +43 s] evaluation blocks vk64
+[floor codesharp/symbol/s0/kept/p2 L 2046 +44 s] vulkan prefill block 8 (vk8)
+[floor codesharp/symbol/s0/kept/p2 L 2046 +56 s] read back and compare b_vk512_vs_vk8
+[floor codesharp/symbol/s0/kept/p2 L 2046 +63 s] evaluation blocks vk8
+[floor codesharp/symbol/s0/kept/p2 L 2046 +64 s] vulkan prefill block 1 (vk1)
+[floor codesharp/symbol/s0/kept/p2 L 2046 +137 s] read back and compare b_vk512_vs_vk1
+[floor codesharp/symbol/s0/kept/p2 L 2046 +144 s] evaluation blocks vk1
+[floor codesharp/symbol/s0/kept/p2 L 2046 +145 s] cpu prefill block 512
+[floor codesharp/symbol/s0/kept/p2 L 2046 +172 s] read back and compare a_cpu_vs_vk512
+[floor codesharp/symbol/s0/kept/p2 L 2046 +173 s] cpu evaluation blocks
+[floor codesharp/symbol/s0/kept/p2 L 2046 tasks 1] done in 178 s; at 54.9 min
+[floor codesharp/symbol/s0/kept/p3 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor codesharp/symbol/s0/kept/p3 L 2048 +2 s] vulkan reference evaluation blocks
+[floor codesharp/symbol/s0/kept/p3 L 2048 +3 s] read back the vulkan reference
+[floor codesharp/symbol/s0/kept/p3 L 2048 +9 s] vulkan prefill block 512 (vk512-rerun)
+[floor codesharp/symbol/s0/kept/p3 L 2048 +11 s] read back and compare c_vk512_rerun
+[floor codesharp/symbol/s0/kept/p3 L 2048 +17 s] evaluation blocks vk512-rerun
+[floor codesharp/symbol/s0/kept/p3 L 2048 +18 s] vulkan prefill block 2048 (vk2048)
+[floor codesharp/symbol/s0/kept/p3 L 2048 +20 s] read back and compare b_vk512_vs_vk2048
+[floor codesharp/symbol/s0/kept/p3 L 2048 +26 s] evaluation blocks vk2048
+[floor codesharp/symbol/s0/kept/p3 L 2048 +27 s] vulkan prefill block 96 (vk96)
+[floor codesharp/symbol/s0/kept/p3 L 2048 +30 s] read back and compare b_vk512_vs_vk96
+[floor codesharp/symbol/s0/kept/p3 L 2048 +36 s] evaluation blocks vk96
+[floor codesharp/symbol/s0/kept/p3 L 2048 +37 s] vulkan prefill block 64 (vk64)
+[floor codesharp/symbol/s0/kept/p3 L 2048 +40 s] read back and compare b_vk512_vs_vk64
+[floor codesharp/symbol/s0/kept/p3 L 2048 +45 s] evaluation blocks vk64
+[floor codesharp/symbol/s0/kept/p3 L 2048 +46 s] vulkan prefill block 8 (vk8)
+[floor codesharp/symbol/s0/kept/p3 L 2048 +58 s] read back and compare b_vk512_vs_vk8
+[floor codesharp/symbol/s0/kept/p3 L 2048 +65 s] evaluation blocks vk8
+[floor codesharp/symbol/s0/kept/p3 L 2048 +66 s] vulkan prefill block 1 (vk1)
+[floor codesharp/symbol/s0/kept/p3 L 2048 +140 s] read back and compare b_vk512_vs_vk1
+[floor codesharp/symbol/s0/kept/p3 L 2048 +147 s] evaluation blocks vk1
+[floor codesharp/symbol/s0/kept/p3 L 2048 +148 s] cpu prefill block 512
+[floor codesharp/symbol/s0/kept/p3 L 2048 +177 s] read back and compare a_cpu_vs_vk512
+[floor codesharp/symbol/s0/kept/p3 L 2048 +177 s] cpu evaluation blocks
+[floor codesharp/symbol/s0/kept/p3 L 2048 tasks 1] done in 184 s; at 57.9 min
+[floor codesharp/symbol/s0/kept/p4 L 2048 +0 s] vulkan prefill block 512 (reference)
+[floor codesharp/symbol/s0/kept/p4 L 2048 +2 s] vulkan reference evaluation blocks
+[floor codesharp/symbol/s0/kept/p4 L 2048 +3 s] read back the vulkan reference
+[floor codesharp/symbol/s0/kept/p4 L 2048 +8 s] vulkan prefill block 512 (vk512-rerun)
+[floor codesharp/symbol/s0/kept/p4 L 2048 +10 s] read back and compare c_vk512_rerun
+[floor codesharp/symbol/s0/kept/p4 L 2048 +17 s] evaluation blocks vk512-rerun
+[floor codesharp/symbol/s0/kept/p4 L 2048 +18 s] vulkan prefill block 2048 (vk2048)
+[floor codesharp/symbol/s0/kept/p4 L 2048 +20 s] read back and compare b_vk512_vs_vk2048
+[floor codesharp/symbol/s0/kept/p4 L 2048 +26 s] evaluation blocks vk2048
+[floor codesharp/symbol/s0/kept/p4 L 2048 +27 s] vulkan prefill block 96 (vk96)
+[floor codesharp/symbol/s0/kept/p4 L 2048 +30 s] read back and compare b_vk512_vs_vk96
+[floor codesharp/symbol/s0/kept/p4 L 2048 +36 s] evaluation blocks vk96
+[floor codesharp/symbol/s0/kept/p4 L 2048 +37 s] vulkan prefill block 64 (vk64)
+[floor codesharp/symbol/s0/kept/p4 L 2048 +40 s] read back and compare b_vk512_vs_vk64
+[floor codesharp/symbol/s0/kept/p4 L 2048 +46 s] evaluation blocks vk64
+[floor codesharp/symbol/s0/kept/p4 L 2048 +47 s] vulkan prefill block 8 (vk8)
+[floor codesharp/symbol/s0/kept/p4 L 2048 +58 s] read back and compare b_vk512_vs_vk8
+[floor codesharp/symbol/s0/kept/p4 L 2048 +64 s] evaluation blocks vk8
+[floor codesharp/symbol/s0/kept/p4 L 2048 +65 s] vulkan prefill block 1 (vk1)
+[floor codesharp/symbol/s0/kept/p4 L 2048 +127 s] read back and compare b_vk512_vs_vk1
+[floor codesharp/symbol/s0/kept/p4 L 2048 +134 s] evaluation blocks vk1
+[floor codesharp/symbol/s0/kept/p4 L 2048 +135 s] cpu prefill block 512
+[floor codesharp/symbol/s0/kept/p4 L 2048 +166 s] read back and compare a_cpu_vs_vk512
+[floor codesharp/symbol/s0/kept/p4 L 2048 +166 s] cpu evaluation blocks
+[floor codesharp/symbol/s0/kept/p4 L 2048 tasks 1] done in 171 s; at 60.8 min
+[floor codesharp/symbol/s0/kept/p5 L 2047 +0 s] vulkan prefill block 512 (reference)
+[floor codesharp/symbol/s0/kept/p5 L 2047 +2 s] vulkan reference evaluation blocks
+[floor codesharp/symbol/s0/kept/p5 L 2047 +2 s] read back the vulkan reference
+[floor codesharp/symbol/s0/kept/p5 L 2047 +7 s] vulkan prefill block 512 (vk512-rerun)
+[floor codesharp/symbol/s0/kept/p5 L 2047 +9 s] read back and compare c_vk512_rerun
+[floor codesharp/symbol/s0/kept/p5 L 2047 +16 s] evaluation blocks vk512-rerun
+[floor codesharp/symbol/s0/kept/p5 L 2047 +17 s] vulkan prefill block 2048 (vk2048)
+[floor codesharp/symbol/s0/kept/p5 L 2047 +19 s] read back and compare b_vk512_vs_vk2048
+[floor codesharp/symbol/s0/kept/p5 L 2047 +26 s] evaluation blocks vk2048
+[floor codesharp/symbol/s0/kept/p5 L 2047 +27 s] vulkan prefill block 96 (vk96)
+[floor codesharp/symbol/s0/kept/p5 L 2047 +30 s] read back and compare b_vk512_vs_vk96
+[floor codesharp/symbol/s0/kept/p5 L 2047 +37 s] evaluation blocks vk96
+[floor codesharp/symbol/s0/kept/p5 L 2047 +38 s] vulkan prefill block 64 (vk64)
+[floor codesharp/symbol/s0/kept/p5 L 2047 +41 s] read back and compare b_vk512_vs_vk64
+[floor codesharp/symbol/s0/kept/p5 L 2047 +47 s] evaluation blocks vk64
+[floor codesharp/symbol/s0/kept/p5 L 2047 +48 s] vulkan prefill block 8 (vk8)
+[floor codesharp/symbol/s0/kept/p5 L 2047 +60 s] read back and compare b_vk512_vs_vk8
+[floor codesharp/symbol/s0/kept/p5 L 2047 +67 s] evaluation blocks vk8
+[floor codesharp/symbol/s0/kept/p5 L 2047 +68 s] vulkan prefill block 1 (vk1)
+[floor codesharp/symbol/s0/kept/p5 L 2047 +154 s] read back and compare b_vk512_vs_vk1
+[floor codesharp/symbol/s0/kept/p5 L 2047 +161 s] evaluation blocks vk1
+[floor codesharp/symbol/s0/kept/p5 L 2047 +162 s] cpu prefill block 512
+[floor codesharp/symbol/s0/kept/p5 L 2047 +189 s] read back and compare a_cpu_vs_vk512
+[floor codesharp/symbol/s0/kept/p5 L 2047 +189 s] cpu evaluation blocks
+[floor codesharp/symbol/s0/kept/p5 L 2047 tasks 1] done in 194 s; at 64.0 min
+floor 2k: 20 contexts, 7 pairs in 64.1 min -> C:\Development\ChunkedkvCache\experiments\G0-floor
+# exit code 0 after 64.1 min

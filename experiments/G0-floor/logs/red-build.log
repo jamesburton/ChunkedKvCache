@@ -1,0 +1,27 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  WARNING: .hip source newer than .co but hipcc not found in PATH. Pre-compiled code objects may be stale. Install ROCm to auto-compile kernels.
+  DotLLM.Core -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Core\bin\Debug\net10.0\DotLLM.Core.dll
+  DotLLM.Hip -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Hip\bin\Debug\net10.0\DotLLM.Hip.dll
+  DotLLM.Cpu -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Cpu\bin\Debug\net10.0\DotLLM.Cpu.dll
+  DotLLM.HuggingFace -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.HuggingFace\bin\Debug\net10.0\DotLLM.HuggingFace.dll
+  DotLLM.Tokenizers -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Tokenizers\bin\Debug\net10.0\DotLLM.Tokenizers.dll
+  DotLLM.Telemetry -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Telemetry\bin\Debug\net10.0\DotLLM.Telemetry.dll
+  DotLLM.Diagnostics -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Diagnostics\bin\Debug\net10.0\DotLLM.Diagnostics.dll
+  DotLLM.Models -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Models\bin\Debug\net10.0\DotLLM.Models.dll
+  DotLLM.Engine -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Engine\bin\Debug\net10.0\DotLLM.Engine.dll
+  DotLLM.Vulkan -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Vulkan\bin\Debug\net10.0\DotLLM.Vulkan.dll
+  DotLLM.Cuda -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Cuda\bin\Debug\net10.0\DotLLM.Cuda.dll
+  DotLLM.ChunkReuse -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.ChunkReuse\bin\Debug\net10.0\DotLLM.ChunkReuse.dll
+  ChunkKvLab -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\benchmarks\ChunkKvLab\bin\Debug\net10.0\ChunkKvLab.dll
+  DotLLM.Server -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Server\bin\Debug\net10.0\DotLLM.Server.dll
+  DotLLM.Cli -> C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\src\DotLLM.Cli\bin\Debug\net10.0\DotLLM.Cli.dll
+C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\tests\DotLLM.Tests.Unit\ChunkReuse\FloorMetricsTests.cs(204,32): error CS0426: The type name 'KvRowsReader' does not exist in the type 'KvDeviation' [C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\tests\DotLLM.Tests.Unit\DotLLM.Tests.Unit.csproj]
+
+Build FAILED.
+
+C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\tests\DotLLM.Tests.Unit\ChunkReuse\FloorMetricsTests.cs(204,32): error CS0426: The type name 'KvRowsReader' does not exist in the type 'KvDeviation' [C:\Development\dotLLM\.claude\worktrees\chunk-vulkan\tests\DotLLM.Tests.Unit\DotLLM.Tests.Unit.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:09.16
