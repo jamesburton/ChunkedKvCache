@@ -1,7 +1,8 @@
 """G2 summary: speed of single-pass vs per-run selective recompute vs full prefill on Vulkan, TTFT of the assembled cache, and the
 numerics (pair (d), single vs per-run, pair (a) on the recomputed state, E4 comparison). Writes summary.md next to this file.
 usage: uv run summarize.py"""
-import csv, gzip, math, os, statistics as st
+import csv, gzip, math, os, sys, statistics as st
+sys.stdout.reconfigure(encoding='utf-8')
 from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -138,10 +139,12 @@ def kv_vs_floor(label, size, pair_map):
     p('| pair | contexts | K all-layer | V all-layer | worst-layer mean ratio K / V | worst-layer p99 ratio K / V | G0 pair | G0 K / V all-layer |')
     p('|---|---:|---:|---:|---|---|---|---|')
     by = defaultdict(dict)
-    nctx = {}
+    nctx = defaultdict(set)
+    for r in read(f'kv-{label}.csv') or []:
+        nctx[r['pair']].add(r['context_id'])
+    nctx = {k: len(v) for k, v in nctx.items()}
     for r in pooled:
         by[r['pair']][(int(r['layer']), r['kind'])] = (float(r['rel_l2_mean']), float(r['rel_l2_p99']))
-        nctx[r['pair']] = r['contexts']
     for pair, d in by.items():
         g0pair = next((g for pre, g in pair_map if pair.startswith(pre)), None)
         layers = sorted({l for l, _ in d})
@@ -167,7 +170,12 @@ def tasks_table(label):
     p('| pair | selector | budget | tasks | KL mean | KL max (task) | top-1 | mean |Δ mask NLL| | max |Δ mask NLL| | EM ref / cmp |')
     p('|---|---|---:|---:|---:|---:|---:|---:|---:|---|')
     g = defaultdict(list)
+    seen = set()
     for r in rows:
+        key = (r['context_id'], r['task_index'], r['pair'], r['selector'], r['budget_pct'])
+        if key in seen:
+            continue
+        seen.add(key)
         g[(r['pair'], r['selector'], int(r['budget_pct']))].append(r)
     for (pair, sel, b), rs in sorted(g.items()):
         kl = [float(r['kl_mean']) for r in rs]

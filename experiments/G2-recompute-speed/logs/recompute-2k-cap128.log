@@ -13,3 +13,74 @@ corpus docagent: t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016 = 
 corpus codesharp: t8-corpus-codesharp-8e2adbd8-20261101111016 = git archive 8e2adbd82a50ce3a847f5b3eba6651d1dbe41bc2 of C:\Development\codesharp; expected chunk-id sha256 (symbol-512) bf397403250ae02d840de51e004c46a7a2e38ef59e41edd80e41e30a865df1fb
 model: bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF @ ae44f08e1392f39c0e474af10c3ff8355c8b6688 / Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf (2497280736 bytes)
 # end provenance
+power requests held: ExecutionRequired, SystemRequired, DisplayRequired
+loaded Qwen_Qwen3-4B-Instruct-2507-Q4_K_M (Qwen, 36 layers, kv heads 8, head dim 128, vocab 151936) on vulkan in 2.5 s; engine 0.3.0-dev.3644.22+b3fd24a6efbca7a01f176c87e15801b4fbdbe9bd
+vulkan device: AMD Radeon(TM) 8060S Graphics; eval off (timing run: all-row logits never widened); single-pass row cap 128
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-AFClaude-b3f29c30-20261101111141: 9 files (0 excluded), symbol-512: 74 chunks, 12744 tokens (chunk tokens median 107, max 510); Decode(Encode(file)) == file for 9/9; 0.5 s
+chunk-id sha256 2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\afclaude.plans.jsonl: 16 plans, identical chunk ids
+kept task ids: 16; found 16; missing 
+contexts (first task id): src/AFClaude/FoundryTools.cs:23:48
+plans: 1 contexts, 1 tasks (kept, seed 0, 1.8 s); mean context 2045 tokens, 12.0 chunks
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +0 s] full prefill block 512 rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +2 s] full prefill block 512 rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +4 s] full prefill block 512 rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +6 s] full prefill block 2048 rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +8 s] full prefill block 2048 rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +9 s] full prefill block 2048 rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +11 s] encode (host entries: forward + readback)
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +17 s] upload host entries into resident caches
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +20 s] control tail_ordinary: 128 rows at 1917.. rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +20 s] control tail_ordinary: 128 rows at 1917.. rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +21 s] control tail_ordinary: 128 rows at 1917.. rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +21 s] control tail_qpos: 128 rows at 1916.. rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +25 s] control tail_qpos: 128 rows at 1916.. rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +29 s] control tail_qpos: 128 rows at 1916.. rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +33 s] chunk_starts 20 % (409 rows, 10 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +40 s] chunk_starts 20 % (409 rows, 10 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +47 s] chunk_starts 20 % (409 rows, 10 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +54 s] chunk_starts 20 % (409 rows, 10 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +60 s] chunk_starts 20 % (409 rows, 10 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +67 s] chunk_starts 20 % (409 rows, 10 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +73 s] random 20 % (409 rows, 325 runs) SinglePass rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +80 s] random 20 % (409 rows, 325 runs) SinglePass rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +88 s] random 20 % (409 rows, 325 runs) SinglePass rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +95 s] random 20 % (409 rows, 325 runs) PerRun rep 0
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +106 s] random 20 % (409 rows, 325 runs) PerRun rep 1
+[recompute afclaude/symbol/s0/kept/p0 L 2045 chunks 12 +118 s] random 20 % (409 rows, 325 runs) PerRun rep 2
+[recompute afclaude/symbol/s0/kept/p0 L 2045 tasks 1] done in 130 s; at 2.2 min
+corpus C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\t8-corpus-CSharpDocAgentFrameworkMCP-66838238-20261101111016: 55 files (0 excluded), symbol-512: 478 chunks, 76017 tokens (chunk tokens median 105, max 511); Decode(Encode(file)) == file for 55/55; 1.3 s
+chunk-id sha256 5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7
+plans verified against C:\Development\ChunkedkvCache\experiments\corpus\docagent.plans.jsonl: 48 plans, identical chunk ids
+kept task ids: 27; found 27; missing 
+contexts (first task id): src/DocAgent.McpServer/Ingestion/TypeScriptIngestionService.cs:94:53
+plans: 1 contexts, 1 tasks (kept, seed 0, 2.0 s); mean context 2040 tokens, 14.0 chunks
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +0 s] full prefill block 512 rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +2 s] full prefill block 512 rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +4 s] full prefill block 512 rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +5 s] full prefill block 2048 rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +7 s] full prefill block 2048 rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +9 s] full prefill block 2048 rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +11 s] encode (host entries: forward + readback)
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +16 s] upload host entries into resident caches
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +20 s] control tail_ordinary: 128 rows at 1912.. rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +20 s] control tail_ordinary: 128 rows at 1912.. rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +21 s] control tail_ordinary: 128 rows at 1912.. rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +21 s] control tail_qpos: 128 rows at 1911.. rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +25 s] control tail_qpos: 128 rows at 1911.. rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +29 s] control tail_qpos: 128 rows at 1911.. rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +33 s] chunk_starts 20 % (408 rows, 11 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +39 s] chunk_starts 20 % (408 rows, 11 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +46 s] chunk_starts 20 % (408 rows, 11 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +53 s] chunk_starts 20 % (408 rows, 11 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +59 s] chunk_starts 20 % (408 rows, 11 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +66 s] chunk_starts 20 % (408 rows, 11 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +73 s] random 20 % (408 rows, 330 runs) SinglePass rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +79 s] random 20 % (408 rows, 330 runs) SinglePass rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +85 s] random 20 % (408 rows, 330 runs) SinglePass rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +91 s] random 20 % (408 rows, 330 runs) PerRun rep 0
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +102 s] random 20 % (408 rows, 330 runs) PerRun rep 1
+[recompute docagent/symbol/s0/kept/p0 L 2040 chunks 14 +113 s] random 20 % (408 rows, 330 runs) PerRun rep 2
+[recompute docagent/symbol/s0/kept/p0 L 2040 tasks 1] done in 125 s; at 4.4 min
+recompute 2k-cap128: 2 contexts in 4.4 min -> C:\Development\ChunkedkvCache\experiments\G2-recompute-speed
+# exit code 0 after 4.7 min
