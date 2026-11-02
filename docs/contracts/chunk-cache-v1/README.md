@@ -41,3 +41,19 @@ semantic checks pass; an optional folder argument checks a copy).
 
 `check.py` is also a small reference implementation of the span validation: it recomputes every hash and offset, derives the
 warnings from the requests and compares them with `expected.json`, and checks the response invariants above.
+
+## Rulings on spec silence (controller, 2026-11-02; the spec should absorb these when next revised)
+
+1. Overlap: the later span in manifest order is dropped; count 1.
+2. A `chunk_cache` object with options only (no `chunks`) next to inline annotations is NOT a conflict.
+3. An empty span (`start == end`) is `chunk_span_invalid`.
+4. Several defects in one request: the strict-mode error code is that of the first defect in request document order (messages, then parts, then spans).
+5. `chunks.annotated = prefix + hit + miss + ignored`; `hit` means "found in the store", whether or not reuse was applied (so `hit` is non-zero under `exact` and `shadow`).
+6. `reason` is `null` when the applied policy equals the requested policy.
+7. Under `shadow`, `plan` is `{selector, budget, tokens{same keys, own partition}, predicted_ttft_ms, full_prefill_estimate_ms}`.
+8. `timings.chunk_n` equals `chunk_reused` (it does not include `prefix_reused_approx`).
+9. Anthropic `message_delta` usage carries only `output_tokens` and `cache_read_input_tokens` (= `prefix_reused`).
+10. Under `exact`, `recompute` is omitted and `timings_ms` is present with zeros.
+11. `start == 0` and `end == len` are on-boundary.
+12. Inline `v` is required; `chunk_not_wire_eligible` is covered by the server task's own tests, not by a fixture.
+13. `chunk_ignored_too_short` is tokenizer-dependent and has no pinned request fixture.
