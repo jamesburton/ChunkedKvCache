@@ -172,6 +172,11 @@ It deconstructs to `(Context, Stats)`.
 - **Namespaces.** `ChunkNamespace.Default` (`""`) is for a single-user local store. `ChunkNamespace.ForApiKey(key)` is
   `"k-"` + the first 16 lowercase hex of SHA-256 over the key's UTF-8 bytes. It never holds the key and never equals the
   default; an empty key is refused (a caller without a key uses the default).
+- **Validity rule** (review S1, `a152e504`): a namespace matches `^(|k-[0-9a-f]{16}|[a-z0-9._-]{1,64})$` (empty = default),
+  checked by `ChunkNamespace.IsValid` / `Validate` and enforced by `ChunkKey.Create` and, before any store read, by
+  `StoredContextAssembler.Assemble`. Valid namespaces are plain ASCII, safe in file names, JSON and logs. The namespace is also
+  hashed with a throwing UTF-8 encoder, because the default encoder turns every lone surrogate into U+FFFD
+  (`"\uD800"` and `"\uDC00"` would otherwise share every key). Golden values did not change.
 - **Assembler.** `StoredContextAssembler.KeyOf(config, ids, @namespace = Default)` and `Assemble(..., query, @namespace =
   Default)`. One namespace's entries are never hits, rejects or evictions in another.
 - **Indexes.** An index's producer identity is `keyOf([])`, so it includes the namespace: an index saved under one namespace

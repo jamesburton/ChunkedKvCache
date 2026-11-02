@@ -19,6 +19,9 @@ What it adds:
   namespace `""` is hashed too (a zero length), never skipped, so no v4 key equals a v3 key.
 - **`public static class ChunkNamespace`**: `Default = ""`; `ForApiKey(apiKey)` = `"k-"` + the first 16 lowercase hex of
   SHA-256 over the key's UTF-8 bytes (a digest, never the key; stable; never equals `Default`; an empty key is refused).
+  `IsValid` / `Validate` / `MaxLength`: a namespace must match `^(|k-[0-9a-f]{16}|[a-z0-9._-]{1,64})$`, enforced by
+  `ChunkKey.Create` and by `Assemble` up front. The namespace is hashed with a strict (throwing) UTF-8 encoder, so two
+  lone-surrogate strings cannot collapse to the same U+FFFD bytes.
 - **`StoredContextAssembler.KeyOf(config, ids, @namespace = Default)`** and **`Assemble(..., query, @namespace =
   Default)`**: one namespace's entries are never hits, rejects or evictions in another. A null namespace is refused before
   any store read.
@@ -39,7 +42,9 @@ namespace` (Task 16), and a CLI `--namespace` option (the CLI keeps the default 
 - [ ] `Key_DefaultNamespace_GoldenV4` pins the v4 default key and the v4 key of one named namespace; both were derived by an
   independent Python re-implementation of the encoding that reproduces the v3 goldens; the v3 golden no longer matches.
 - [ ] `Key_DiffersByNamespace`, `ForApiKey_IsStable_AndNeverEqualsDefault` (golden `k-e0dbaa0c6455768b` for
-  `sk-test-123`), `Index_SavedUnderOtherNamespace_LoadsEmptyWithNote`, `Assemble_OtherNamespace_AllMisses` pass.
+  `sk-test-123`), `Index_SavedUnderOtherNamespace_LoadsEmptyWithNote`, `Assemble_OtherNamespace_AllMisses`,
+  `Namespace_LoneSurrogates_NeverShareAKey`, `Namespace_Valid_IsAccepted`, `Namespace_Invalid_IsRefusedEverywhere` and
+  `Namespace_Null_IsNotValid` pass.
 - [ ] Every correctness test shown to fail against a mutant (below).
 
 ## Mutant evidence
@@ -66,3 +71,15 @@ filter was run on the CPU (`DOTLLM_SKIP_VULKAN=1`), and the file was restored by
 | N12 `ForApiKey` returns the key itself | same |
 | N13 `ChunkKey.Create` treats null as the default | `Key_DiffersByNamespace` |
 | N14 `Assemble` / `KeyOf` treat null as the default | `Assemble_OtherNamespace_AllMisses` |
+
+Review fix round (`a152e504`; driver `phase-i-task-2-fix-mutate.py`, log `phase-i-task-2-fix-mutants.log`): **9 of 10
+killed, 1 equivalent.**
+
+| mutant | result |
+|---|---|
+| F1 `ChunkKey.Create` skips the rule | killed: `Namespace_Invalid_IsRefusedEverywhere`, `Assemble_OtherNamespace_AllMisses`. `Namespace_LoneSurrogates_NeverShareAKey` still passes here: the strict encoder alone refuses lone surrogates |
+| F2 replacing UTF-8 encoder for the namespace | **equivalent**: the rule admits ASCII only, so the encoder never sees a surrogate |
+| F3 F1 + F2 | killed: `Namespace_LoneSurrogates_NeverShareAKey`, `Namespace_Invalid_…`, `Assemble_OtherNamespace_…` |
+| F4 upper case accepted / F5 no length bound / F6 `/` and `\` accepted / F7 any characters accepted / F8 `Validate` checks only null | killed: `Namespace_Invalid_IsRefusedEverywhere` (F4, F6, F7 and F8 also by `Assemble_OtherNamespace_…`) |
+| F9 `Assemble` checks only null up front | killed: `Assemble_OtherNamespace_AllMisses` (ParamName `namespace` before `destination`) |
+| F10 null counted as valid | killed: `Namespace_Null_IsNotValid` |
