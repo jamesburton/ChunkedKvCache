@@ -255,8 +255,8 @@ Request level (`chunk_cache`):
      the rendered output contains the placeholder intact and that the text around it is what the template produced for
      the unannotated request. Implementation choice for dotLLM: sentinel rendering, or rendering twice and diffing.
    - **If the template altered the span's text, the span is ignored** (warning `chunk_template_altered`). The comparison
-     uses the span text as the chat path marks it (U+FDD0 inserted into special-token spellings, #1339), or strips U+FDD0
-     from both sides. Pinned in Task 9 **[verified]**:
+     uses the span text as the chat path marks it (U+FDD0 inserted into special-token spellings, #1339; `ControlTokenGuard`
+     strips it at encode time), or strips U+FDD0 from both sides. Pinned in Task 9 **[verified]**:
      - Llama-3.1's template trims user / assistant / system content and JSON-encodes tool content, so on Llama-3.1
        tool-result spans are never reusable in v1, and spans at a part edge lose whitespace;
      - Qwen3 keeps content verbatim.
@@ -264,8 +264,8 @@ Request level (`chunk_cache`):
      does not trim.
 6. **Special tokens.** Chunk text is tokenised exactly as the plain request path tokenises message content (Task 9
    pin, ruling 21) **[verified]**.
-   - The chat path does not parse special-token strings in caller content: the template marks them with U+FDD0 and encode
-     strips the mark. Bare `EncodeRaw` **does** parse them, so the chunkers were not equivalent.
+   - The chat path does not parse special-token strings in caller content: the template marks them with U+FDD0 and
+     `ControlTokenGuard` strips the mark at encode time (not on decode). Bare `EncodeRaw` **does** parse them, so the chunkers were not equivalent.
    - So chunk text is tokenised as `EncodeRaw(MarkUntrustedSpecials(text))` by the store, the wire path, `build` and
      prewarm alike; a chunk containing `<think>` is plain text on both sides. `chunk_special_tokens` stays reserved.
    - Either way, a file cannot inject control tokens through the chunk path that it could not inject as plain content.
@@ -1039,7 +1039,7 @@ decorator position; CRLF; the guard cannot cut at spans.
 | **L6** | **Text-first chunkers:** `lines-512`; `SymbolChunker` marks over-long-line token slices wire-ineligible; `build` asserts `EncodeRaw(text) == ids` per chunk | B1 (§5.3, item 4) | this project |
 | **L7** | **Snapshot lineage** (`exact` / `approx` per row range) in the prefix-snapshot store, with restore limited by policy | B2 (§5.3, item 8) | dotLLM session |
 | **L8** | **`namespace` in `ChunkKey`** (a new field; key scheme v4) and in the ledger | isolation (§10) | this project |
-| **L9** | **Index path keyed by chunker** (and later by render profile): `index-<chunker>[-<render>].json` | avoids collisions when `numbered-relative` arrives | this project (later) |
+| **L9** | **Index path keyed by chunker and model** (and later by render profile): `index-<chunker>.<model12>[-<render>].json`, plus a `chunkcache.json` registry in the store root. A server-backed CLI keys on the **server's** model identity (from `GET /v1/chunk-cache`), not the local GGUF's | two models (or a chunker change) sharing a store root no longer collide; `numbered-relative` slots in later | this project (Phase I Task 4b) |
 
 ## 15. Sources
 

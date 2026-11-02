@@ -101,7 +101,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 | lane | tasks (serial within a lane unless noted) | worktree | runs |
 |---|---|---|---|
 | contract | 0 | this repo | first; feeds every lane |
-| L library | 1 → 2 → 3 → 4; 5 → 5b may run beside 2–4 in a temporary worktree `chunk-wire` off `feature/chunk-cache` (merge conflict expected only in the index JSON context); 5b precedes Tasks 13, 15 and 17 | `chunk-cache` | CPU (Task 1 has one GPU-lock step) |
+| L library | 1 → 2 → 3 → 4 → 4b; 5 → 5b may run beside 2–4 in a temporary worktree `chunk-wire` off `feature/chunk-cache` (merge conflict expected only in the index JSON context); 5b precedes Tasks 13, 15 and 17 | `chunk-cache` | CPU (Task 1 has one GPU-lock step) |
 | C client | 6 (its review fixes run in parallel with everything else) → (7 ∥ 8); no dependency on any store task (L or I1b), so it may ship first (user-approved) | `chunk-client` | CPU; fully parallel with L and S |
 | S server (we implement, dotllm-97 / user file and merge) | 9 (done, `38c0314b`) → 10 → 11 → 13 → 14; 12 parallel with 10–11 in worktree `chunk-server-lineage` (separate files: `DotLLM.Engine/PromptCache/*`); 15 → 16 after Lane L Task 4 is merged into the server branch | `chunk-server` | CPU (Task 15 has one GPU-lock step) |
 | T tooling | 17 → 18, after Tasks 4, 5, 6 and the Task 16 endpoint contract | `chunk-cache` | CPU |
@@ -243,6 +243,9 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   (`index-<chunker>.lock`); `AcquireStoreLock` (existing) is now documented and used for short scopes only: one `Put` batch,
   one ledger or index save, one eviction pass. `ChunkStoreLockTimeoutException` (derives from `ChunkStoreBusyException`) on
   timeout. The remarks at `ChunkIndex.cs:284-289` change to the new contract.
+- Starting point: Phase S Task 7's fix round already narrowed `build` to take the store lock only around index update,
+  encode and write, with a `--lock-timeout` option. This task still does the short-scope redesign (per-index lock, per-batch
+  store lock, eviction pass) and keeps `--lock-timeout` as the CLI's timeout for both locks.
 
 - [ ] **Step 1: Write failing tests:** `IndexOnlyUpdate_DoesNotNeedStoreLock` (store lock held by another handle; index update
   plus save succeed); `SameChunkerIndexUpdates_Serialise` (second acquirer times out); `DifferentChunkers_DoNotBlock`;
@@ -251,6 +254,32 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 3:** Implement (exclusive `FileShare.None` lock files, as `AcquireStoreLock`).
 - [ ] **Step 4:** Rerun; PASS; mutants: index lock is the store lock; lock not released on exception; shared lock mode.
 - [ ] **Step 5:** Commit.
+
+### Task 4b: Index naming by chunker and model, store registry (L9) [CPU]
+
+**Files:**
+- Modify (dotLLM): `src/DotLLM.ChunkReuse/Store/ChunkIndex.cs` (`DefaultPath`, lock names)
+- Create (dotLLM): `src/DotLLM.ChunkReuse/Store/StoreRegistry.cs`
+- Test: `tests/DotLLM.Tests.Unit/ChunkReuse/StoreRegistryTests.cs`
+
+**Interfaces:**
+- Produces: `ChunkIndex.DefaultPath(string storeRoot, string chunkerName, string modelId)` =
+  `<storeRoot>/index-<chunker>.<model12>.json`, where `model12` = the first 12 hex digits of SHA-256 of the content model id
+  (`GgufIdentity.ModelId` form); the index lock follows (`index-<chunker>.<model12>.lock`). `StoreRegistry` =
+  `<storeRoot>/chunkcache.json` listing each index: `{file, chunker, model_id, tokenizer_id, backend, namespace, updated}`,
+  written atomically under the store lock; `StoreRegistry.Find(chunker, modelId, ns) -> string? indexPath`.
+  `ReferencedKeysUnder` / `StoreWideOrphans` read every `index-*.json` as today (registry is advisory; a missing registry is
+  rebuilt from the index files' producer identities). A server-backed CLI (Task 17) keys on the **server's** model identity
+  (from `GET /v1/chunk-cache`, which Task 14 must return as the content model id and tokenizer id), never on a local GGUF's.
+  The old `index-<chunker>.json` is loaded once and renamed when its producer identity matches, else left for `orphans`.
+
+- [ ] **Step 1: Write failing tests:** `TwoModelsSameChunker_TwoIndexFiles`; `Registry_ListsEveryIndex_AndRebuildsWhenMissing`;
+  `Registry_SaveIsAtomic`; `OldIndexName_MigratedWhenProducerMatches`; `OldIndexName_OtherProducer_LeftAndStillReferenced`;
+  `Orphans_CountKeysFromAllModelIndexes`.
+- [ ] **Step 2:** Run; expected FAIL.
+- [ ] **Step 3:** Implement.
+- [ ] **Step 4:** Rerun; PASS; mutants: model hash omitted from the name; registry treated as authoritative for orphans.
+- [ ] **Step 5:** Commit; write the issue draft.
 
 ### Task 5: Wire-eligible chunking (L6) [CPU; may run beside Tasks 2–4]
 
@@ -293,8 +322,9 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 
 ### Task 5b: Chunk encoding matches the chat path (ruling 21) [CPU]
 
-Task 9 found that `EncodeRaw` **parses** special-token spellings (F9) while the chat path does not (F7: the template marks
-them with U+FDD0, #1339, and encode strips the mark). So a chunk containing `<think>` or `<|im_start|>` gets different ids
+Task 9 found that `EncodeRaw` **parses** special-token spellings (F9) while the chat path does not (F7: the template
+inserts U+FDD0 into each special spelling in caller text, #1339, and `ControlTokenGuard` strips the mark at **encode** time,
+not on decode, so the spelling tokenises as plain text). So a chunk containing `<think>` or `<|im_start|>` gets different ids
 from the chunkers than from a chat request. Ruling 21: chunk text is tokenised as `EncodeRaw(MarkUntrustedSpecials(text))`
 everywhere: chunkers, `ChunkEncoder`, `VerifyRoundTrip`, the server wire and encode paths (Tasks 13, 15), and CLI / prewarm
 (Task 17).
@@ -302,7 +332,9 @@ everywhere: chunkers, `ChunkEncoder`, `VerifyRoundTrip`, the server wire and enc
 **Files:**
 - Create (dotLLM): `src/DotLLM.ChunkReuse/Corpus/ChunkTokenization.cs`
 - Modify (dotLLM): `Corpus/SymbolChunker.cs` (the `EncodeRaw` calls at `:180,209,239`), `Corpus/LinesChunker.cs`,
-  `Corpus/WireChunking.cs` (`VerifyRoundTrip`), `ChunkEncoder.cs` if it tokenises text; if `MarkUntrustedSpecials` is not
+  `Corpus/FixedSizeChunker.cs` (lab-only, kept consistent), `Corpus/WireChunking.cs` (`VerifyRoundTrip`), `ChunkEncoder.cs`
+  if it tokenises text, and every raw `EncodeRaw` call on chunk text in `tools/DotLLM.ChunkCache/` (find with
+  `rg -n "EncodeRaw" tools/DotLLM.ChunkCache src/DotLLM.ChunkReuse`); if `MarkUntrustedSpecials` is not
   public (`JinjaChatTemplate.cs:99,190`), reach it through the existing `InternalsVisibleTo` (C1) rather than copying it
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/ChunkTokenizationTests.cs`
 
@@ -317,7 +349,14 @@ everywhere: chunkers, `ChunkEncoder`, `VerifyRoundTrip`, the server wire and enc
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement; route every library tokenisation of chunk text through `ChunkTokenization.Encode`.
 - [ ] **Step 4:** Rerun; PASS; mutants: unmarked `EncodeRaw`; marking applied twice; one chunker left on `EncodeRaw`.
-- [ ] **Step 5:** **Versioning note.** Token ids are in `ChunkKey`, so a chunk whose ids change gets a new key by itself (a
+- [ ] **Step 5:** **Re-pin the corpus hashes (decision: re-pin, the lab moves to the new tokenisation).** codesharp's
+  source contains `<think>...</think>` (`CompactionSummaryValidation.cs:57`), so its pinned `symbol-512` and `fixed-512`
+  chunk-id hashes (`experiments/corpus.md`, E4c roundtrip logs) **will change**. Rerun `ChunkKvLab index-roundtrip` /
+  `roundtrip` on the three frozen corpora, record old and new hashes side by side in `experiments/corpus.md` with the 5b
+  commit, and state that E1–E4c results were produced under the old tokenisation (they differ only for chunks containing
+  special spellings; give the count per corpus). Keeping the lab on the old tokenisation was rejected: lab and wire would
+  disagree on exactly the chunks this task fixes.
+- [ ] **Step 6:** **Versioning note.** Token ids are in `ChunkKey`, so a chunk whose ids change gets a new key by itself (a
   miss, never a wrong hit), and `KvOutputVersion` is unchanged (K/V for given ids is unchanged). Stored indexes, however,
   hold the old `KeyHex` for such chunks: if this task lands after Task 2's `chunk-key/v4` has been used for a persisted store,
   bump the index format version so old indexes re-chunk; if before, v4 covers it and no extra bump is needed. Record which
@@ -589,7 +628,8 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
 
 **Interfaces:**
 - Produces: `GET /v1/chunk-cache` (§5.9 capabilities; `selectors: ["chunk_starts"]`, `wire_chunkers: ["symbol-512"]`,
-  `auto_validated: []`, store figures 0 until Task 15); `POST /v1/chunk-cache/explain` (§7.2 schema; same codes; per-chunk
+  `auto_validated: []`, store figures 0 until Task 15; `model.id` is the content model id (`GgufIdentity.ModelId`) and
+  `model.tokenizer_id` is added, which the server-backed CLI uses to name its index, Task 4b); `POST /v1/chunk-cache/explain` (§7.2 schema; same codes; per-chunk
   status only for an authenticated caller in its own namespace, else counts). Flag off: both 404.
   **Auth (dotLLM has no authentication today, `SERVER.md` § Security):** `ChunkCacheAuth.Resolve(HttpContext) ->
   ChunkCaller(bool Authenticated, string Namespace)`. With `--chunk-cache-api-keys` set: `X-API-Key` / `Bearer` must be in
@@ -683,11 +723,25 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
   hash lookup exists; body `{"request": ...}` per ruling 15, the texts in an OpenAI string-content message per ruling 19).
   All chunk text is tokenised with `ChunkTokenization.Encode` (Task 5b). `explain` posts a request file.
   `compare` stays lab-only, not in MCP.
+- **Already in Phase S Task 7's fix round (not repeated here):** UTF-8 stdout, repeatable non-splitting list options,
+  registry-name validation. **This task adds:** `--server URL`; the API key from `CHUNKCACHE_API_KEY` only (never a command
+  line argument, ruling 18); `--model` optional when `--server` is given (the server's model identity names the index,
+  Task 4b), required with `--offline`.
+- **Known divergences to resolve here (Task 7 review):** (a) `build` encodes everything by default while the MCP tool's
+  `encode` defaults to `false`: the CLI keeps its default, and the MCP wrapper always passes the index-only flag unless
+  `encode: true`, plus the budget; (b) `--max-chunks` counts chunks while `max_encode_tokens` counts tokens: add
+  `--max-encode-tokens` and map the MCP field to it, never to `--max-chunks`; (c) under `--json` every error is a JSON object
+  on stdout, `{"error": {"code": "...", "message": "..."}}`, with a non-zero exit; (d) CLI-only output fields (lab detail)
+  are allowed in CLI JSON, and the MCP wrapper projects onto the §7.2 output schema, which forbids extra properties;
+  (e) `budget_bytes` is not emitted today: `status` emits it only with `--server` (from capabilities), and the §7.2 schema
+  treats it as optional; (f) evict modes are aligned to §7.2 (`orphans | path | namespace | all`), old CLI mode names
+  rejected with a message naming the new one.
 
 - [ ] **Step 1: Write failing tests:** `EachVerb_Json_MatchesSchema` (schemas from §7.2 as JSON Schema files under
   `tests/.../Fixtures/v1/schemas/`); `Build_DeniedFiles_CountedNotChunked`; `Build_Lines512_IsPendingE4c_RefusedWithoutLab`;
   `Build_Encode_CallsPrewarm_NeverPut`; `Evict_WithoutServerOrOffline_Exit2`; `Offline_SecondWriter_ExitsNonZeroWithinTimeout`
-  (Review Focus); `Select_HashEqualsWireHash`.
+  (Review Focus); `Select_HashEqualsWireHash`; `Json_Error_IsObjectOnStdout_NonZeroExit`; `ApiKey_FromEnvOnly`;
+  `ServerBacked_IndexNamedByServerModel`; `MaxEncodeTokens_CountsTokens`; `Evict_OldModeName_RejectedWithHint`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: build `--encode` writes locally; deny-list skipped; JSON field renamed.
@@ -708,6 +762,8 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
   `chunkcache_select`, `chunkcache_status`, `chunkcache_evict`, `chunkcache_prewarm`, `chunkcache_explain`, each with
   `inputSchema` and `outputSchema` from §7.2, returning `structuredContent` plus a serialised text copy. Each tool runs the
   same verb handler as `chunkcache <verb> --json`; nothing else (thin wrapper). `dry_run` defaults to `true` for evict.
+  The wrapper passes index-only unless `encode: true` and maps `max_encode_tokens` to `--max-encode-tokens`; it projects CLI
+  output onto the §7.2 schema (extra properties dropped); a CLI JSON error object becomes a tool result with `isError`.
 
 - [ ] **Step 0 (spike, decide the package):** the official SDK (`modelcontextprotocol/csharp-sdk`) ships
   `ModelContextProtocol.Core` (client and low-level server APIs, minimal dependencies), `ModelContextProtocol` (Core plus
@@ -721,7 +777,7 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
   GPL-3.0-compatible) and the version (≥ 2 weeks old). **Default to `ModelContextProtocol.Core` if it suffices.** Record the
   answers and the choice in `docs/release/mcp-sdk-choice.md`.
 - [ ] **Step 1: Write failing tests:** `ToolsList_HasSixTools_WithSchemas`; `EachTool_StructuredContentEqualsCliJson` (same
-  args, byte-equal JSON); `Evict_DefaultsToDryRun`; `UnknownArgument_RejectedBySchema`; `ToolError_IsResultWithIsError`.
+  args, byte-equal JSON after projection onto the §7.2 schema); `Build_DefaultIsIndexOnly`; `Evict_DefaultsToDryRun`; `UnknownArgument_RejectedBySchema`; `ToolError_IsResultWithIsError`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement with the chosen package's stdio transport.
 - [ ] **Step 4:** Rerun; PASS; mutants: tool output re-shaped; dry-run default false.
@@ -871,8 +927,8 @@ accuracy metrics of §12.5. The default stays `exact`.
 ## Not in this plan
 
 I7 transparent mode and the Claude Code recipe; adapters for Semantic Kernel / LangChain / Claude Code; `contextual`
-positioning; by-reference chunks; `hybrid` selector; `numbered-relative` (L9's render suffix is reserved; the chunker half of
-L9 already exists as `index-<chunker>.json`); recurrent models (Phase T); the E7 quality half.
+positioning; by-reference chunks; `hybrid` selector; `numbered-relative` (L9's render suffix is reserved; the chunker and
+model parts are Task 4b); recurrent models (Phase T); the E7 quality half.
 
 ## Decisions (answered 2026-11-02)
 
@@ -889,8 +945,9 @@ L9 already exists as `index-<chunker>.json`); recurrent models (Phase T); the E7
 
 ## Self-review notes
 
+- 2026-11-02 rev 4: Task 7 review: Task 4b (L9 adopted), 5b re-pin and file list, Task 17/18 divergences, L3 note.
 - 2026-11-02 rev 3: Task 9 done; rulings 19–21 folded into Tasks 5b (new), 10, 11, 13, 15, 17.
-- Spec coverage: L1 Tasks 15, 17; L2 Task 3; L3 Task 4; L4 Task 1; L5 gate G-I5; L6 Task 5; L7 Task 12; L8 Task 2; L9 noted
+- Spec coverage: L1 Tasks 15, 17; L2 Task 3; L3 Task 4; L4 Task 1; L5 gate G-I5; L6 Task 5; L7 Task 12; L8 Task 2; L9 Task 4b
   above. I1a Tasks 9–14; I1b Tasks 15–16; I2 Tasks 6–8; I3 Tasks 17–18; I4 Appendix A; I5 and I6 (Phase D) gated sections;
   I7 deferred. §12.6 dotLLM contract tests map to Tasks 9, 10, 11, 13, 1/15 (CPU entry never hits on Vulkan) and 3/16
   (orphans keep ledger entries).
