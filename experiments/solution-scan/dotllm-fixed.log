@@ -1,0 +1,73 @@
+# provenance
+utc: 2026-11-02 15:46:50
+dotLLM: b2acb3b698a9b0acc6c0ca7a5e41ef70b6767ada dirty=0 (scanned solution = this worktree)
+sdk: 10.0.401
+model (tokenizer only): C:\Users\james\.cache\huggingface\hub\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\snapshots\ae44f08e1392f39c0e474af10c3ff8355c8b6688\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+command: scan-info --solution C:\Development\dotLLM\.claude\worktrees\chunk-scan\dotLLM.slnx --chunker fixed --chunk 512
+
+scan C:\Development\dotLLM\.claude\worktrees\chunk-scan\dotLLM.slnx: 30.7 s (workspace load, LF texts, compilations)
+projects scanned 27, skipped entries 0; files 2583 (generated 84, authored 2499); authored chars 29177887
+  project benchmarks/ChunkKvLab/ChunkKvLab.csproj [ChunkKvLab]: files 17, authored 14, diagnostics 0
+  project benchmarks/DotLLM.Benchmarks/DotLLM.Benchmarks.csproj [DotLLM.Benchmarks]: files 45, authored 42, diagnostics 0
+  project benchmarks/EmbeddingBench/EmbeddingBench.csproj [EmbeddingBench]: files 4, authored 1, diagnostics 0
+  project samples/DotLLM.Sample.Console/DotLLM.Sample.Console.csproj [DotLLM.Sample.Console]: files 4, authored 1, diagnostics 0
+  project samples/DotLLM.Sample.Interpretability/DotLLM.Sample.Interpretability.csproj [DotLLM.Sample.Interpretability]: files 4, authored 1, diagnostics 0
+  project samples/DotLLM.Sample.Logprobs/DotLLM.Sample.Logprobs.csproj [DotLLM.Sample.Logprobs]: files 4, authored 1, diagnostics 0
+  project samples/DotLLM.Sample.Server/DotLLM.Sample.Server.csproj [DotLLM.Sample.Server]: files 4, authored 1, diagnostics 0
+  project samples/DotLLM.Sample.ToolCalling/DotLLM.Sample.ToolCalling.csproj [DotLLM.Sample.ToolCalling]: files 4, authored 1, diagnostics 0
+  project src/DotLLM.ChunkReuse/DotLLM.ChunkReuse.csproj [DotLLM.ChunkReuse]: files 43, authored 39, diagnostics 0
+  project src/DotLLM.Cli/DotLLM.Cli.csproj [DotLLM.Cli]: files 41, authored 38, diagnostics 0
+  project src/DotLLM.Core/DotLLM.Core.csproj [DotLLM.Core]: files 114, authored 111, diagnostics 0
+  project src/DotLLM.Cpu/DotLLM.Cpu.csproj [DotLLM.Cpu]: files 93, authored 90, diagnostics 0
+  project src/DotLLM.Cuda/DotLLM.Cuda.csproj [DotLLM.Cuda]: files 95, authored 92, diagnostics 0
+  project src/DotLLM.Diagnostics/DotLLM.Diagnostics.csproj [DotLLM.Diagnostics]: files 4, authored 1, diagnostics 0
+  project src/DotLLM.Engine/DotLLM.Engine.csproj [DotLLM.Engine]: files 120, authored 117, diagnostics 0
+  project src/DotLLM.Hip/DotLLM.Hip.csproj [DotLLM.Hip]: files 15, authored 12, diagnostics 0
+  project src/DotLLM.HuggingFace/DotLLM.HuggingFace.csproj [DotLLM.HuggingFace]: files 14, authored 11, diagnostics 0
+  project src/DotLLM.Models/DotLLM.Models.csproj [DotLLM.Models]: files 134, authored 131, diagnostics 0
+  project src/DotLLM.Server/DotLLM.Server.csproj [DotLLM.Server]: files 74, authored 71, diagnostics 0
+  project src/DotLLM.Telemetry/DotLLM.Telemetry.csproj [DotLLM.Telemetry]: files 8, authored 5, diagnostics 0
+  project src/DotLLM.Tokenizers/DotLLM.Tokenizers.csproj [DotLLM.Tokenizers]: files 54, authored 51, diagnostics 0
+  project src/DotLLM.Tray.Core/DotLLM.Tray.Core.csproj [DotLLM.Tray.Core]: files 15, authored 12, diagnostics 0
+  project src/DotLLM.Tray/DotLLM.Tray.csproj [DotLLM.Tray]: files 9, authored 6, diagnostics 0
+  project src/DotLLM.Vulkan/DotLLM.Vulkan.csproj [DotLLM.Vulkan]: files 342, authored 339, diagnostics 0
+  project tests/DotLLM.Tests.Integration/DotLLM.Tests.Integration.csproj [DotLLM.Tests.Integration]: files 187, authored 183, diagnostics 0
+  project tests/DotLLM.Tests.Unit/DotLLM.Tests.Unit.csproj [DotLLM.Tests.Unit]: files 1122, authored 1118, diagnostics 0
+  project tests/DotLLM.Tray.Tests/DotLLM.Tray.Tests.csproj [DotLLM.Tray.Tests]: files 13, authored 10, diagnostics 0
+chunker fixed-512: 16610 chunks, 7876485 tokens (15.0 s)
+projects: invocations 153743, bind 153693 (100.0 %), to an authored file 84058 (54.7 %) [34.0 s]; graph edges 369017 (46.85 per 1K tokens) [35.5 s]; Definition 82, Use 272073, Import 6918, Call 89944
+bcl-only: invocations 153301, bind 129472 (84.5 %), to an authored file 83450 (54.4 %) [26.1 s]; graph edges 367354 (46.64 per 1K tokens) [34.7 s]; Definition 82, Use 271062, Import 6900, Call 89310
+edge overlap: both 362971, projects only 6046, bcl-only only 4383
+  Definition projects 82, bcl-only 82, both 82
+  Use        projects 272073, bcl-only 271062, both 271054
+  Import     projects 6918, bcl-only 6900, both 2525
+  Call       projects 89944, bcl-only 89310, both 89310
+per project (authored files): invocations, bind share projects vs bcl-only, to-authored-file share projects vs bcl-only
+  benchmarks/ChunkKvLab/ChunkKvLab.csproj: 1264; 100.0 % vs 100.0 %; 25.7 % vs 25.7 %
+  benchmarks/DotLLM.Benchmarks/DotLLM.Benchmarks.csproj: 1523; 100.0 % vs 98.6 %; 19.4 % vs 19.2 %
+  benchmarks/EmbeddingBench/EmbeddingBench.csproj: 327; 100.0 % vs 100.0 %; 25.1 % vs 25.1 %
+  samples/DotLLM.Sample.Console/DotLLM.Sample.Console.csproj: 59; 100.0 % vs 100.0 %; 1.7 % vs 1.7 %
+  samples/DotLLM.Sample.Interpretability/DotLLM.Sample.Interpretability.csproj: 1; 100.0 % vs 100.0 %; 0.0 % vs 0.0 %
+  samples/DotLLM.Sample.Logprobs/DotLLM.Sample.Logprobs.csproj: 44; 100.0 % vs 100.0 %; 0.0 % vs 0.0 %
+  samples/DotLLM.Sample.Server/DotLLM.Sample.Server.csproj: 14; 100.0 % vs 92.9 %; 0.0 % vs 0.0 %
+  samples/DotLLM.Sample.ToolCalling/DotLLM.Sample.ToolCalling.csproj: 47; 100.0 % vs 100.0 %; 0.0 % vs 0.0 %
+  src/DotLLM.ChunkReuse/DotLLM.ChunkReuse.csproj: 1040; 100.0 % vs 87.9 %; 23.1 % vs 21.7 %
+  src/DotLLM.Cli/DotLLM.Cli.csproj: 2145; 100.0 % vs 63.6 %; 11.6 % vs 13.7 %
+  src/DotLLM.Core/DotLLM.Core.csproj: 571; 100.0 % vs 100.0 %; 32.2 % vs 32.2 %
+  src/DotLLM.Cpu/DotLLM.Cpu.csproj: 7261; 99.7 % vs 97.1 %; 32.1 % vs 32.1 %
+  src/DotLLM.Cuda/DotLLM.Cuda.csproj: 8384; 100.0 % vs 99.8 %; 79.0 % vs 79.0 %
+  src/DotLLM.Diagnostics/DotLLM.Diagnostics.csproj: 0; 0.0 % vs 0.0 %; 0.0 % vs 0.0 %
+  src/DotLLM.Engine/DotLLM.Engine.csproj: 3233; 100.0 % vs 99.2 %; 40.5 % vs 40.5 %
+  src/DotLLM.Hip/DotLLM.Hip.csproj: 95; 100.0 % vs 100.0 %; 65.3 % vs 65.3 %
+  src/DotLLM.HuggingFace/DotLLM.HuggingFace.csproj: 638; 100.0 % vs 98.6 %; 23.4 % vs 23.4 %
+  src/DotLLM.Models/DotLLM.Models.csproj: 7341; 100.0 % vs 98.7 %; 52.0 % vs 52.0 %
+  src/DotLLM.Server/DotLLM.Server.csproj: 2512; 100.0 % vs 85.0 %; 36.7 % vs 34.2 %
+  src/DotLLM.Telemetry/DotLLM.Telemetry.csproj: 169; 100.0 % vs 93.5 %; 11.2 % vs 11.2 %
+  src/DotLLM.Tokenizers/DotLLM.Tokenizers.csproj: 2164; 100.0 % vs 100.0 %; 43.4 % vs 43.4 %
+  src/DotLLM.Tray.Core/DotLLM.Tray.Core.csproj: 320; 100.0 % vs 91.9 %; 29.7 % vs 25.3 %
+  src/DotLLM.Tray/DotLLM.Tray.csproj: 405; 100.0 % vs 58.5 %; 32.1 % vs 26.7 %
+  src/DotLLM.Vulkan/DotLLM.Vulkan.csproj: 17510; 99.9 % vs 99.7 %; 80.0 % vs 80.0 %
+  tests/DotLLM.Tests.Integration/DotLLM.Tests.Integration.csproj: 12151; 100.0 % vs 75.0 %; 17.4 % vs 17.3 %
+  tests/DotLLM.Tests.Unit/DotLLM.Tests.Unit.csproj: 83929; 100.0 % vs 77.7 %; 23.4 % vs 23.3 %
+  tests/DotLLM.Tray.Tests/DotLLM.Tray.Tests.csproj: 596; 100.0 % vs 46.6 %; 14.1 % vs 11.9 %
+exit 0; wall 216.7 s
