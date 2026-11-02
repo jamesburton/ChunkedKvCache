@@ -112,7 +112,7 @@ The spec was rewritten as revision 2.
 - **B3: chat templates.** Spans are located in the rendered prompt, and `chunk_template_altered` is added. Special
   tokens in chunk text are tokenised exactly as in the plain content path, else `chunk_special_tokens`.
 - **B4: required changes.** A "Required library and engine changes" section (§14) lists L1–L9 with owners: server as
-  sole writer, a server ledger counted by `StoredWideOrphans`, short-scope and per-index locks, the backend tag in the
+  sole writer, a server ledger counted by `StoreWideOrphans`, short-scope and per-index locks, the backend tag in the
   header, and engine assembly as I1/I5 work.
 
 **Should-fix**
@@ -162,3 +162,50 @@ The spec was rewritten as revision 2.
 - The LMCache version to pin is not identified.
 - #1540 is still not referenced in this repo.
 - The ~28 GB figure (100K tokens × 288 KiB) assumes every token misses.
+
+## Fix round 2 (codesharp-d1 review, `codesharp-review-answers.md`)
+
+§12 was rewritten, and the related lines elsewhere were updated.
+
+**Corrections applied in §12**
+- **Prefix-cache types.** `PrefixCacheLevel` and `IPrefixCachePolicy` are in `Core/PrefixCache`;
+  `RegistryPrefixCachePolicy` is in `Models`.
+- **Rule scope:**
+  - A4, B3 and B5 apply to all dotLLM providers;
+  - B1 and B2 only when `PrefixSnapshots == 1`;
+  - A1, A3, B6 and B9 to all providers.
+- **Capability.** A flag plus a new `IPrefixCachePolicy.ChunkReuseFor(modelId)`, backed by async probe state.
+- **Placement and gate.**
+  - The handler goes next to `DotLlmMaxTokensHandler`, gated on `dotllm`, not on openai-compatible.
+  - The decorator goes below `Retrying` and above `UniqueToolCallId`.
+  - Spans are keyed by text, not by call id.
+  - The `AsyncLocal` hand-off is unverified and is open question 1.
+  - SSE is parsed lazily.
+- **`read_file` facts:**
+  - the BOM is stripped and CRLF is preserved;
+  - no line numbers;
+  - the 2,000-line cap and its trailer;
+  - the windowed total is off by one.
+- **CRLF fix.** Normalising `read_file` output to LF is cheap and safe, because `EditFileTool` adapts line endings.
+- **Mutators.**
+  - Hook rewrites append to the same text: suffixes keep manifest spans valid, but whole-part spans break.
+  - `ToolOutputGuard` cannot cut at span boundaries without a new API.
+- **Compaction.** `SessionCompactor.Plan` works on serialised session JSON, by turns; B5 is size-based.
+- **Spike precondition.** B3 and B9 (ideally B7) must be built before the spike; `shadow` hit-rate measurement can run
+  before them.
+- **Open questions** were rebuilt: the answered ones are folded in, and the items they marked unverified are kept.
+
+**Corrections applied elsewhere**
+- §5.3 item 1: the hash is over decoded text, not the wire bytes.
+- §4 and §8.4: ADR-009 is cited first, then ADR-011.
+- §8.3: the handler gating and the decoded-text re-hash.
+- §11 item 5: the hook-rewrite wording.
+- I4 depends on B3 and B9.
+
+**Length.** Trimmed §9 alignment and §15 sources to keep the net change to +4 lines (1,051).
+
+**Still open**
+- The `AsyncLocal` hand-off.
+- Round-tripping of session JSON `AdditionalProperties`.
+- Whether `HookContext` carries the file path.
+- `SubAgentBootstrap` location.
