@@ -8,6 +8,9 @@
 > `C:\Development\dotLLM\.claude\worktrees\chunk-cache-server`, on top of the Task 14 security fix round (`3db1b01c`):
 > `804f8f1c` (library: owner lock, index-only referenced keys, deny-list), `0231b85b` (server), `b6fc3832` + `8e309015`
 > (tests), `2eb254df` (docs).
+> **Security review fix round** (`review-phase-i-task15-report.md`, 7 should-fix + nits): `72919d72` (deny-list),
+> `2be535b8` (server), `923a2246` + `10abfc68` (tests, written first and shown red), `7fbc5447` (docs). Summary in the
+> section "Review fix round" below.
 > **Packaging:** builds on issues 13 (exact / shadow, read-only `--chunk-store`) and 14 (auth, which gates the side
 > effects), and on the library store issues 02, 03, 04, 04b (namespace key, server ledger, lock model, index naming),
 > already merged into the server branch. Can ship as its own PR after 13 + 14; issue 16 (prewarm / evict / forget,
@@ -55,10 +58,10 @@ After `exact` / `shadow` planning, each verified **miss** of an **authenticated*
 caller without keys, or a valid key; anyone else gets no lookups and no side effects) on `/v1/chat/completions` or
 `/v1/messages` (never `explain`, never a request failing strict) is queued for a background encode only when:
 1. it is not `no_store` (no sighting either) and not `stability: "volatile"`;
-2. its `source.path`, when given, is not on the deny-list (`ChunkDenyList`, new in `DotLLM.ChunkReuse`: `.env*`,
-   `*.pem`, `*.key`, `*.pfx`, `id_*`, `secrets.json`, `appsettings.*.Development.json` by file name at any depth, and
-   anything under `.git/`; case-insensitive on every platform); a `source` that is not an object or a non-string `path`
-   is never admitted (the annotation itself is still accepted: `source` never affects lookup);
+2. its `source.path`, when given, is not on the deny-list (`ChunkDenyList`, new in `DotLLM.ChunkReuse`; the widened
+   list and the Windows-spelling normalisation are under "Review fix round", S6), and its text holds no PEM private
+   key; a `source` that is not an object or a non-string `path` is never admitted (the annotation itself is still
+   accepted: `source` never affects lookup); the most restrictive occurrence of a repeated text decides;
 3. the backend is CPU and the chunk has at most 2048 tokens;
 4. its text was seen in at least 2 requests in the caller's namespace (`SightingTable`: in memory, keyed by namespace
    and text hash, at most 100,000 rows, LRU; one sighting per request and text); `on_miss: "encode"` bypasses only this;
@@ -116,6 +119,50 @@ Nothing logs chunk text, hashes, keys or namespaces. The ledger holds each row's
 K/V): treat the root like the repository (spec §10). Maintainer decision carried from issue 14: namespaces derived by
 unsalted `ForApiKey` now also land in `ledger-server.json`.
 
+## Review fix round (security review of Task 15)
+
+- **S1, oversized entries.** An encoded entry larger than the budget, or than what the server's own rows could free, is
+  dropped alone with `chunk_store_unavailable` / `detail: entry_too_large`; nothing is evicted and the writer keeps
+  running. Only a store with nothing the server may evict stops encoding (`budget_exhausted`). A caller can no longer
+  stop the writer for everyone with one large chunk.
+- **S2, shutdown.** An encode in progress cannot be interrupted (the forward takes no cancellation). The server waits up
+  to 30 s; if the worker is still encoding, the model, the request gate and the store's ownership are left for the
+  process exit (logged by type only) instead of being freed under a running forward; ownership is released by the
+  worker itself when it ends.
+- **S3, ledger unreadable mid-run.** One state: after a failed save the ledger is read back (brief retries for a sharing
+  violation); if it cannot be read, the unsaved row leaves memory and writes stop (`ledger_unreadable`: no admission,
+  encode or write; the file is never written over). Only a verified read (retried every 30 s) re-enables writes; the
+  same applies to an unreadable ledger at startup.
+- **S4, latency.** The worker takes the model only after 2 s of quiet (no request running, waiting or started meanwhile;
+  a fixed constant), and pauses 10 s after 4 encodes in one quiet window. Worst-case wait for a request is one encode:
+  measured on the synthetic test model (CPU, 1 thread) about 35 ms for 86 tokens and 2.0-2.2 s for 2048 tokens; a real
+  CPU model is not measured (plausibly tens of seconds for 2048 tokens of a 7-8B model).
+- **S5, fairness.** Per-namespace queue share (64 of 256), at most 16 texts queued per request, per-namespace sighting
+  share (25,000 of 100,000), `source.path` stored capped at 256 characters (prefix + hash), and budget eviction takes the
+  writing namespace's own rows first.
+- **S6, deny-list (ruling).** Denied by file name: `.env*`, `*.env`, `*.pem`, `*.key`, `*.pfx`, `*.p12`, `id_*`,
+  `id_rsa*`, `secrets.*`, `appsettings*.json` (all, including `appsettings.Development.json`), `credentials*`,
+  `.npmrc`, `.netrc`, `.pgpass`; and anything under `.git/` or `.ssh/`. Windows spellings are normalised (trailing dots
+  and spaces, `::` alternate data streams denied, `:stream` dropped, 8.3 short names whose stem could be a denied name
+  denied). Chunk text with a PEM private-key header is never stored.
+- **S7, offline writers (Task 17, no code here).** `chunkcache --offline` must take the owner lock with
+  `StoreOwnerLock.TryAcquire` and **hold it for the whole write**. `StoreOwnerLock.IsHeldByAnother` is a racy probe (a
+  server can start between the probe and the write, and the probe itself can make a starting server fail); use it for
+  status display only.
+- **Nits.** The most restrictive occurrence of a text repeated in one request decides; `serve` claims ownership before
+  the model loads (a second writer fails in seconds); docs state that the owner lock is unreliable on network file
+  systems and that the store holds token ids (same access controls as the repository, out of crash dumps); writer
+  metrics `dotllm_chunk_store_{writes,evictions,skips}_total` and `dotllm_chunk_store_queue_depth` (fixed labels); a test
+  for the model-swap drop; the GPU test also asserts no `chunk_store_unavailable`.
+
+### Known limits (multi-tenant)
+
+(a) The encode queue is shared (per-namespace share 64 of 256, 16 per request). (b) The sighting table is shared
+(per-namespace share 25,000 of 100,000). (c) Sighting memory is bounded by the 256-character path cap. (d) The byte
+budget and its LRU are shared: eviction prefers the writing namespace's own rows, but a tenant with none evicts others'
+least recently used entries. Per-namespace budgets come with issue 16. The writer-wide `detail` values are visible to
+every authenticated tenant. The owner lock assumes a local file system.
+
 ## Acceptance criteria
 
 - [ ] PR targets `dev`, never `main`; `docs/SERVER.md` and `docs/CHUNK_CACHE.md` updated in the same PR.
@@ -125,6 +172,7 @@ unsalted `ForApiKey` now also land in `ledger-server.json`.
       initializer, guarded by the existing `JsonContextDefaultsTests`).
 - [ ] Mutation evidence below recorded in the PR body; `Closes #N` closed by hand on `dev`.
 - [ ] GPU step: `VulkanServer_CpuWrittenStore_NoHits` run under the GPU lock (not yet run: lock not obtained).
+- [ ] Task 17's `--offline` writer takes and holds the owner lock (`TryAcquire`), never relies on `IsHeldByAnother`.
 
 ## Tests
 

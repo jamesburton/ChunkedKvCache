@@ -140,3 +140,9 @@ warnings from the requests and compares them with `expected.json`, and checks th
 59. A local caller without keys (authenticated=true under the loopback rule) may write through annotated inference requests, subject to `--chunk-store-write`.
 60. Index-only mode accepts a key referenced by any index file in the store (as built).
 61. Encode/queue limits stay fixed constants in v1; options are deferred.
+
+## Rulings on the Task 15 fix round (controller, 2026-11-03)
+
+62. A hung encode may keep the model alive until process exit (no forced abort); the owner lock is kept too.
+63. The deny-list is a superset of ruling's list: `id_*` and `.git/**` stay; 8.3 short-name matching errs towards denying.
+64. The per-namespace sighting share is a fixed quarter of the table (25,000); all writer limits are constants in v1 (ruling 61).
