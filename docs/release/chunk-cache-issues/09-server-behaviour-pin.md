@@ -73,3 +73,8 @@ the GGUF template; it is the Qwen3 counterpart of the Llama-3.1 trim / tojson pi
 empty-block rule (identical with or without a separator, by design), and `RealGguf_TemplateFixture_IsTheGgufMetadataTemplate`
 (fixture provenance). The spec's assumptions were also run as expectations first (plan Step 1): 8 of 27 failed, all
 recorded in the task report.
+
+**PR cut re-run (2026-11-03, PR split Task 2):** branch `pr/chunkcache-server-pins` (`9d1899ed`, `38c0314b`
+cherry-picked onto `origin/dev` `29567637`), archive copy, same filter and script: baseline 27 / 27, **M1-M10 10 / 10
+killed by the same tests** (log `.superpowers/sdd/2026-11-01-phase-s/pr-split-pr2-pins-mutants.log`). PR body draft:
+`pr-bodies/PR-02-server-pins.md`.

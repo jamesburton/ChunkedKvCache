@@ -114,3 +114,8 @@ leaks the orphaned approximate node. Both became tests in `918bb68d`.
 Not targeted by a mutant: the `IsApprox` checks in `FindChild` / the insert dedup (redundant with the salted key except on
 a 64-bit hash collision, so an equivalent mutant without a forced collision). Review fix round (`3b594dc2`) added M13-M15 with
 their tests; M1-M12 rerun on the same commit, all still killed.
+
+**PR cut re-run (2026-11-03, PR split Task 2):** branch `pr/chunkcache-lineage` (`94d2fcd3`, the 3 commits rebased onto
+`origin/dev` `29567637`), archive copy, same filter and script: baseline passes, **M1-M15 15 / 15 killed by the same
+tests** (log `.superpowers/sdd/2026-11-01-phase-s/pr-split-pr1-lineage-mutants.log`). PR body draft:
+`pr-bodies/PR-01-lineage.md`.
