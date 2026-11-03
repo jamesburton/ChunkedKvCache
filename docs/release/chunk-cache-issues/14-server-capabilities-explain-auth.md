@@ -6,7 +6,8 @@
 > please review it as such. Branch `feature/chunk-cache-server`, worktree
 > `C:\Development\dotLLM\.claude\worktrees\chunk-cache-server`, on top of the Task 13 fix round (`10149688`):
 > `e5e0ea0b` (keys file, `ChunkCacheAuth`), `e23b16f7` (endpoints, caller namespace for inference, per-chunk status),
-> `ba271c5c` + `865d51a4` (tests), `bf77ef7d` (docs).
+> `ba271c5c` + `865d51a4` (tests), `bf77ef7d` (docs); security review fix round `dca359d4` (code + tests) and
+> `3db1b01c` (docs).
 > **Packaging:** it builds on the Tasks 10 + 11 + 13 PR (issue 13) and can ship as its own PR right after it, or ride
 > with it; without it a `--chunk-cache` server has no capabilities probe, so the client (issues 06 / 08) never annotates.
 
@@ -46,42 +47,70 @@ bare 404 for every method) and nothing else changes.
   up exactly as inference would. Returns `policy_would_apply`, `reason`, `chunks[{id, status, why}]` (authenticated
   caller only, own namespace), `counts`, `predicted_ms {reuse, full_prefill}` (the shadow plan's cost-model prediction)
   and `warnings` (codes). A strict request's defect is returned exactly as the chat endpoint returns it. Nothing is
-  generated, stored or counted in `/metrics`; explain does not probe the prompt cache (nothing is `prefix`).
-- Both routes are **rate-limited like inference** (every `/v1/` path is metered unless exempted; these are deliberately
-  not exempt, documented in `RateLimitMiddleware`).
+  generated, stored or counted in `/metrics`; explain does not probe the prompt cache (nothing is `prefix`). The prompt
+  is tokenised once. **Bounds**: at most 2 explains run at once per server (the next gets `429`, `Retry-After: 1`); a
+  body over 4 MiB is `413`, with or without a `Content-Length`.
+- **CSRF guards** (in place before prewarm / evict add side effects): `Sec-Fetch-Site: cross-site` is `403` on both
+  routes whatever the key; explain reads only `Content-Type: application/json` (else `415`), so a browser must preflight.
+- **Rate limiting** applies only when it is configured (`--rate-limit-*`; off by default): `/v1/chunk-cache*` is then
+  metered like inference (not exempted, documented in `RateLimitMiddleware`). Pre-existing: the limiter's bucket is the
+  raw presented key string, so a client that sends a fresh random key per request gets a fresh bucket each time; with
+  keys configured such requests only reach the cheap 401 path, and explain's own bounds above apply regardless.
 
 ### Authentication (`ChunkCacheAuth`)
 
-- **`--chunk-cache-api-keys <file>`** (needs `--chunk-cache`): one key per line, `<key>` or `<key> admin`, `#`
-  comments, each line trimmed. Any non-ASCII or control character (also a no-break space) refuses the file at startup
-  with the **line number, never the key**; so do repeated keys, an unknown role word and a file with no key. Keys shorter
-  than 16 characters start with a warning naming the line. Only SHA-256 digests are kept.
+- **`--chunk-cache-api-keys <file>`** (needs `--chunk-cache`): one key per line, `<key> [admin] [ns=<namespace>]`;
+  a line whose first non-blank character is `#` is a comment (so a key never starts with `#`); each line trimmed. Any
+  non-ASCII or control character (also a no-break space) refuses the file at startup with the **line number, never the
+  key**; so do repeated keys, unknown or repeated fields, an invalid `ns=` and a file with no key. **Keys shorter than 32
+  characters refuse startup** (line number only) unless `--chunk-cache-allow-short-keys`, which accepts them with a
+  warning each. `docs/CHUNK_CACHE.md` gives a generation recipe (32 random bytes, base64url). The keys file's keys are
+  held as SHA-256 digests only (a presented key string does stay in memory elsewhere: the rate limiter's buckets, the
+  request items, the scheduler's fairness key; none is logged).
+- **`ns=<namespace>`** (optional): the key maps to that namespace (`ChunkNamespace.IsValid`, not empty, never `default`)
+  instead of the derived one. Two keys may share one on purpose (a team; a rotated key keeping its predecessor's
+  entries). A named namespace says nothing about the key.
+- **Rotation and revocation**: the file is read once at startup and never reloaded, so **revoking a key means a
+  restart**. A replacement key starts a new, empty derived namespace and strands the old key's entries, unless both
+  lines carry the same `ns=` (the rotation path).
 - **With keys**: `X-API-Key` (exactly one value) or `Authorization: Bearer` must be listed, else
   `401 authentication_error` (`WWW-Authenticate: Bearer`). Matching is constant-time
   (`CryptographicOperations.FixedTimeEquals` over the digests of every key, no early exit). Namespace =
-  `ChunkNamespace.ForApiKey(key)`.
+  the key's `ns=`, else `ChunkNamespace.ForApiKey(key)`.
 - **Without keys**: local callers only, namespace `ChunkNamespace.Default`, else `403 permission_error`. "Local" is
   stricter than the plan's "loopback": a loopback remote address **and** a `localhost` / loopback `Host` header **and** no
   `Origin` header. The server's CORS policy allows any origin, so without the last two a web page in the user's browser
   (directly, or through DNS rebinding) could read the local caller's per-chunk status. An unknown remote address (Unix
-  socket, in-memory host) is not local. Behind a reverse proxy on the same host every caller looks local: configure keys.
+  socket, in-memory host) is not local. "Local" still admits every process on the machine (an SSRF-able service too),
+  and behind a reverse proxy on the same host every caller looks local: configure keys in both cases.
 - **Inference is never refused** (dotLLM inference stays unauthenticated). An annotated inference request from a caller
   the control plane would refuse is served normally, but its chunks are **never looked up** in the store (all misses, no
   warning) and `report: "per_chunk"` gives it the summary. An authenticated caller's `report: "per_chunk"` adds
   `per_chunk: [{id, status, why}]` to the response `chunk_cache` object (blocking, finish-reason chunk, Anthropic
   `message_delta`). The same rule will gate store writes (sole-writer task).
-- **Namespaces are server-assigned and never leave the server**: they are hashed into every chunk key (one key's
-  entries are never hits for another's), the body `chunk_cache.namespace` is still ignored unless it equals the
-  caller's own (`chunk_namespace_ignored`), and no response or log line carries a namespace, a key or a key digest.
-  Nothing in the auth path logs at all; startup logs the key count and the short-key warnings (line numbers only).
+- **Namespaces are server-assigned**: they are hashed into every chunk key (one key's store entries are never hits
+  for another's), the body `chunk_cache.namespace` is still ignored unless it equals the caller's own
+  (`chunk_namespace_ignored`), and **no response or log line carries a namespace, a key or a key digest**. Namespaces
+  **do appear on disk**: in the store's index file names and, with the sole-writer task, in the server ledger. Nothing in
+  the auth path logs at all; startup logs the key count and the short-key warnings (line numbers only).
+- **Isolation stops at the store.** The prompt (prefix) cache is shared by every caller and knows nothing about
+  namespaces: `prefix` status, `usage.cached_tokens` / `timings.cache_n` and time to first token show whether *anyone*
+  recently sent the same prompt prefix. That is pre-existing (`cached_tokens` is unauthenticated) and nothing here adds
+  to it, but a multi-tenant deployment does not get full isolation (a per-namespace prompt cache is an open item).
+  `/metrics` is unauthenticated and its chunk-cache counters are server-wide (aggregate only, no namespace labels).
+- **Stack traces**: the server runs `UseDeveloperExceptionPage()` unconditionally (pre-existing; worth an upstream
+  look now that a security-sensitive surface sits on it). The chunk-cache handlers catch their own failures.
 
 ### Maintainer decision: unsalted `ForApiKey` vs HMAC (needs a decision before multi-tenant use)
 
-`ChunkNamespace.ForApiKey(key)` is `k-` + the first 16 hex digits of an **unsalted** SHA-256 of the key. Namespaces
-appear in store file names (`index-<chunker>.<model12>.<p8>.<ns>.json`) and, with the sole-writer task, in the server
-ledger. So **anyone who can read the store root can test guessed keys offline**, at SHA-256 speed; a short or
-dictionary key is cheap to recover (hence the startup warning), and a recovered key unlocks that tenant's chunk-cache
-surface (and whatever else the operator reused it for).
+`ChunkNamespace.ForApiKey(key)` is `k-` + the first 16 hex digits of an **unsalted** SHA-256 of the key. Derived
+namespaces appear in store file names (`index-<chunker>.<model12>.<p8>.<ns>.json`) and, with the sole-writer task, in
+the server ledger. So **anyone who can read the store root can test guessed keys offline**, at GPU SHA-256 rates (on the
+order of 10^10 guesses per second). The 64-bit truncation does not slow that down, and the name's `k-<16 hex>` is not the
+only verifier: the producer tag `<p8>` in index file names and the ledger rows can confirm a guess too. A short or
+dictionary key is cheap to recover (hence the 32-character minimum), and a recovered key unlocks that tenant's
+chunk-cache surface (and whatever else the operator reused it for). Long random keys, or `ns=` names (which are not
+derived from the key), avoid it.
 
 The alternative is `HMAC-SHA256(server secret, key)` with the secret in server configuration, outside the store root.
 Offline guessing then needs the secret too. The costs:
@@ -101,15 +130,15 @@ the maintainer:** keep it, or switch to HMAC before any shared (multi-tenant) de
 - Explain is OpenAI-surface only in v1 (ruling 19; `chunkcache select --server` sends OpenAI string content).
 - Admin keys are parsed now (`<key> admin`) but grant nothing yet: store-wide figures and cross-namespace evict come with
   the store tasks.
-- `per_chunk` items: `why` is the §5.8 code that dropped the annotation (machine-readable), not prose.
-- With no `--chunk-store`, `store` is still the object with zeros (the shipped client parses `store` as an object; contract
-  ruling 44 says `store: false`; see the ruling question in the task report).
+- `per_chunk` items: `why` is the §5.8 code that dropped the annotation, or null (ruling 55), not prose.
+- `store` is always an object; without `--chunk-store` it carries `"configured": false` (ruling 52).
 
 ## Acceptance criteria
 
 - [ ] PR targets `dev`, never `main`; `docs/SERVER.md` (flag, Security subsection, metering note) and
       `docs/CHUNK_CACHE.md` updated; `Closes #N` closed by hand; flagged security-sensitive in the PR.
-- [ ] `--chunk-cache-api-keys` documented and tested on both option paths, refused without `--chunk-cache`.
+- [ ] `--chunk-cache-api-keys` and `--chunk-cache-allow-short-keys` documented and tested on both option paths, refused
+      without `--chunk-cache` (the override also without a keys file); an unusable path is a clean startup error.
 - [ ] Flag off: `GET` and `POST` on both routes are the same bare 404 as an unmapped path (`FlagOff_404`); the existing
       flag-off byte-identity tests still pass.
 - [ ] Capabilities match `capabilities.json` (same top-level keys, lists, store keys) and expose model id, tokenizer id,
@@ -128,9 +157,18 @@ the maintainer:** keep it, or switch to HMAC before any shared (multi-tenant) de
 - [ ] No namespace, key or key digest in any response body or log line (console and `ILogger`, every level) across
       capabilities, 401, explain, a 400 explain, blocking and streaming inference (`NamespaceNeverInResponseBodiesOrLogs`).
 - [ ] Keys file: trimmed, comments, admin role, non-ASCII / control / no-break space refused with the line number and
-      without the key, short keys warned, duplicates / unknown role / empty refused (`KeysFile_TrimsKeys_RefusesNonAscii_WarnsShortKeys`).
+      without the key, keys under 32 characters refused (warned with the override), duplicates / unknown fields / bad
+      `ns=` / empty refused (`KeysFile_TrimsKeys_RefusesNonAscii_WarnsShortKeys`); `ns=` maps keys to a named,
+      shareable namespace (`KeysFile_NsField_MapsKeyToNamedNamespace`).
+- [ ] `store.configured: false` without a store, absent with one (`Capabilities_StoreConfiguredFalse_WithoutStore`).
+- [ ] CSRF: explain without `application/json` is 415; `Sec-Fetch-Site: cross-site` is 403 on both routes
+      (`ControlPlane_RequiresJson_RefusesCrossSite`).
+- [ ] Explain bounded: 2 concurrent (429 + `Retry-After`), 4 MiB body (413, sized and chunked), every slot released
+      (`Explain_ConcurrencyCapped_429_BodyLimited_413`); `Host` with a port is still local; a parse/caller namespace
+      mismatch is refused (`ExchangeBegin_NamespaceMismatch_Refused`).
 - [ ] A non-admin sees its own namespace's figures only, not store-wide totals (`NonAdmin_CapabilitiesShowOwnNamespaceFiguresOnly`).
-- [ ] Both routes metered: second request under a 1-per-minute policy is 429 (`Endpoints_AreRateLimited`).
+- [ ] Both routes metered when rate limiting is configured: second request under a 1-per-minute policy is 429
+      (`Endpoints_AreRateLimited`).
 - [ ] Unauthenticated annotated inference: summary for `per_chunk`, no store lookups; key holder gets `per_chunk`, also
       on the streaming finish chunk (`ReportPerChunk_UnauthenticatedGetsSummary`).
 - [ ] No new `JsonSerializerContext`: the new DTOs are in `ServerJsonContext`, have no init-property initializers and are
@@ -175,3 +213,34 @@ T3c (shared namespace, key ignored).
 | T16 | keys-file error echoes the offending line | `KeysFile_…` |
 | T17 | duplicate keys accepted | `KeysFile_…` |
 | T18 | producer computed in the default namespace for every caller | `KeysConfigured_ValidKey_NamespaceFromKey` |
+
+### Security review fix round
+
+`git archive` copy of `3db1b01c`, same filter; baseline 223 / 223. Red evidence for the fix round: written test-first;
+against API stubs (no behaviour) 8 of the 19 tests failed. **17 new mutants, all killed; the 26 + L0 above re-run against
+the new code, all killed** (L0 now fails 17).
+
+| mutant | change | killed by |
+|---|---|---|
+| F1 | short keys accepted without the override | `KeysFile_TrimsKeys_…` |
+| F1b | minimum key length 16 | `KeysFile_TrimsKeys_…` (31-character key) |
+| F1c | override ignored (short keys always refused) | `KeysFile_TrimsKeys_…`, `NamespaceNeverIn…` |
+| F1d | `--chunk-cache-allow-short-keys` accepted without a keys file | `KeysFile_TrimsKeys_…` |
+| F2 | `ns=` ignored (derived namespace always) | `KeysFile_NsField_MapsKeyToNamedNamespace` |
+| F2b | `ns=` not validated | `KeysFile_TrimsKeys_…` |
+| F2c | a second `ns=` overrides the first | `KeysFile_TrimsKeys_…` |
+| F3 | explain slot never released | `Explain_ConcurrencyCapped_…` and 3 more |
+| F3b | explain concurrency not capped | `Explain_ConcurrencyCapped_429_BodyLimited_413` |
+| F4 | explain body not limited | `Explain_ConcurrencyCapped_…` |
+| F4b | only `Content-Length` checked (chunked bodies unbounded) | `Explain_ConcurrencyCapped_…` |
+| F5 | explain content type not checked | `ControlPlane_RequiresJson_RefusesCrossSite` |
+| F6 | cross-site not refused on explain | `ControlPlane_RequiresJson_…` |
+| F6b | cross-site not refused on capabilities | `ControlPlane_RequiresJson_…` |
+| F7 | `store.configured` never written | `Capabilities_StoreConfiguredFalse_WithoutStore`, `Capabilities_MatchesFixtureShape` |
+| F8 | `ChunkCacheExchange.Begin` accepts a parse/caller namespace mismatch | `ExchangeBegin_NamespaceMismatch_Refused` |
+| F9 | `why` omitted when null (ruling 55) | `Explain_PerChunkOnlyForOwnNamespace` |
+
+Not mutant-checked: the clean-error wrap around an unusable keys path (on .NET the inputs the test can produce already
+throw `ArgumentException`, so the wrap cannot be told apart) and the `BadHttpRequestException` → 413/400 mapping
+(Kestrel's own 30 MB limit is above explain's 4 MiB, so the test reaches explain's own 413 first); both are code-review
+items.
