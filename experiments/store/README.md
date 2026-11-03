@@ -173,6 +173,7 @@ It deconstructs to `(Context, Stats)`.
   `"k-"` + the first 16 lowercase hex of SHA-256 over the key's UTF-8 bytes. It never holds the key and never equals the
   default; an empty key is refused (a caller without a key uses the default).
 - **Validity rule** (review S1, `a152e504`): a namespace matches `^(|k-[0-9a-f]{16}|[a-z0-9._-]{1,64})$` (empty = default),
+  except the reserved `default` (since Phase I Task 4b: it is the default namespace's tag in index file names),
   checked by `ChunkNamespace.IsValid` / `Validate` and enforced by `ChunkKey.Create` and, before any store read, by
   `StoredContextAssembler.Assemble`. Valid namespaces are plain ASCII, safe in file names, JSON and logs. The namespace is also
   hashed with a throwing UTF-8 encoder, because the default encoder turns every lone surrogate into U+FFFD
@@ -207,13 +208,81 @@ It deconstructs to `(Context, Stats)`.
   deleting it exposes every server-written entry to orphan eviction.
 - **Load.** A row whose entry file is reported not found is dropped (`DroppedOnLoad`); a row whose entry state cannot be
   determined (access denied, sharing or device error) is kept and counted (`UndeterminedOnLoad`).
-- **Writes.** One writer, the server that owns the store. Order: put the entry file, then record and save the row, holding
-  `AcquireStoreLock` from the put through the ledger save; an eviction pass holds the same lock from `StoreWideOrphans` to its
-  deletes. `Save` writes a temp file, flushes it and renames it over the ledger in one step; two instances do not merge (the
-  last rename wins). Lane L Task 4 narrows these lock scopes.
+- **Writes.** One writer, the server that owns the store; the CLI never writes the ledger. Order per batch: put the entry
+  files, then record and save the rows, all inside **one** store-lock scope (never release the lock between the put and the
+  save; never encode while holding it); an eviction pass holds the same lock from reading the indexes and the ledger to its
+  last delete. `Save` writes a temp file, flushes it and renames it over the ledger in one step; two instances do not merge
+  (the last rename wins). See "Lock model" below.
 - **Shared keys.** Keys are content-addressed, so a server entry (default namespace) can be the same key a CLI index
   references. After `Remove`, delete the file only if `ReferencedKeysUnder` no longer contains the key.
 - Tests: `ServerLedgerTests` (dotLLM), `ChunkCacheCliTests.Evict_KeepsServerLedgerKeys_AndAnUnreadableLedgerBlocksIt_StatusReportsTheLedger`.
+
+## Lock model (Phase I Task 4, L3)
+
+- **Two kinds of lock file**, both opened exclusively (`FileShare.None`), released on dispose or when the process dies, and
+  never deleted (a lock file left on disk is not a held lock; only an open handle is):
+  - **index lock** `index-<chunker>.<model12>.<ns-or-default>.lock` (`ChunkIndex.AcquireIndexLock(root, chunker, modelId, ns,
+    timeout)`, or `AcquireIndexLockFor(indexPath, timeout)`), one per index file: held by every writer of that index from
+    `Load` through `Update` to `Save`. Index-only updates (a build without encoding) take only this lock.
+  - **store lock** `.chunkstore.lock` (`ChunkIndex.AcquireStoreLock`): short scopes only: one put batch
+    (`LockingChunkStore` takes it per put / evict), one ledger write (puts + `Record` + `Save` of one batch), one registry save
+    (`StoreRegistry.Update`), one eviction pass (`ChunkIndex.EvictStoreWideOrphans`: orphans computed and deleted in one scope).
+- **Lock order:** index lock, then store lock; never an index lock while holding the store lock. Within one execution flow
+  this is enforced (`InvalidOperationException`, at once); work started inside a store-lock scope inherits the flow and is
+  refused too. The store lock is not re-entrant (a second acquire in the same flow waits and times out).
+- **Publication rule** (why concurrent index-only updates and eviction passes are safe): a writer saves its index under the
+  index lock *before* putting the entries it references, and decides which referenced entries are already stored under the
+  store lock *after* that save. Any pass that read the old index has finished by then, and every later pass reads the new
+  one, so a key the writer saw stored is never evicted under it. A key evicted before that check is simply missing and is
+  encoded again: a miss, never a corrupt entry.
+- **Timeout:** `ChunkStoreLockTimeoutException` (derives from `ChunkStoreBusyException`, an `IOException`; names the lock
+  file and the wait). `StoredContextAssembler` counts a lock timeout on `Put` as a store failure, like a busy entry. The CLI
+  maps it to exit 1, JSON error code `store_busy`; `--lock-timeout` is the wait for the index lock and for each store-lock
+  scope.
+- **CLI `build`:** index lock for migration, load, update and save; one short store-lock scope for the registry save plus
+  the publication check; then each put under the store lock (`LockingChunkStore`); no lock while encoding. `evict --apply`
+  is one eviction pass.
+- **Platforms.** Verified on Windows (NTFS): an exclusive handle refuses every other open, readers included, and a killed
+  holder's handle is closed by the OS (`StoreLockTests.CrashedHolder_ItsLockIsFreedByTheOs`). Linux / macOS: .NET emulates
+  `FileShare.None` with an advisory `flock`, honoured by other .NET processes and released at process exit, but **not
+  verified here**, not binding on non-.NET programs, and disabled by `DOTNET_SYSTEM_IO_DISABLEFILELOCKING`. Network file
+  systems are not supported.
+- Tests: `StoreLockTests` (dotLLM), `ChunkCacheCliTests.Lock_*`.
+
+## Index names and the store registry (Phase I Task 4b, L9)
+
+- **Index file** `index-<chunker>.<model12>.<ns-or-default>.json` (`ChunkIndex.DefaultPath(root, chunker, modelId, ns)`):
+  `model12` = first 12 lowercase hex of SHA-256 over the UTF-8 content model id (`ChunkIndex.ModelTag`; a server-backed CLI
+  uses the server's model id, Task 17); the last part is the namespace, or `default` for `ChunkNamespace.Default`. Chunker
+  names are `[a-z0-9_-]{1,64}` (no `.`); namespaces are validated (`ChunkNamespace.Validate`) before they reach a file name.
+  `default` is therefore a **reserved namespace** (`ChunkNamespace.IsValid("default")` is false), so the default namespace
+  and a namespace called `default` never share a file. `ChunkIndex.TryParseIndexFileName` parses a name back.
+- **Not in the name:** tokenizer, RoPE, backend, dtype. An index saved by another producer at the same name loads empty, so
+  writers check `ChunkIndex.ProducerOf(path)` first; the CLI refuses to save over another producer's index (exit 1). A
+  server-backed CPU and Vulkan pair for one model and namespace would collide here: open for Task 17 (see the Task 4 report).
+- **Migration (read once).** `ChunkIndex.MigrateLegacyIndex` (under the new index lock; takes the store lock for the rename):
+  when the new file does not exist, a legacy `index-<chunker>.json` (library v1) or `index-<chunker>.<producer12>.json`
+  (Phase S CLI) saved by this producer is **renamed** (never copied, so its keys never lose protection) and its registry row
+  moves with it. A legacy file of another producer, an unreadable one, or one beside an existing current file is left in
+  place: it is still an index, so its keys stay protected until someone deletes it. Read-only callers use
+  `ChunkIndex.ResolveIndexPath` (current name, else this producer's legacy file read in place, never renamed). `chunkcache
+  build` migrates; `status` / `select` / `build --dry-run` read in place.
+- **Registry** `<storeRoot>/chunkcache.json` (`StoreRegistry`), format 2, snake_case: `{"format_version": 2, "indexes":
+  [{"file", "chunker", "model12", "model_id", "tokenizer_id", "backend", "namespace", "producer", "updated", "tool":
+  {...}}]}`. `tool` holds tool-specific strings (the CLI's `root`, `source_kind`, `source_path`, `configuration`,
+  `model_path`, `model_fingerprint`); unknown row properties are kept. The Phase S CLI's version-1 config is read and
+  rewritten as version 2.
+  - **Advisory.** Orphan eviction reads every `index-*.json` whether listed or not. `Load` never fails on content: missing,
+    corrupt or newer-format registries are rebuilt from the index file names (chunker, model tag, namespace; other fields
+    unknown); rows whose file is gone are dropped; unlisted current-form index files are added. `StoreRegistry.Find(chunker,
+    modelId, ns)` returns the index path when listed or present.
+  - **Writes** only under the store lock (`Save` refuses otherwise), as load + change + save (`StoreRegistry.Update`), so
+    concurrent writers never lose rows; temp file + flush + one rename. A corrupt registry is copied to `chunkcache.json.bad`
+    before it is replaced; a newer-format registry is never overwritten (`InvalidDataException`). Rows naming a file that is
+    not a plain `index-*.json` in the store root are refused on load (`InvalidRows`) and never reach a delete;
+    `chunkcache evict --all-for-model` refuses while any exist.
+- Tests: `StoreRegistryTests` (dotLLM), `ChunkCacheCliTests.{Build_MigratesAPhaseSStore_IndexRenamedOnce_RegistryKeepsRootAndSource,
+  Build_NeverOverwritesAnotherProducersIndexAtItsName, Evict_AllForModel_RefusesRegistryIndexNamesOutsideTheStore}`.
 
 ## Measurement (Qwen3-4B-Instruct-2507 Q4_K_M, CPU, 8 threads)
 
