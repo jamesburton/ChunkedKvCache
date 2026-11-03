@@ -105,3 +105,13 @@ warnings from the requests and compares them with `expected.json`, and checks th
 36. A span whose text is not at its stated position in the rendered/received message is `chunk_span_invalid`; a span containing a caller-supplied U+FDD0 is `chunk_template_altered` (it cannot be reproduced after encode).
 37. The locator's retry budget (4 sentinel renders per request) is a fixed internal constant in v1; exposing it as an option is deferred.
 38. Task 13 merges the locator's warnings into the parser's list with per-code counts. Located character ranges are NOT proof of token equality: Task 13 verifies token ids over each located range before counting a span as reusable.
+
+## Rulings from Task 13 (controller, 2026-11-03)
+
+39. The read-only `--chunk-store <dir>` stays in the Task 10/11/13 PR (without a store `shadow` could only ever report misses).
+40. Anthropic `usage.cache_read_input_tokens` is NOT added for annotated requests (usage must be identical to the unannotated request); the report lives in the `chunk_cache` object only.
+41. `exact` on an unsupported model: `reason: null` plus a `chunk_model_unsupported` warning (ruling 6 prevails over the spec's §5.5 wording; the spec follows).
+42. `chunk_policy_unavailable` appears in `reason` AND once in `warnings`.
+43. The default shadow plan budget is 0.05 (as in the `response-shadow` fixture); a request's `recompute.budget` overrides it.
+44. With no store configured, misses carry no warning; `GET /v1/chunk-cache` reports `store: false`.
+45. `report: "per_chunk"` returns the summary until auth exists (Task 14).
