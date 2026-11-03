@@ -6,7 +6,7 @@
 > persists caller text as token ids and K/V; evict deletes entries and is the spec's "forget this repo" privacy
 > control), plus the first use of `admin` keys. Branch `feature/chunk-cache-server`, worktree
 > `C:\Development\dotLLM\.claude\worktrees\chunk-cache-server`, on top of Task 15 (`569f59a3`): `f31b2990` (library:
-> per-file index keys), `c30dcd94` (server), `7576acba` (tests, written first and shown red 19 / 19), `5b2c2167` (docs), `2c85f5ed` (fence guard).
+> per-file index keys), `c30dcd94` (server), `7576acba` (tests, written first and shown red 19 / 19), `5b2c2167` (docs), `2c85f5ed` (fence guard); security-review fix round `1aacc48e`, `5c614bf6`, `e0f0fedd`, `b031100b` (section below).
 > **Packaging:** builds on issue 15 (the sole writer, its ledger, queue and sighting table) and issue 14 (auth, CSRF
 > gates, `admin` parsed but inert there). Can ship as its own PR after 15; issue 17 (CLI `--server` / `prewarm` /
 > `evict`) consumes this endpoint contract.
@@ -93,12 +93,13 @@ counts only: no namespace, key, key digest, text, hash or path.
 ### Admin keys
 
 `admin` in the keys file (parsed since issue 14) now grants: store-wide capabilities figures, `orphans`, another
-namespace in the evict body, and a store-wide `all`. Without a keys file the **local caller is admin** (a single-user
-server; the issue 14 review's condition, the CSRF gates above, is met).
+namespace in the evict body, and a store-wide `all`. Without a keys file the local caller is admin for figures, dry
+runs and its own namespace only; store-wide or cross-namespace **deletes** need an admin key (fix round, S2).
 
 ### `--chunk-store-namespace-budget <bytes>` (optional, off by default)
 
-Each namespace's ledger bytes must stay within it, and budget eviction (issue 15) takes **only the writing namespace's
+A **cap, not a reservation** (fix round S1: below the store budget, a startup warning when the caps add up to more,
+and a blocked namespace is refused at admission). Each namespace's ledger bytes must stay within it, and budget eviction (issue 15) takes **only the writing namespace's
 own rows**: a namespace over its share evicts its own LRU rows; when the store is full of others' rows, the entry is
 dropped (`entry_too_large`) instead of evicting another tenant, and a namespace never stops the writer for the others.
 Admission refuses `over_budget` against the smaller budget. Off: issue 15's shared LRU (own rows first, then others').
@@ -115,6 +116,52 @@ non-admin sees 0 and an admin the read-only store's files. `dtype` is `f32`.
 `ChunkIndex.IndexFilesUnder`, `KeysOfIndexFile`, `IndexReferencedKeysUnder(root, except)` (same fail-closed
 `InvalidDataException`); `IndexKeysUnder` refactored onto them, no behaviour change.
 
+## Security review fix round (`review-phase-i-task16-report.md`, S1-S6 + nits; controller rulings)
+
+dotLLM `1aacc48e` (library `ServerLedger.KeysOnDisk`), `5c614bf6` (server), `e0f0fedd` (tests, written first: 9 red
+against stubs), `b031100b` (docs).
+- **S1, per-namespace budget is a cap, not a reservation.** Refused at startup when `>= --chunk-store-budget`; a startup
+  warning when the caps of all namespaces (the keys file's distinct namespaces, or 2 without one) exceed the store
+  budget. A namespace that finds the store full of other namespaces' rows is **blocked at admission**
+  (`chunk_encode_skipped` with `detail: "namespace_budget_blocked"`; its queued items are not encoded either) until a
+  minimum entry fits again (30 s re-check, or at once after an evict that freed space): no encode is spent and thrown
+  away. Documented: only `namespaces x cap <= budget` (minus CLI entries, ruling 69) is a real quota.
+- **S2, keyless admin and the proxy hazard (ruling).** A request carrying `Forwarded`, any `X-Forwarded-*` or `X-Real-IP`
+  is never local. A keyless server grants **no store-wide or cross-namespace destructive admin**: its local caller may
+  prewarm, delete in its own (default) namespace and dry-run anything; `orphans`, a store-wide `all` and another
+  namespace with `dry_run: false` need an `admin` **key** (`403 chunk_cache_admin_key_required`).
+- **S3, slow bodies.** Explain, prewarm and evict read the body within 10 s (`408 request_timeout`) and the size cap
+  **before** taking any slot; write calls are limited to one per namespace at a time (and 2 in all), so one tenant cannot
+  hold both slots.
+- **S4, partial deletes.** A failed index or entry delete adds the warning `chunk_evict_partial` and `failed:
+  {entry_files, index_files}` (counts only). A failed ledger save's 503 says no file was deleted and the rows stay, but
+  the matching sightings and queued encodes were already dropped.
+- **S5, tests and mutants** for: an evict while the writer holds the ledger gate (waits, then sees the row; or times out
+  cleanly, no deadlock), the write-time fence alone (one in-flight item, nothing queued), the 429 gates (per namespace
+  and global), the per-namespace `over_budget` check, `dry_run: null`, a repeated `dry_run`, and a non-admin's
+  `"default"` / `""` body namespace.
+- **S6, path forget scope.** A path forget drops only the matching queued and in-flight items (an item fence by sequence
+  number); forgotten items are checked again before encoding, so none is encoded and thrown away.
+- **Nits.** Dry runs read the index files and the ledger file once, outside the ledger gate (no writer stall); a real
+  evict reads them once under its locks and re-reads only before deleting entry files. A ledger read failure is retried
+  (4 x 100 ms, awaited); only a real run that still cannot read it disables writes (as the writer's own failed save); a
+  dry run never changes writer state. Globs are capped at 1,024 characters. `namespace_budget_blocked` is a metric
+  label. Docs: path forget cannot reach rows or sightings without `source.path`; a non-admin's `{}` (mode `orphans`) is a
+  403; fail-closed is store-wide (one unreadable index blocks every tenant's forget); the failed-save rollback may sleep
+  briefly on the request thread (failure path only); `queued` counts repeats in one call, `queued_tokens` does not.
+
+## Decisions for the maintainer (security-sensitive)
+
+- **Keyless destructive admin.** Ruled for v1: a server without `--chunk-cache-api-keys` lets its local user delete only
+  in the default namespace; store-wide deletes (`orphans`, `all`) and other namespaces need an `admin` key. Alternative
+  (not implemented): an explicit opt-in flag for keyless store-wide deletes.
+- **Same-host reverse-proxy hazard.** "Local" is a loopback address, a loopback `Host`, no `Origin` and (new) no
+  `Forwarded` / `X-Forwarded-*` / `X-Real-IP` header. A proxy that adds none of these (e.g. nginx's bare `proxy_pass
+  http://127.0.0.1:...`) makes every caller local, so on a keyless server anyone who reaches the proxy can use the control
+  plane, including prewarm and forget of the default namespace (not store-wide deletes). Recommendation in `SERVER.md`
+  and `CHUNK_CACHE.md`: configure keys whenever anything but local processes can reach the server. Options for the
+  maintainer: require keys for any write route, or refuse keyless writes when bound to a non-loopback address.
+
 ## Acceptance criteria
 
 - [ ] PR targets `dev`, never `main`; `docs/SERVER.md` and `docs/CHUNK_CACHE.md` updated in the same PR.
@@ -124,6 +171,7 @@ non-admin sees 0 and an admin the read-only store's files. `dtype` is `f32`.
       `ServerJsonContext`, no init-property initializers, guarded by `JsonContextDefaultsTests`; no new context.
 - [ ] Mutation evidence below recorded in the PR body; `Closes #N` closed by hand on `dev`.
 - [ ] Reviewed as security-sensitive (CSRF gates, admin scope, namespace isolation, fail closed, no content in logs).
+- [ ] The maintainer has decided the two items under "Decisions for the maintainer" (keyless destructive admin, proxy hazard).
 
 ## Tests
 
@@ -183,8 +231,7 @@ the `429` write gate, and the forget fence's `Seq 0` guard (`2c85f5ed`).
 
 - `path` forget does not edit CLI index files (the server owns no index references); it reports them in
   `kept_referenced`. The CLI's own forget (issue 17) removes its index entries.
-- `orphans` is admin-only (store-wide); a keyed non-admin cannot clean orphans.
-- The forget fence for `path` drops every in-flight encode of the namespace, not only the matching path's.
+- `orphans` is admin-only (store-wide; ruling 68); deleting orphans needs an admin key even on a keyless server.
 - Per-namespace figures count ledger rows (what the server wrote for the namespace), not a CLI's offline entries.
 - The store registry (`chunkcache.json`) is not rewritten on index-file deletion (advisory; it drops rows of missing
   files on its next load).
