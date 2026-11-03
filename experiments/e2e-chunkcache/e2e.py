@@ -64,24 +64,42 @@ def annotated_chunks(file_sel):
     return [c for c in file_sel["chunks"] if c["tokens"] >= MIN_CHUNK_TOKENS]
 
 
-def build_prompt(file_sels):
-    """One tool-result string: a glue header per file, then the file's chunk texts in document order.
+def glue_header(path, chunks_or_lines):
+    return f"// {path} lines {chunks_or_lines[0]}-{chunks_or_lines[1]}"
 
-    Returns (prompt, placed) where placed lists every annotated chunk with its character and UTF-8 byte range in the
-    prompt. Chunks shorter than MIN_CHUNK_TOKENS are in the text but not in `placed`.
+
+def build_prompt(file_sels, layout="chunk"):
+    """One tool-result string with a glue header and the chunk texts in document order.
+
+    layout "file" (the plan's literal layout): one header per file, then the file's chunk texts back to back.
+    layout "chunk": a header before every chunk, ending in a digit, then a newline unless the chunk starts with one.
+    Why: symbol-512 chunks of one file tile it, and a chunk often starts with the blank line the previous chunk's
+    last newline belongs with (a closing brace line, then a line starting with /// summary). Qwen's tokenizer merges two newlines across such an edge, so
+    back-to-back chunks are not token-stable and the server reports them chunk_template_altered (finding F-A1). A
+    header that ends in a letter or digit cannot merge with a following newline.
+
+    Returns (prompt, placed): every annotated chunk with its character and UTF-8 byte range in the prompt. Chunks
+    shorter than MIN_CHUNK_TOKENS are in the text but not in `placed`.
     """
     prompt = ""
     placed = []
     for fs in file_sels:
-        lines = [c["start_line"] for c in fs["chunks"]] + [c["end_line"] for c in fs["chunks"]]
-        prompt += f"// {fs['path']} (lines {min(lines)}-{max(lines)})\n"
+        if layout == "file":
+            lines = [c["start_line"] for c in fs["chunks"]] + [c["end_line"] for c in fs["chunks"]]
+            prompt += glue_header(fs["path"], (min(lines), max(lines))) + "\n"
         for c in fs["chunks"]:
+            if layout == "chunk":
+                prompt += glue_header(fs["path"], (c["start_line"], c["end_line"]))
+                if not c["text"].startswith("\n"):
+                    prompt += "\n"
             start = len(prompt)
             prompt += c["text"]
             if c["tokens"] >= MIN_CHUNK_TOKENS:
                 placed.append({"file": fs["path"], "id": c["id"], "hash": c["hash"], "tokens": c["tokens"],
                                "text": c["text"], "char_start": start, "char_end": len(prompt),
                                "byte_start": char_to_byte(prompt, start), "byte_end": char_to_byte(prompt, len(prompt))})
+            if layout == "chunk":
+                prompt += "\n" if not prompt.endswith("\n") else ""
     return prompt, placed
 
 
@@ -98,8 +116,8 @@ def manifest_entries(placed, message_index, wrong_hash_at=None):
 
 
 def build_openai(model, file_sels, policy=None, report="per_chunk", strict=False, max_tokens=16, stream=False,
-                 wrong_hash_at=None, options=None, annotate=True):
-    prompt, placed = build_prompt(file_sels)
+                 wrong_hash_at=None, options=None, annotate=True, layout="chunk"):
+    prompt, placed = build_prompt(file_sels, layout)
     body = {"model": model, "temperature": 0, "max_tokens": max_tokens, "logprobs": True,
             "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt},
                          {"role": "user", "content": QUERY}]}
@@ -120,16 +138,21 @@ def build_openai(model, file_sels, policy=None, report="per_chunk", strict=False
     return body, placed
 
 
+def anthropic_safe(chunk):
+    """Anthropic joins text blocks with one newline: a chunk that itself starts with a newline would merge with the joiner
+    (two newlines), so such a chunk is left unannotated (plain text) on this surface."""
+    return chunk["tokens"] >= MIN_CHUNK_TOKENS and not chunk["text"].startswith("\n")
+
+
 def build_anthropic(model, file_sels, policy="shadow", max_tokens=16, stream=True):
-    """Inline `chunk` annotations on text blocks (surface 2). One block per header and per chunk."""
+    """Inline `chunk` annotations on text blocks (surface 2): a header block, then the chunk block, per chunk."""
     blocks = []
     placed = []
     for fs in file_sels:
-        lines = [c["start_line"] for c in fs["chunks"]] + [c["end_line"] for c in fs["chunks"]]
-        blocks.append({"type": "text", "text": f"// {fs['path']} (lines {min(lines)}-{max(lines)})"})
         for c in fs["chunks"]:
+            blocks.append({"type": "text", "text": glue_header(fs["path"], (c["start_line"], c["end_line"]))})
             b = {"type": "text", "text": c["text"]}
-            if c["tokens"] >= MIN_CHUNK_TOKENS:
+            if anthropic_safe(c):
                 b["chunk"] = {"v": 1, "id": c["id"], "hash": c["hash"], "chunker": CHUNKER, "source": {"path": fs["path"]}}
                 placed.append({"id": c["id"], "tokens": c["tokens"], "file": fs["path"]})
             blocks.append(b)
@@ -614,13 +637,12 @@ def shadow_request(ctx, roles=("F1", "F2", "F3"), key="self", **kw):
     return ctx.chat(body, key=key), placed
 
 
-def chk_A3(ctx):
-    r, placed = shadow_request(ctx)
+def chk_A3(ctx, cid="A3", layout="file"):
+    r, placed = shadow_request(ctx, layout=layout)
     if r.get("status") != 200:
-        return result("A3", False, "200", {"status": r.get("status"), "body": r.get("error_text", "")[:500]})
+        return result(cid, False, "200", {"status": r.get("status"), "body": r.get("error_text", "")[:500]})
     hit, miss = split_roles(ctx, ("F1", "F2"), ("F3",))
     expect = {"hit": len(hit), "miss": len(miss), "ignored": 0, "hit_tokens": sum(c["tokens"] for c in hit)}
-    stored = {c["id"]: bool(c.get("stored")) for r_ in ("F1", "F2", "F3") for c in annotated_chunks(ctx.fx[r_])}
     # `stored` per chunk from a fresh select against the store (the CLI's own view)
     fresh = {}
     for role in ("F1", "F2", "F3"):
@@ -628,11 +650,18 @@ def chk_A3(ctx):
         for c in fs["chunks"]:
             fresh[c["id"]] = bool(c.get("stored"))
     stored = {c["id"]: fresh.get(c["id"], False) for r_ in ("F1", "F2", "F3") for c in annotated_chunks(ctx.fx[r_])}
-    res = check_shadow_counts("A3", r["report"], expect, per_chunk_stored=stored)
-    res["evidence_files"] = [ctx.evidence("A3-response-report.json", r["report"])]
+    res = check_shadow_counts(cid, r["report"], expect, per_chunk_stored=stored)
+    res["evidence_files"] = [ctx.evidence(f"{cid}-response-report.json", r["report"])]
+    res["observed"]["layout"] = layout
+    res["observed"]["warnings"] = r["report"].get("warnings")
     res["observed"]["prompt_tokens"] = r.get("prompt_tokens")
     res["observed"]["prompt_ms"] = r.get("prompt_ms")
     return res
+
+
+def chk_A3g(ctx):
+    """A3 with a glue header before every chunk (the layout the other checks use); see build_prompt for why."""
+    return chk_A3(ctx, "A3g", "chunk")
 
 
 def neutrality_sequence(ctx, stream, cid, roles=("F1", "F2", "F3")):
@@ -695,11 +724,15 @@ def chk_A6(ctx):
     if r.get("status") != 200:
         return result("A6", False, "200", {"status": r.get("status"), "body": r.get("error_text", "")[:500]})
     rep = r["report"]
-    hit, miss = split_roles(ctx, ("F1", "F2"), ("F3",))
-    obs = {"events": sorted(set(r["events"])), "report_present": rep is not None}
+    hit = [p for p in placed if p["file"] in (ctx.fx["F1"]["path"], ctx.fx["F2"]["path"])]
+    miss = [p for p in placed if p["file"] == ctx.fx["F3"]["path"]]
+    obs = {"events": sorted(set(r["events"])), "report_present": rep is not None, "annotated_safe_chunks": len(placed),
+           "chunks_left_plain_because_they_start_with_newline":
+               sum(len(annotated_chunks(ctx.fx[x])) for x in ("F1", "F2", "F3")) - len(placed)}
     if rep:
         ctx.count(rep)
         obs["chunks"] = rep.get("chunks")
+        obs["warnings"] = rep.get("warnings")
     want = {"hit": len(hit), "miss": len(miss), "ignored": 0}
     ok = rep is not None and all((rep.get("chunks") or {}).get(k) == v for k, v in want.items())
     return result("A6", ok, {"message_delta.chunk_cache.chunks": want}, obs, [ctx.evidence("A6-report.json", rep or {})])
@@ -966,7 +999,7 @@ def chk_VOH(ctx):
     return result("VOH", med is not None and med < 5, {"median(annotated) - median(plain) prompt_ms": "< 5"}, obs)
 
 
-CHECKS = {"A0": chk_A0, "A1": chk_A1, "A2": chk_A2, "A3": chk_A3, "A4": chk_A4, "A4b": chk_A4b, "A5": chk_A5, "A6": chk_A6,
+CHECKS = {"A0": chk_A0, "A1": chk_A1, "A2": chk_A2, "A3": chk_A3, "A3g": chk_A3g, "A4": chk_A4, "A4b": chk_A4b, "A5": chk_A5, "A6": chk_A6,
           "A7": chk_A7, "A8": chk_A8, "A9": chk_A9, "A10": chk_A10, "A11": chk_A11, "A12": chk_A12,
           "V1": chk_V1, "V2": chk_V2, "V3": chk_V3, "VOH": chk_VOH}
 

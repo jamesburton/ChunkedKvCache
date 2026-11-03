@@ -187,6 +187,20 @@ class Manifest(unittest.TestCase):
         # the second span starts after the multi-byte text: byte offset exceeds the character offset
         self.assertGreater(entries[1]["at"]["start"], placed[1]["char_start"])
 
+    def test_chunk_layout_header_cannot_merge_with_newline(self):
+        # chunk 2 starts with a newline (the blank line of the previous symbol): the header before it must end in a digit
+        a = "int a;\n"
+        b = "\n    // second\n"
+        prompt, placed = e2e.build_prompt(self.sel(a, b), "chunk")
+        for p in placed:
+            before = prompt[:p["char_start"]]
+            self.assertTrue(before.endswith("\n") or before[-1].isdigit(), repr(before[-12:]))
+        i = prompt.index(b)
+        self.assertTrue(prompt[i - 1].isdigit())
+        # layout "file" keeps chunks back to back (the plan's literal layout)
+        pf, _ = e2e.build_prompt(self.sel(a, b), "file")
+        self.assertIn(a + b, pf)
+
     def test_short_chunks_are_not_annotated(self):
         sel = self.sel("a" * 10, "b" * 10)
         sel[0]["chunks"][0]["tokens"] = 5
