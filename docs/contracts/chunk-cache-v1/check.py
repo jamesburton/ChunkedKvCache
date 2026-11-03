@@ -255,7 +255,7 @@ def check_capabilities(name, c):
         fail(f"{name}: fixed-512 is not text-first and must not be listed")
     if c["auto_validated"] != []:
         fail(f"{name}: auto_validated must be empty today")
-    if set(c["model"]) != {"id", "supported", "reason"}:
+    if not {"id", "supported", "reason"} <= set(c["model"]):
         fail(f"{name}: model keys")
     if set(c["store"]) != {"entries", "bytes", "budget_bytes", "dtype"}:
         fail(f"{name}: store keys")

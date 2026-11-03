@@ -123,3 +123,11 @@ warnings from the requests and compares them with `expected.json`, and checks th
 48. `timings_ms.full_prefill_estimate` is an ESTIMATE of the unannotated prefill time (cost model, or the last measured full prefill of this model/backend if available), never simply the measured prefill of this request when reuse was applied; under `exact` (no reuse) it may equal `prefill`.
 49. Spans that cannot be verified because the server's verification budget ran out are IGNORED with the warning `chunk_verification_skipped` (warning only, NEVER a strict-mode error); `chunk_template_altered` is reserved for spans actually found altered. The shadow plan counts them as ignored.
 50. The default shadow plan budget is 0.05; `recompute.budget` in the request overrides it (ruling 43 stands).
+
+## Rulings from Task 14 (controller, 2026-11-03)
+
+51. Capabilities `model` may carry extra keys beyond `{id, supported, reason}` (`tokenizer_id`, `producer`, `quantization`, `backend`, `kv_dtype`, rope parameters, ...); `check.py` requires only that the three base keys are present. Clients ignore unknown keys.
+52. Ruling 44 is amended: `store` in the capabilities response is ALWAYS an object (clients parse it as one); when no store is configured it is `{"configured": false, "entries": 0, "bytes": 0, "budget_bytes": 0, "dtype": "f32"}`; `configured` is optional (absent = unknown/true).
+53. "Local caller" (no keys file) means loopback remote address AND a loopback/`localhost` Host header AND no `Origin` header (browser/DNS-rebinding protection); otherwise 403.
+54. An inference request from a caller the control plane would refuse gets NO store lookups (summary report from parsing only); the annotation still never changes the output.
+55. `per_chunk` shape is `[{id, status, why}]` with `why` a §5.8 code or null; explain is OpenAI-surface only in v1 and returns `counts` besides the chunk list.
