@@ -131,3 +131,12 @@ warnings from the requests and compares them with `expected.json`, and checks th
 53. "Local caller" (no keys file) means loopback remote address AND a loopback/`localhost` Host header AND no `Origin` header (browser/DNS-rebinding protection); otherwise 403.
 54. An inference request from a caller the control plane would refuse gets NO store lookups (summary report from parsing only); the annotation still never changes the output.
 55. `per_chunk` shape is `[{id, status, why}]` with `why` a §5.8 code or null; explain is OpenAI-surface only in v1 and returns `counts` besides the chunk list.
+
+## Rulings from Task 15 (controller, 2026-11-03)
+
+56. Writer problems (`chunk_store_unavailable`, `chunk_encode_skipped`, ...) are WARNINGS only, never a strict-mode error: inference must never fail because of the store; strict errors are for request defects.
+57. The optional `detail` field on a warning (e.g. `ledger_unreadable`, `budget_exhausted`, `lock_timeout`, `write_failed`) is an additive contract extension; clients ignore unknown fields.
+58. Vulkan servers write nothing until Phase D settles how Vulkan K/V entries are versioned (shader/driver changes) and stored (compact rows).
+59. A local caller without keys (authenticated=true under the loopback rule) may write through annotated inference requests, subject to `--chunk-store-write`.
+60. Index-only mode accepts a key referenced by any index file in the store (as built).
+61. Encode/queue limits stay fixed constants in v1; options are deferred.
