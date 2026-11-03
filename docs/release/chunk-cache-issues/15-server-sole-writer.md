@@ -186,8 +186,13 @@ Commits `95afe2b6` (deny-list), `fb8850de` (server), `bcc36799` (tests, written 
 - **Measured worst-case request wait (S4).** Qwen3-4B-Instruct-2507 Q4_K_M, CPU, 8 threads, Strix Halo, one run under
   the `cpu-bench` lock with the CPU otherwise lightly loaded: a 512-token chunk encodes in 8.4 s, a 2048-token chunk in
   43.5 s. A request on a CPU server can therefore wait up to about 45 s behind one maximal background encode (about 8 s
-  behind a 512-token wire chunk). The 2048-token cap (`MaxEncodeTokens`) is a candidate to lower to 512 for CPU servers
-  (maintainer decision; fixed constants per ruling 61).
+  behind a 512-token wire chunk).
+- **Ruling: 512-token CPU cap** (`3e384f20`, docs `569f59a3`). On the CPU backend a chunk over 512 tokens
+  (`MaxCpuEncodeTokens`, a constant) is never encoded in the background: refused at admission, reported as
+  `chunk_encode_skipped` with `detail: "too_large_for_cpu"` (metric reason `too_large_for_cpu`). Worst-case request wait
+  on Qwen3-4B-Instruct-2507 Q4_K_M, CPU, 8 threads, Strix Halo: **about 8.4 s** (measured 8.35 s for 512 tokens; 43.5 s
+  for 2048 tokens, the reason for the cap). Other models, thread counts and hardware are unmeasured. Test written first
+  (red), mutants H1 (cap removed) and H1b (detail dropped) killed.
 - **For issue 16 (forget).** A path stored on a sighting row longer than 256 characters is a prefix plus a hash, so
   forget must compare `SightingTable.StoredPath(requested)`, never the raw path.
 - **Still not on the deny-list** (for the Task 16/17 deny-list flag): `*.kdbx`, `*.p8`, `.pypirc`, `.gnupg/`.
