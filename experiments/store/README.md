@@ -189,6 +189,32 @@ It deconstructs to `(Context, Stats)`.
   Index_SavedUnderOtherNamespace_LoadsEmptyWithNote}`, `StoredAssemblyTests.Assemble_OtherNamespace_AllMisses`. The v4
   goldens were derived by an independent Python re-implementation of the encoding that reproduces the v3 goldens.
 
+## Server ledger (Phase I Task 3, L2): `ledger-server.json`
+
+- **Why.** Index files reference the CLI's entries. Once the server is the only K/V writer (L1), its entries are in no index,
+  so plain orphan eviction (store keys minus index keys) would delete all of them. The ledger records them.
+- **File.** `<storeRoot>/ledger-server.json` (`ServerLedger.DefaultPath`; not `index-*`, so never read as an index):
+  `{"formatVersion": 1, "rows": [{"key", "namespace", "sourcePath", "bytes", "firstSeen", "lastUsed"}]}`. Rows are sorted by
+  namespace then key, so each namespace is one contiguous section and identical content gives identical bytes.
+  `sourcePath` is the first-seen, tree-relative `source.path`, or null.
+- **Orphans.** `ChunkIndex.ReferencedKeysUnder` = keys of every `index-*.json` plus every ledger key (all namespaces), so
+  `StoreWideOrphans` = store keys minus index keys minus ledger keys. A ledger key stops being protected only when the ledger
+  drops its row (`Remove`: forget, budget eviction) or its entry file is not found at load.
+- **Fail closed.** Unknown properties are ignored. Anything else wrong (other version, missing field, repeated property,
+  malformed or duplicate row, invalid namespace, a directory at the path, any probe or read error other than "not found")
+  is `LedgerUnreadableException`: eviction refuses and deletes nothing, `chunkcache status` reports `ledger: unreadable`
+  (`--strict` exits 3), `chunkcache evict` exits 1 with JSON error code `ledger_unreadable`. Repair or restore the file;
+  deleting it exposes every server-written entry to orphan eviction.
+- **Load.** A row whose entry file is reported not found is dropped (`DroppedOnLoad`); a row whose entry state cannot be
+  determined (access denied, sharing or device error) is kept and counted (`UndeterminedOnLoad`).
+- **Writes.** One writer, the server that owns the store. Order: put the entry file, then record and save the row, holding
+  `AcquireStoreLock` from the put through the ledger save; an eviction pass holds the same lock from `StoreWideOrphans` to its
+  deletes. `Save` writes a temp file, flushes it and renames it over the ledger in one step; two instances do not merge (the
+  last rename wins). Lane L Task 4 narrows these lock scopes.
+- **Shared keys.** Keys are content-addressed, so a server entry (default namespace) can be the same key a CLI index
+  references. After `Remove`, delete the file only if `ReferencedKeysUnder` no longer contains the key.
+- Tests: `ServerLedgerTests` (dotLLM), `ChunkCacheCliTests.Evict_KeepsServerLedgerKeys_AndAnUnreadableLedgerBlocksIt_StatusReportsTheLedger`.
+
 ## Measurement (Qwen3-4B-Instruct-2507 Q4_K_M, CPU, 8 threads)
 
 **Run setup.**

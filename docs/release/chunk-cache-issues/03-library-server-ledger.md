@@ -18,29 +18,34 @@ What it adds:
 
 - **`ServerLedger`** (`<storeRoot>/ledger-server.json`): one row per server-written key, `LedgerRow(KeyHex, Namespace,
   SourcePath, Bytes, FirstSeen, LastUsed)`.
-  - `Load(storeRoot)`: a missing file is an empty ledger (nothing is created); a row whose entry file is gone is dropped
-    (`DroppedOnLoad`; the next save persists it).
+  - `Load(storeRoot)`: only a "not found" probe means no ledger (nothing is created); a directory at the path or any other
+    probe / read error is unreadable. A row whose entry file (or shard directory) is reported not found is dropped
+    (`DroppedOnLoad`; the next save persists it); a row whose entry state cannot be determined (access denied, sharing or
+    device error) is kept and counted (`UndeterminedOnLoad`), so a transient error never turns a live entry into an orphan.
   - `Record(key, ns, sourcePath, bytes, now)`: a new row, or a re-sighting that keeps the first-seen time and provenance,
     takes the new size, and never moves `LastUsed` backwards. The namespace must pass `ChunkNamespace.Validate`; a key
     already recorded under another namespace is refused (the namespace is hashed into the key). `sourcePath` is
     tree-relative and normalised like index paths.
-  - `Touch(key, now)` (a hit), `Remove(key)` (forget / budget eviction: the only way a ledger key loses protection),
+  - `Touch(key, now)` (a hit), `Remove(key)` (forget / budget eviction: the only way a ledger key loses protection; keys
+    are content-addressed, so a default-namespace server entry can also be a CLI index key: delete the file only if
+    `ReferencedKeysUnder` no longer contains it),
     `LeastRecentlyUsed()` (ascending `LastUsed`, then key), `UnderPath(glob)` (`PathGlob` semantics, case-insensitive on
     Windows like `ChunkIndex.PathComparer`), `InNamespace(ns)`.
   - `Save()`: temp file, flush, one rename (retried briefly while a reader holds the file); stale temp files are swept after
     an hour. Rows are written sorted by namespace then key, so each namespace is one contiguous section and identical
     content gives identical bytes.
-- **Format version 1**, camelCase, source-generated `JsonSerializerContext`, nullable DTO properties (no initialisers).
-  Unknown properties are ignored; any other version, a missing field, a malformed / duplicate row, an invalid namespace, a
-  rooted source path, or an I/O error is **`LedgerUnreadableException`** (an `IOException` naming the file, never a
+- **Format version 1**, camelCase, source-generated `JsonSerializerContext` with `AllowDuplicateProperties = false`,
+  nullable DTO properties (no initialisers; guarded by `ChunkReuseJsonContextDefaultsTests`, which also covers
+  `ChunkIndexJsonContext`). Unknown properties are ignored; any other version, a missing field, a repeated property, a
+  malformed / duplicate row, an invalid namespace, a rooted source path, a directory at the path, or an I/O error is **`LedgerUnreadableException`** (an `IOException` naming the file, never a
   namespace value), never an empty ledger.
 - **`ChunkIndex.ReferencedKeysUnder`** now adds every ledger key (all namespaces; `exceptPath` never skips the ledger), so
   `StoreWideOrphans` = store keys minus index keys minus ledger keys, and `EvictableOrphans` honours the ledger too. An
   unreadable ledger makes both throw: eviction fails closed and deletes nothing.
-- **`chunkcache status`** reports the ledger (`ledger: {state: absent | ok | unreadable, rows, rows_without_entry, error}`
-  in `--json`; one text line), and still exits 0 when the ledger is unreadable (read-only verb). **`chunkcache evict`** says
-  entries are kept when "referenced by an index or the server ledger" and exits 1 on an unreadable ledger (dry run and
-  `--apply`).
+- **`chunkcache status`** reports the ledger (`ledger: {state: absent | ok | unreadable, rows, rows_without_entry,
+  rows_undetermined, error}` in `--json`; one text line); it exits 0 when the ledger is unreadable (read-only verb) and 3
+  with `--strict`. **`chunkcache evict`** says entries are kept when "referenced by an index or the server ledger" and exits
+  1 on an unreadable ledger (dry run and `--apply`), JSON error code `ledger_unreadable`.
 
 **Locking.** The ledger has one writer, the server that owns the store. It must put the entry file first, then record and
 save the row, holding `ChunkIndex.AcquireStoreLock` from the put through the ledger save; an eviction pass holds the same
@@ -59,10 +64,17 @@ Not in this change: the server's use of the ledger (Task 15: encode, budget evic
   `Ledger_UnderPath_UsesGlobAndPathComparer`, `Ledger_TwoNamespaces_DoNotAffectEachOther`,
   `StoreWideOrphans_KeepsLedgerKeys`, `StoreWideOrphans_UnreadableLedger_ThrowsAndDeletesNothing` (14 cases: not JSON,
   null, future version, no version, no rows, null row, bad key, bad namespace, no namespace, negative bytes, no last use,
-  rooted source, duplicate key, truncated), `Ledger_HeldExclusivelyByAnotherProcess_IsUnreadable_NotEmpty`,
+  rooted source, duplicate key, truncated; plus repeated property in a row and at the top level),
+  `Ledger_PathIsADirectory_IsUnreadable_NotAbsent`, `Ledger_UnprobeablePath_IsUnreadable_OnlyNotFoundIsAbsent`,
+  `Ledger_EntryStateUnknown_RowKeptAndReported_OnlyNotFoundDrops`, `Ledger_SaveFailure_IsNotMaskedByTempCleanup`,
+  `Ledger_HeldExclusivelyByAnotherProcess_IsUnreadable_NotEmpty`,
   `Ledger_UnknownFieldsAreIgnored_WithinTheVersion`, `Ledger_SaveIsAtomic`,
   `Ledger_ConcurrentSaves_EvictionNeverSeesAPartialLedger`, `Ledger_IsNotAnIndexFile_AndDefaultPathIsInTheStoreRoot` pass.
 - [ ] `ChunkCacheCliTests.Evict_KeepsServerLedgerKeys_AndAnUnreadableLedgerBlocksIt_StatusReportsTheLedger` passes.
+- [ ] `ChunkReuseJsonContextDefaultsTests` (the Global Constraints' `JsonContextDefaultsTests`-style guard for
+  `ServerLedgerJsonContext` and `ChunkIndexJsonContext`) passes.
+- [ ] The owning doc has a ledger section: `experiments/store/README.md`, "Server ledger (Phase I Task 3, L2)" (written in
+  the research repo; it moves to the dotLLM docs that ship with the library PR).
 - [ ] Every correctness test shown to fail against a mutant (below).
 
 ## Mutant evidence
@@ -100,3 +112,8 @@ not compile (CS0162 as error) and was rewritten as `File.Exists(...) || key.Leng
 | M16 CLI `status` reports an unreadable ledger as absent | CLI `Evict_KeepsServerLedgerKeys_…` |
 | M17 `Remove` does not remove | `Ledger_TwoNamespaces_DoNotAffectEachOther`, `StoreWideOrphans_KeepsLedgerKeys` |
 
+**Review fix round** (dotLLM `738737dc`; copy of that commit; driver `phase-i-task-3-fix-mutate.py`, log
+`phase-i-task-3-fix-mutants.log`): **11 applied, 11 killed**: F1 ledger probe error read as absent, F2 directory at the ledger path, F3 undetermined entry
+drops the row, F4 not-found entry keeps the row, F5 undetermined rows not counted, F6 duplicate JSON properties allowed, F7
+temp cleanup masks the save's exception, F8 `status --strict` ignores an unreadable ledger, F9 generic error code, F10 negated
+glob ignored, F11 `init` setter with an initializer on a ledger DTO (killed by the JSON-context guard).
