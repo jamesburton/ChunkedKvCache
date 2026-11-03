@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A7: one OpenAI-surface request through the C_A client (ChunkAnnotatingChatClient + ChunkCacheBodyHandler).
+       Build: dotnet build -c Release -p:ClientRoot=C:\Development\dotLLM-e2e\client-5f003693 -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ClientRoot Condition="'$(ClientRoot)' == ''">C:\Development\dotLLM-e2e\client-5f003693</ClientRoot>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(ClientRoot)\src\DotLLM.ChunkCache.Client\DotLLM.ChunkCache.Client.csproj" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.10.0" />
+  </ItemGroup>
+</Project>
