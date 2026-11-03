@@ -198,12 +198,13 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
   @namespace = ChunkNamespace.Default)`. The index producer identity (`keyOf([])`) therefore includes the namespace.
   **Validity rule** (Task 2 review; implemented in the Task 2 fix round): a namespace matches
   `^(|k-[0-9a-f]{16}|[a-z0-9._-]{1,64})$`; `ChunkNamespace.Validate(string ns)` throws `ArgumentException` otherwise, and
-  `ChunkKey.Create`, `ServerLedger` and the index path all call it.
+  `ChunkKey.Create`, `ServerLedger` and the index path all call it. The name `default` is **reserved** (it is the file-name
+  form of the empty namespace): `IsValid("default")` is false (Task 4 review).
 
 - [ ] **Step 1: Write failing tests:** `Key_DiffersByNamespace`; `Key_DefaultNamespace_GoldenV4` (new golden hex; v3 golden
   no longer matches); `ForApiKey_IsStable_AndNeverEqualsDefault`; `Assemble_OtherNamespace_AllMisses`;
   `Index_SavedUnderOtherNamespace_LoadsEmptyWithNote`; `Namespace_InvalidValues_Rejected` (upper case, `/`, `\`, 65
-  chars, `k-` with 15 hex digits, non-ASCII).
+  chars, `k-` with 15 hex digits, non-ASCII, `default`).
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement; bump the scheme string; document in `experiments/store/README.md` that v3 stores are rebuilt.
 - [ ] **Step 4:** Rerun; PASS; mutants: namespace not hashed; default namespace hashed as null-skip collapsing to v3.
@@ -249,16 +250,21 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 4:** Rerun; PASS; mutants: orphans ignore the ledger; unreadable ledger treated as empty; LRU by FirstSeen.
 - [ ] **Step 5:** Commit.
 
-### Task 4: Lock model (L3) [CPU]
+### Task 4: Lock model (L3) [CPU] — DONE (pending a small fix round)
+
+**Status:** Tasks 4 and 4b done on `feature/chunk-cache` `393b0e67`; review
+`.superpowers/sdd/2026-11-01-phase-s/review-phase-i-task4-report.md`.
 
 **Files:**
 - Modify (dotLLM): `src/DotLLM.ChunkReuse/Store/ChunkIndex.cs`, `FileChunkStore.cs`
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/StoreLockTests.cs`
 
 **Interfaces:**
-- Produces: `ChunkIndex.AcquireIndexLock(string storeRoot, string chunkerName, TimeSpan timeout) -> IDisposable`
-  (`index-<chunker>.lock`); `AcquireStoreLock` (existing) is now documented and used for short scopes only: one `Put` batch,
-  one ledger or index save, one eviction pass. `ChunkStoreLockTimeoutException` (derives from `ChunkStoreBusyException`) on
+- Produces (as built): `AcquireIndexLock` by model / producer / namespace and by index path (the planned 3-argument
+  `(storeRoot, chunkerName, timeout)` form is superseded); the lock file is the index file name with `.lock`
+  (Task 4b). `AcquireStoreLock` (existing) covers short scopes only: one `Put` batch, one ledger or registry save, one
+  eviction pass; an **index save is under the index lock**, not the store lock. **Lock order is index → store**, enforced by
+  handles: `Save` methods that need the store lock take the held store-lock handle as a parameter. `ChunkStoreLockTimeoutException` (derives from `ChunkStoreBusyException`) on
   timeout. The remarks at `ChunkIndex.cs:284-289` change to the new contract.
 - Starting point: Phase S Task 7's fix round already narrowed `build` to take the store lock only around index update,
   encode and write, with a `--lock-timeout` option. This task still does the short-scope redesign (per-index lock, per-batch
@@ -272,7 +278,7 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - [ ] **Step 4:** Rerun; PASS; mutants: index lock is the store lock; lock not released on exception; shared lock mode.
 - [ ] **Step 5:** Commit.
 
-### Task 4b: Index naming by chunker and model, store registry (L9) [CPU]
+### Task 4b: Index naming by chunker, model, producer and namespace; store registry (L9) [CPU] — DONE (see Task 4 status)
 
 **Files:**
 - Modify (dotLLM): `src/DotLLM.ChunkReuse/Store/ChunkIndex.cs` (`DefaultPath`, lock names)
@@ -280,15 +286,15 @@ numbers below (§5.3, L4, I1a, ...) refer to it. Contracts consumed: `experiment
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/StoreRegistryTests.cs`
 
 **Interfaces:**
-- Produces: `ChunkIndex.DefaultPath(string storeRoot, string chunkerName, string modelId, string ns)` =
-  `<storeRoot>/index-<chunker>.<model12>.<ns-or-default>.json`, where `model12` = the first 12 hex digits of SHA-256 of the
-  content model id (`GgufIdentity.ModelId` form) and `<ns-or-default>` is the validated namespace or the literal `default`
-  for `ChunkNamespace.Default`; the index lock follows (`index-<chunker>.<model12>.<ns-or-default>.lock`). `StoreRegistry` =
+- Produces (as built): `<storeRoot>/index-<chunker>.<model12>.<p8>.<ns-or-default>.json`, where `model12` = the first
+  12 hex digits of SHA-256 of the content model id (`GgufIdentity.ModelId` form), `p8` = the first 8 hex digits of the
+  producer hash (`keyOf([]).Hex`: model, tokenizer, RoPE, backend, dtype, namespace), and `<ns-or-default>` is the validated
+  namespace or the reserved literal `default` for `ChunkNamespace.Default`; the lock is the same name with `.lock`. `StoreRegistry` =
   `<storeRoot>/chunkcache.json` listing each index: `{file, chunker, model_id, tokenizer_id, backend, namespace, updated}`,
   written atomically under the store lock; `StoreRegistry.Find(chunker, modelId, ns) -> string? indexPath`.
   `ReferencedKeysUnder` / `StoreWideOrphans` read every `index-*.json` as today (registry is advisory; a missing registry is
   rebuilt from the index files' producer identities). A server-backed CLI (Task 17) keys on the **server's** model identity
-  (from `GET /v1/chunk-cache`, which Task 14 must return as the content model id and tokenizer id), never on a local GGUF's.
+  and producer hash (from `GET /v1/chunk-cache`, Task 14), never on a local GGUF's.
   The old `index-<chunker>.json` is loaded once and renamed when its producer identity matches, else left for `orphans`.
 
 - [ ] **Step 1: Write failing tests:** `TwoModelsSameChunker_TwoIndexFiles`; `Registry_ListsEveryIndex_AndRebuildsWhenMissing`;
@@ -670,7 +676,8 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
 **Interfaces:**
 - Produces: `GET /v1/chunk-cache` (§5.9 capabilities; `selectors: ["chunk_starts"]`, `wire_chunkers: ["symbol-512"]`,
   `auto_validated: []`, store figures 0 until Task 15; `model.id` is the content model id (`GgufIdentity.ModelId`) and
-  `model.tokenizer_id` is added, which the server-backed CLI uses to name its index, Task 4b); `POST /v1/chunk-cache/explain` (§7.2 schema; same codes; per-chunk
+  `model.tokenizer_id` and `model.producer` (the producer hash, `keyOf([]).Hex`, for the caller's namespace) are added,
+  which the server-backed CLI uses to find its index, Task 4b); `POST /v1/chunk-cache/explain` (§7.2 schema; same codes; per-chunk
   status only for an authenticated caller in its own namespace, else counts). Flag off: both 404.
   **Auth (dotLLM has no authentication today, `SERVER.md` § Security):** `ChunkCacheAuth.Resolve(HttpContext) ->
   ChunkCaller(bool Authenticated, string Namespace)`. With `--chunk-cache-api-keys` set: `X-API-Key` / `Bearer` must be in
@@ -732,6 +739,11 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
   (b) Write order per entry: `Put` the entry file, then `Record` the ledger row and `Save`, all inside **one** store-lock
   scope. (c) Budget eviction and `ServerLedger.Remove` delete an entry **file** only when no index references its key
   (content-addressed keys can be shared with CLI indexes); otherwise only the ledger row goes.
+- **Locking rules (Task 4 review):** `ServerLedger.Save` requires the held store-lock handle; puts, `Record` and `Save` run in
+  one lock scope. No sleep-polling (the library's 20 ms retry loop) on request threads: store writes happen on the
+  sole-writer thread (`ChunkEncodeQueue`), or through an async acquire. `LockingChunkStore` is never used inside its own
+  lock scope (the lock is not re-entrant). Lock timeouts surface as `ChunkStoreLockTimeoutException` and map to
+  `chunk_store_unavailable` with a "lock timeout" detail; they are never swallowed as an ordinary busy store.
 
 - [ ] **Step 1: Write failing tests:** `SeenOnce_NotQueued_SeenTwice_Queued`; `VolatileAndNoStore_NeverQueued`;
   `BudgetRequired_StartupFailsWithoutIt`; `OverBudget_EvictsLruLedgerRows_NeverIndexOnlyEntries`;
@@ -740,12 +752,13 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
   `EntriesTaggedWithServerBackend`; `OnMissEncode_QueuesFirstSighting_ServesExact`;
   `UnreadableLedgerAtStartup_WritesDisabled_FileUntouched` (byte-identical ledger after startup and a request);
   `PutRecordSave_InOneLockScope` (a second lock holder never observes a file without its row after the scope);
-  `BudgetEviction_KeyAlsoInCliIndex_KeepsFile_RemovesRowOnly`.
+  `BudgetEviction_KeyAlsoInCliIndex_KeepsFile_RemovesRowOnly`; `RequestThread_NeverBlocksOnStoreLock` (lock held
+  elsewhere; the request completes within its normal time and reports the queue); `LockTimeout_SurfacesAsLockTimeoutDetail`.
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: seen-once admitted; eviction ignores the budget; ledger written before the file;
   unreadable ledger replaced by an empty one and saved; `LedgerUnreadableException` caught as `IOException`; lock released
-  between `Put` and `Save`; evicted file deleted despite an index reference.
+  between `Put` and `Save`; evicted file deleted despite an index reference; lock timeout reported as plain busy.
 - [ ] **Step 5 [GPU-lock]:** `VulkanServer_CpuWrittenStore_NoHits` (GPU-gated integration: a store encoded by a CPU server
   gives `hit: 0` in `shadow` on a Vulkan server for the same request). Coordinate the slot through the user.
 - [ ] **Step 6:** Commit; write the issue draft `docs/release/chunk-cache-issues/NN-<slug>.md` (title, body, acceptance criteria from the Global Constraints, mutant evidence).
@@ -772,7 +785,8 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
 - [ ] **Step 1: Write failing tests:** `Prewarm_TextOnly_QueuesWithoutSightings`; `Prewarm_DeniedPath_Refused`;
   `Evict_DryRunDefault_DeletesNothing`; `Evict_Orphans_KeepsLedgerAndIndexKeys`; `Evict_Path_ForgetsAllFourKinds`;
   `Evict_Namespace_CannotTouchOtherNamespace`; `Evict_UnreadableLedger_FailsClosed`; `Capabilities_ReportsStoreFigures`;
-  `NonAdmin_EvictBodyNamespace_Ignored`; `NamespaceBudget_PrewarmEvictsOnlyOwnRows`; `Forget_ClearsSightings_NoMarker`.
+  `NonAdmin_EvictBodyNamespace_Ignored`; `NamespaceBudget_PrewarmEvictsOnlyOwnRows`; `Forget_ClearsSightings_NoMarker`;
+  `EvictNamespaceMode_RemovesThatNamespacesIndexFilesRowsAndSightingsOnly` (per-namespace index files from Task 4b).
 - [ ] **Step 2:** Run; expected FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Rerun; PASS; mutants: dry run ignored; cross-namespace evict; sightings kept on forget; namespace budget
@@ -803,8 +817,9 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
   `compare` stays lab-only, not in MCP.
 - **Already in Phase S Task 7's fix round (not repeated here):** UTF-8 stdout, repeatable non-splitting list options,
   registry-name validation. **This task adds:** `--server URL`; the API key from `CHUNKCACHE_API_KEY` only (never a command
-  line argument, ruling 18); `--model` optional when `--server` is given (the server's model identity names the index,
-  Task 4b), required with `--offline`.
+  line argument, ruling 18); `--model` optional when `--server` is given, required with `--offline`. A server-backed CLI
+  reads and writes **its own producer's** index: the name comes from the server's `model.id` and `model.producer`
+  (Task 14), `index-<chunker>.<model12>.<p8>.<ns-or-default>.json`.
 - **From the Task 5 review:** `build`'s wire-eligibility count must require all three: an allow-listed chunker
   (`WireChunking.IsWireChunker`), a non-slice chunk (`WireEligible`), and `VerifyRoundTrip` OK (today `BuildCommand` checks
   only the round trip). This task also owns `compare`'s query encoding, which must use `ChunkTokenization.Encode`
@@ -825,7 +840,7 @@ but the sole writer should still evict a rejected entry before `Put`, as `Stored
   `Offline_EvictApply_NeedsOwnershipLock`; `Cli_NeverWritesLedger` (ledger bytes unchanged after every verb);
   `StatusStrict_UnreadableLedger_Fails`; `Offline_SecondWriter_ExitsNonZeroWithinTimeout`
   (Review Focus); `Select_HashEqualsWireHash`; `Json_Error_IsObjectOnStdout_NonZeroExit`; `ApiKey_FromEnvOnly`;
-  `ServerBacked_IndexNamedByServerModel`; `MaxEncodeTokens_CountsTokens`; `Evict_OldModeName_RejectedWithHint`;
+  `ServerBacked_IndexNamedByServerModelAndProducer`; `MaxEncodeTokens_CountsTokens`; `Evict_OldModeName_RejectedWithHint`;
   `Build_ControlTokenSpellingTree_EligibilityUsesChunkTokenization` and `Compare_QueryWithThinkTag_UsesChunkTokenization`
   (a CLI fixture tree whose source contains `<think>`; the synthetic GGUF gets a type-3 special token so the spelling
   parses under bare `EncodeRaw`; kills B-M13 and B-M14); `Build_EligibilityRequiresAllowListSliceAndRoundTrip`.
@@ -1046,6 +1061,7 @@ model parts are Task 4b); recurrent models (Phase T); the E7 quality half.
 
 ## Self-review notes
 
+- 2026-11-03 rev 9: Tasks 4/4b done (`393b0e67`); reserved `default`; p8 in index names; lock order and server locking rules.
 - 2026-11-02 rev 8: Task 3 done (`37c6d3b8`); ledger rules into Tasks 15–17.
 - 2026-11-02 rev 7: Task 5/5b done (`4bf908b7`, merged `9c99ed6a`); Task 19 trimmed; Task 17 and 13 additions from the Task 5 review.
 - 2026-11-02 rev 6: Task 2 review: namespace validity rule, namespace in index/lock names, server-assigned namespace, auth hardening, per-namespace figures and budgets.

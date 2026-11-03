@@ -5,7 +5,7 @@
 > **Packaging: Tasks 10, 11 and 13 ship together as one PR** (the flag must do something when it is merged). This text
 > becomes that PR's span-location section, or a sub-issue of #1543. Branch `feature/chunk-cache-server`, worktree
 > `C:\Development\dotLLM\.claude\worktrees\chunk-cache-server`: `2b53f3b7` (parser follow-up, rulings 33 and 34) and
-> `0bc4aab2` (span location), on top of Task 10 (`4e3f8257`).
+> `0bc4aab2` (span location) and `68485327` (review fix round), on top of Task 10 (`4e3f8257`).
 
 ## Title
 
@@ -42,8 +42,18 @@ What it adds:
   - The probe characters break the sentinel under any escaping filter, so every Llama-3.1 tool-result span is
     altered, even one whose own characters need no escaping.
   - Trimming is caught by the comparison.
-- **Markers (ruling 20).** The comparison skips U+FDD0 on both sides. A located range is the marked copy of the span
-  text (`MarkUntrustedSpecials(text)`). A span that itself contains U+FDD0 is ignored, because encode drops the marker.
+- **Markers (ruling 20).** The template marks caller text as a whole message, and the comparison skips U+FDD0 on both
+  sides. **Stripping the U+FDD0 markers from a located range gives the span text**, and the range starts and ends on
+  span characters. The range is not always `MarkUntrustedSpecials(text)`: a special spelling that crosses the span's
+  end leaves its marker inside the range (`q <|im_` of `q <|im_end|> z` is located as `q <`, U+FDD0, `|im_`). A span
+  that itself contains U+FDD0 is ignored, because encode drops the marker (the walk also relies on it).
+- **Assistant turns.** The guard leaves the template's reasoning tags live (unmarked) in assistant content. A Qwen3
+  assistant span holding `<think>` is therefore located by characters, but its tokens differ from the chunk's: a
+  control token in the prompt, plain text in the store. The token check in the `exact` / `shadow` part is what rejects
+  it.
+  - Qwen3 rewrites assistant content that holds `</think>`. A span in the reasoning part of a historical turn, or one
+    that starts with the stripped newlines, is altered.
+  - Llama-3.1 trims assistant content like user content.
 - **Attribution.** The comparison walks from the start and from the end. A span in the common prefix or suffix is
   located with exact offsets. When the two strings differ, the first and last unproven spans are ignored, and the spans
   between them are tried again in another render. This is conservative: a span is never located on a guess.
@@ -77,9 +87,20 @@ located range before it counts a span as reusable.
   - [ ] Llama-3.1 edge spans touched by the trim are `chunk_template_altered`;
   - [ ] every Llama-3.1 tool-result span is altered, including a plain-words one;
   - [ ] good spans next to altered ones are still located.
-- [ ] Every located range equals the marked span text. A property test checks this over random conversations with
-      non-BMP text, CRLF, quotes, backslashes and special spellings: on Qwen3 every span is located; on Llama-3.1 every
-      user or system span is located and every tool span is altered.
+- [ ] Stripping U+FDD0 from every located range gives the span text, and the range starts and ends on span characters.
+      A property test checks this over random conversations with non-BMP text, CRLF, quotes, backslashes and special
+      spellings: on Qwen3 every span is located; on Llama-3.1 every user or system span is located and every tool span
+      is altered.
+- [ ] A special spelling crossing a span's end leaves its marker inside the range; one crossing the span's start
+      leaves it just before the range (not in it).
+- [ ] Assistant turns:
+  - [ ] Qwen3: a span holding a live `<think>` is located (no marker in the range); a span in the reasoning part, or
+        one starting with the stripped newlines, is altered.
+  - [ ] Llama-3.1: a trimmed edge span is altered and a mid span located; with tools listed, the first user message is
+        moved and a mid span in it is still located.
+- [ ] **Token check (the `exact` / `shadow` part, Task 13):** an assistant span with a live `<think>` is located by the
+      locator but fails the token-id check, so it is not counted reusable (`AssistantSpanWithThinkTag_…`); so does a
+      span with a special spelling crossing its edge.
 - [ ] A span containing `<think>` / `<|im_end|>` is located through the marked comparison; a span with a caller U+FDD0
       is ignored; a forged sentinel in caller text never yields a location.
 - [ ] Anthropic end to end (parser → converter → render → locator): a text-block span is located; a tool-result span is
@@ -87,8 +108,8 @@ located range before it counts a span as reusable.
 - [ ] Profile offset: with the offset the span is located; without it the span is `chunk_span_invalid`.
 - [ ] Hostile input never throws: a throwing, dropping or duplicating template, inconsistent positions, overlaps, a
       lone surrogate.
-- [ ] Cost bound: 4,096 spans on a 4 MiB message use one sentinel render; 4,096 trimmed Llama-3.1 edge spans stop at the
-      render cap (4).
+- [ ] Cost bound (render counts, no wall-clock asserts): 4,096 spans on a 4 MiB message use one sentinel render; 4,096
+      trimmed Llama-3.1 edge spans stop at the render cap (4).
 - [ ] Parser: unknown `report` / `on_miss` values and an out-of-range `query.message` are malformed (strict 400) with
       the default applied; known values give no warning; eligibility is checked after the id and before the range.
 - [ ] No new JSON DTO or `JsonSerializerContext`; new types `internal`.
@@ -96,10 +117,11 @@ located range before it counts a span as reusable.
 
 ## Mutant evidence
 
-Run in a `git archive` copy of `0bc4aab2` (never the live worktree), `--filter FullyQualifiedName~Server.ChunkCache`,
-Release, CPU, `DOTLLM_SKIP_VULKAN=1`. Baseline 150 / 150. **19 mutants, 19 killed.** The plan's three named mutants are
-L1–L3. Red evidence: a stub locator that locates nothing (L0) fails 26 tests; the parser tests failed 9 before the
-follow-up was implemented.
+Run in a `git archive` copy (never the live worktree), `--filter FullyQualifiedName~Server.ChunkCache`, Release, CPU,
+`DOTLLM_SKIP_VULKAN=1`. Final run on the review fix round `68485327`: baseline 155 / 155, **20 mutants, 20 killed**
+(first run on `0bc4aab2`: 19 / 19). The plan's three named mutants are L1–L3. Red evidence: a stub locator that locates
+nothing (L0) fails 31 tests; the parser tests failed 9 before the follow-up was implemented. The "killed by" column
+lists the first-run tests; the fix-round tests add kills (the log has them).
 
 | mutant | change | killed by |
 |---|---|---|
@@ -122,5 +144,7 @@ follow-up was implemented.
 | L12 | engine text-at-position check removed | `InconsistentPositions_AreSpanInvalid_NotAThrow`, `ProfileSystemPrompt_OffsetIsAdded` |
 | L13 | a throwing template propagates | `HostileTemplates_IgnoreSpans_NeverThrow` |
 | L14 | overlapping engine spans both kept | `InconsistentPositions_…` |
+| L15 | forward walk records a span's start before skipping markers (a marker right before the span) | `SpellingStraddlingSpanEdge_LocatedByCharacters` (review S1) |
 
-Log: `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-11-mutants.log` (script `phase-i-task-11-mutate.py`).
+Logs: `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-11-mutants.log` (first run) and
+`phase-i-task-11-fix-mutants.log` (fix round); script `phase-i-task-11-mutate.py`.
