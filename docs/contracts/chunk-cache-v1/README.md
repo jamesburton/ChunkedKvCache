@@ -99,3 +99,9 @@ warnings from the requests and compares them with `expected.json`, and checks th
 33. Check order is: structure, version, id, eligibility (`chunk_not_wire_eligible`), range/boundary, overlap/conflict, hash. An ineligible span never reserves a range.
 34. Unknown string values for `report` and `on_miss` are malformed (`chunk_annotation_malformed`: warning, strict 400) and the default is used otherwise; an invalid `query.message` is also malformed. (Task 11's first step brings the parser in line.)
 35. `chunk_not_wire_eligible` drops the span (warning; strict 400), as in ruling 26.
+
+## Rulings from Task 11 (controller, 2026-11-03)
+
+36. A span whose text is not at its stated position in the rendered/received message is `chunk_span_invalid`; a span containing a caller-supplied U+FDD0 is `chunk_template_altered` (it cannot be reproduced after encode).
+37. The locator's retry budget (4 sentinel renders per request) is a fixed internal constant in v1; exposing it as an option is deferred.
+38. Task 13 merges the locator's warnings into the parser's list with per-code counts. Located character ranges are NOT proof of token equality: Task 13 verifies token ids over each located range before counting a span as reusable.
