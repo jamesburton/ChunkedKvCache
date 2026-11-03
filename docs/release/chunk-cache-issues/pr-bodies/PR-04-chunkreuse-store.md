@@ -11,8 +11,7 @@ Chunk reuse: file chunk store (`.ckv`, backend tag in the header) and store-back
 
 ## Body
 
-Refs #1542 (umbrella: chunk-level KV reuse). Depends on the `DotLLM.ChunkReuse` core PR (PR 3). Issue for this PR: not
-filed yet (draft `docs/release/chunk-cache-issues/01b-library-store.md` in ChunkedkvCache).
+Refs #1542 (umbrella: chunk-level KV reuse). Refs #1568 (this PR's issue). **Stacked on the core PR (PR 3, #1567)**: open it after PR 3 merges (rebase with `git rebase --onto origin/dev pr/chunkreuse-core`); until then this branch contains PR 3's commits. `DotLLM.ChunkReuse` stays `IsPackable=false`.
 
 ### Summary
 
@@ -115,7 +114,7 @@ them, so they were not re-run.
 ### Conventions checklist
 
 - [x] Targets `dev`, not `main`; opened after PR 3 merges, rebased on `dev`. `Closes #N` does not auto-close on `dev`.
-- [x] Issue first: draft `01b-library-store.md` (file before opening; Refs #1542 until then).
+- [x] Issue first: draft `01b-library-store.md` (filed as #1568).
 - [x] Owning doc in the same PR: `docs/CHUNK_REUSE.md` store sections.
 - [x] XML docs on all public API; warnings as errors.
 - [x] STJ source-gen DTO rule: n/a (binary format, no JSON).

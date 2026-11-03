@@ -12,8 +12,7 @@ Chunk reuse: `DotLLM.ChunkReuse` core library (encode a chunk's K/V in isolation
 
 ## Body
 
-Refs #1542 (umbrella: chunk-level KV reuse). Issue for this PR: not filed yet (draft
-`docs/release/chunk-cache-issues/01-library-core.md` in ChunkedkvCache).
+Refs #1542 (umbrella: chunk-level KV reuse). Refs #1567 (this PR's issue). The core builds **without Roslyn or Vulkan** (a light assembly: key, store-independent encode/assemble, tokenisation, backend seam; the C# chunker and Vulkan backend arrive in later PRs as separate assemblies). `DotLLM.ChunkReuse` stays `IsPackable=false` until the server PR needs it (maintainer decision on #1567). PR 4 (store, #1568) is stacked on this PR.
 
 ### Summary
 
@@ -143,7 +142,7 @@ G01-G07 in the original logs) are killed by `GgufIdentityTests`, which ship unch
 ### Conventions checklist
 
 - [x] Targets `dev`, not `main`. `Closes #N` does not auto-close on `dev`: the issue is closed by hand after merge.
-- [x] Issue first: draft `01-library-core.md` (file before opening; Refs #1542 until then).
+- [x] Issue first: draft `01-library-core.md` (filed as #1567).
 - [x] Owning doc in the same PR: new `docs/CHUNK_REUSE.md`.
 - [x] XML docs on all public API; builds with warnings as errors (crefs to types in later PRs are `<c>` text).
 - [x] STJ source-gen DTO rule: n/a (no DTO, no `JsonSerializerContext`; the library's first context arrives in a later PR with its
