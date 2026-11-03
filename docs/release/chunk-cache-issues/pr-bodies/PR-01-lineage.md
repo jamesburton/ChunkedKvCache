@@ -10,7 +10,7 @@ Prefix cache: tag snapshot lineage (exact / approximate rows) so exact requests 
 
 ## Body
 
-Refs #1542 (umbrella: chunk-level KV reuse). Refs #<lineage issue, from draft 12, once filed>.
+Refs #1542 (umbrella: chunk-level KV reuse). Refs #1557 (snapshot lineage).
 
 ### Summary
 
