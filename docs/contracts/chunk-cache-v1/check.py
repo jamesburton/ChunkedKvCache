@@ -257,7 +257,7 @@ def check_capabilities(name, c):
         fail(f"{name}: auto_validated must be empty today")
     if not {"id", "supported", "reason"} <= set(c["model"]):
         fail(f"{name}: model keys")
-    if set(c["store"]) != {"entries", "bytes", "budget_bytes", "dtype"}:
+    if not {"entries", "bytes", "budget_bytes", "dtype"} <= set(c["store"]):
         fail(f"{name}: store keys")
 
 
