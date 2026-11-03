@@ -4,7 +4,7 @@
 > (library PR, Lane L; this draft is the Task 4b part and may be folded into the row-2 issue). Branch: `feature/chunk-cache`
 > (local only). Plan: Phase I Task 4b (spec §14 L9). Builds on draft 04 (lock model).
 
-**Suggested title:** `chunk-cache store: one index per chunker, model and namespace, plus a chunkcache.json registry`
+**Suggested title:** `chunk-cache store: one index per chunker, model, producer and namespace, plus a chunkcache.json registry`
 
 ## Body
 
@@ -14,32 +14,40 @@ it, and the next orphan eviction deletes the first one's entries. The Phase S CL
 `index-<chunker>.<producer12>.json` and its own `chunkcache.json`. This change makes the per-model, per-namespace name the
 library's and moves the registry into the library.
 
-- **Index name** `ChunkIndex.DefaultPath(storeRoot, chunker, modelId, ns)` =
-  `<storeRoot>/index-<chunker>.<model12>.<ns-or-default>.json`: `model12` = first 12 lowercase hex of SHA-256 over the
+- **Index name** `ChunkIndex.DefaultPath(storeRoot, chunker, modelId, producer, ns)` =
+  `<storeRoot>/index-<chunker>.<model12>.<p8>.<ns-or-default>.json` (review ruling S3): `p8` = first 8 lowercase hex of the
+  producer identity `keyOf([]).Hex` (`ChunkIndex.ProducerTag`; it hashes model fingerprint, tokenizer, RoPE, backend, dtype,
+  positioning and namespace, so a CPU and a Vulkan producer of one model keep separate indexes); `model12` = first 12 lowercase hex of SHA-256 over the
   UTF-8 content model id (`ChunkIndex.ModelTag`; `GgufIdentity.ModelId` form; a server-backed client uses the server's
   model id); the last part is the namespace, or `default` for `ChunkNamespace.Default`. The index lock follows
-  (`index-<chunker>.<model12>.<ns-or-default>.lock`, `AcquireIndexLock(storeRoot, chunker, modelId, ns, timeout)`).
+  (`index-<chunker>.<model12>.<p8>.<ns-or-default>.lock`, `AcquireIndexLock(storeRoot, chunker, modelId, producer, ns, timeout)`).
+  **Task 14's `GET /v1/chunk-cache` must return the producer hash** (`keyOf([]).Hex`) with the content model id and tokenizer
+  id, so a server-backed client (Task 17) names the index it reads.
   Chunker names must be `[a-z0-9_-]{1,64}`; the namespace is validated (`ChunkNamespace.Validate`) before it reaches a file
   name. **`default` becomes a reserved namespace** (`ChunkNamespace.IsValid("default")` is false), so the default namespace
   and a namespace named `default` can never share a file. `ChunkIndex.TryParseIndexFileName` parses a name back.
-- **Not in the name:** tokenizer, RoPE, backend, dtype. `ChunkIndex.ProducerOf(path)` reads an index file's producer, and
-  `chunkcache build` refuses to save over another producer's index at its name (exit 1).
+- **Producer collisions:** only 32 bits of the producer are in the name. `ChunkIndex.ProducerOf(path)` reads an index file's
+  producer; `chunkcache build` writes its own file next to another producer's index, and refuses (exit 1) only a prefix
+  collision (a file at its exact name recorded by another producer), never overwriting it.
 - **Migration, read once.** `ChunkIndex.MigrateLegacyIndex(storeRoot, chunker, modelId, ns, keyOf, timeout)` (called under
   the new index lock; takes the store lock for the rename): when the new file does not exist, a legacy `index-<chunker>.json`
-  or Phase S `index-<chunker>.<producer12>.json` saved by this producer is renamed (not copied: its keys never lose
+  or Phase S `index-<chunker>.<producer12>.json` or Task 4b `index-<chunker>.<model12>.<ns-or-default>.json` saved by this
+  producer is renamed (not copied: its keys never lose
   protection) and its registry row moves with it. A legacy file of another producer, an unreadable one, or one beside an
   existing current file is left where it is: still an index (its keys stay protected) until someone deletes it.
   `ChunkIndex.ResolveIndexPath` gives read-only callers the current file, else this producer's legacy file read in place.
   The legacy two-argument `DefaultPath(storeRoot, chunker)` stays (it names the legacy file).
 - **Registry** `StoreRegistry`, `<storeRoot>/chunkcache.json`, format 2, snake_case: `{"format_version": 2, "indexes":
-  [{"file", "chunker", "model12", "model_id", "tokenizer_id", "backend", "namespace", "producer", "updated", "tool": {...}}]}`
+  [{"file", "chunker", "model12", "producer8", "model_id", "tokenizer_id", "backend", "namespace", "producer", "updated", "tool": {...}}]}`
   (`tool`: tool-specific strings; unknown row properties are kept). `Find(chunker, modelId, ns)`, `Get`, `Upsert`,
   `Remove`, `EntryFor`, `Update(storeRoot, timeout, change)`.
   - **Advisory:** `ReferencedKeysUnder` / `StoreWideOrphans` still read every `index-*.json`, listed or not. `Load` never
     fails on content: a missing, corrupt or newer-format registry is rebuilt from the index file names (chunker, model tag,
     namespace); rows whose file is gone are dropped; unlisted current-form index files are added.
   - **Writes** only under the store lock (`Save` refuses otherwise), as load + change + save, atomically (temp file, flush,
-    one rename), so concurrent writers never lose rows. A corrupt registry is copied to `chunkcache.json.bad` first; a
+    one rename), so concurrent writers never lose rows; `Save(handle)` takes the held store-lock handle as proof. A corrupt
+    registry is copied to `chunkcache.json.bad-<utc time>` first (earlier copies kept); a read refused by a sharing
+    violation is retried for 2 s; a
     newer-format registry is never overwritten. Rows naming anything but a plain `index-*.json` in the store root are refused
     on load (`InvalidRows`) and never reach a delete.
   - Reads the Phase S CLI's version-1 `chunkcache.json` and rewrites it as version 2 (the CLI's fields move into `tool`).
@@ -60,13 +68,17 @@ Task 14); per-render-profile names (`[-<render>]`, later).
   `Registry_SaveIsAtomic_AndOnlyUnderTheStoreLock`, `Registry_Corrupt_IsRebuilt_KeptAsBad_AndNewerVersionIsNeverOverwritten`,
   `Registry_ConcurrentWriters_LoseNoRow`, `OldIndexName_MigratedWhenProducerMatches`,
   `OldIndexName_OtherProducer_LeftAndStillReferenced` pass (file names checked against SHA-256 computed in the test).
+- [ ] `StoreRegistryTests.TwoProducersSameModelAndNamespace_TwoIndexFiles`, `Registry_RebuiltRow_RecordsTheIndexProducer`,
+  `Registry_TransientReadError_IsRetried_PersistentOneBlocksOnlyThatSave` pass (fix round).
 - [ ] `ChunkCacheCliTests.Build_MigratesAPhaseSStore_IndexRenamedOnce_RegistryKeepsRootAndSource`,
-  `Build_NeverOverwritesAnotherProducersIndexAtItsName`, `Evict_AllForModel_RefusesRegistryIndexNamesOutsideTheStore`
+  `Build_AnotherProducersIndex_IsLeftAlone_ThisProducerWritesItsOwn`, `Build_NeverOverwritesAProducerPrefixCollision`,
+  `Evict_AllForModel_RefusesRegistryIndexNamesOutsideTheStore`
   pass; `ChunkStoreTests.Namespace_Invalid_IsRefusedEverywhere("default")` passes.
 - [ ] `ChunkReuseJsonContextDefaultsTests` covers `StoreRegistryJsonContext`.
 - [ ] The owning doc has an index-name and registry section: `experiments/store/README.md`, "Index names and the store
   registry (Phase I Task 4b, L9)" (research repo; moves to the dotLLM docs with the library PR).
-- [ ] The namespace rule change (`default` reserved) is reflected in issue draft 02 / the spec's validity rule before filing.
+- [x] The namespace rule change (`default` reserved) is reflected in issue draft 02 (fix round). The spec §5 `namespace`
+  row and §14 L3/L9 rows, and the plan's Task 2 / Task 4 / Task 16 text, are updated by the controller before filing.
 - [ ] Every correctness test shown to fail against a mutant (below).
 
 ## Mutant evidence
@@ -93,3 +105,25 @@ Task 14); per-render-profile names (`[-<render>]`, later).
 | N16 CLI build does not migrate | KILLED | `Build_MigratesAPhaseSStore_IndexRenamedOnce_RegistryKeepsRootAndSource` |
 | N17 read-only verbs ignore a not-yet-migrated legacy index | KILLED | `Build_MigratesAPhaseSStore_IndexRenamedOnce_RegistryKeepsRootAndSource`, `OldIndexName_MigratedWhenProducerMatches` |
 | N18 name parser accepts an upper-case model tag | KILLED | `Names_ValidatedBeforeTheyReachAFileName_AndParseBack` |
+
+### Fix round 1 (review `review-phase-i-task4-report.md`)
+
+`git archive` copy of `08179bf5`, filter `StoreLockTests | StoreRegistryTests | ServerLedgerTests | ChunkCacheCliTests | StoredAssemblyTests | ChunkIndexTests`; driver / log `phase-i-task-4-fix-mutate.py`, `phase-i-task-4-fix-mutants.log`. **15 / 15 killed.**
+
+| mutant | verdict | killed by |
+|---|---|---|
+| F1 S1 | KILLED | `lock timeout on put swallowed as a busy entry: Lock_EachPutTakesTheStoreLock_AHeldLockFailsTheBuildFast_StoreBusy`, `Assemble_StoreLockTimeoutOnPut_Propagates_NotCountedAsBusy` |
+| F2 S1 | KILLED | `lock timeout on evict swallowed: Assemble_EvictFailsOnRejectedEntry_IsMissNotError` |
+| F3 S2 | KILLED | `handle proof ignores the store root: StoreLockHandle_IsProofForItsLiveRootOnly_LedgerAndRegistry`, `Registry_SaveIsAtomic_AndOnlyUnderTheStoreLock` |
+| F4 S2 | KILLED | `handle proof ignores disposal: ChildDisposesTheParentsHandle_ParentNoLongerHoldsIt`, `StoreLockHandle_IsProofForItsLiveRootOnly_LedgerAndRegistry`, `Registry_SaveIsAtomic_AndOnlyUnderTheStoreLock` |
+| F5 S2 | KILLED | `ledger save without the lock check: StoreLockHandle_IsProofForItsLiveRootOnly_LedgerAndRegistry` |
+| F6 S2 | KILLED | `order check process-wide (any root): LockOrder_IsPerStoreRoot` |
+| F7 S2 | KILLED | `order check counts released handles: Build_MaxChunks_EncodesAtMostN_StatusListsTheRest`, `Build_MigratesAPhaseSStore_IndexRenamedOnce_RegistryKeepsRootAndSource`, `Build_NeverOverwritesAProducerPrefixCollision`, `Build_OtherTreeRoot_IsRefusedWithoutReroot`, `Build_Rerun_IsAllHits`, `Build_StoreWriteFailure_ExitsOne`, `Compare_PrintsTheTable_NamesThePathOfEachTiming_AndFullRecomputeEqualsFullPrefill`, `Evict_AllForModel_RemovesOnlyThatModelsEntriesAndIndexes`, `Evict_Apply_KeepsEntriesReferencedByAnyIndex`, `Evict_DryRun_DoesNotDelete_ApplyDeletesOnlyOrphans`, `Evict_KeepsServerLedgerKeys_AndAnUnreadableLedgerBlocksIt_StatusReportsTheLedger`, `Lock_ConcurrentBuildAndEvict_LeaveTheStoreComplete`, `Lock_EachPutTakesTheStoreLock_AHeldLockFailsTheBuildFast_StoreBusy`, `Lock_EvictAfterIndexPublished_KeepsReReferencedKeys_AndDoesNotWaitForTheBuild`, `Lock_HeldByAnotherWriter_BuildAndEvictApplyFail_DryRunsDoNot`, `Lock_IndexLockHeld_BuildIsBusy_DryRunIsNot`, `Status_AfterEdit_ListsTheStaleFile_AndARebuildEncodesOnlyItsChangedChunks`, `ChildDisposesTheParentsHandle_ParentNoLongerHoldsIt`, `ChildFlowStartedInsideAScope_IsNotRefusedAfterTheScopeEnds`, `CrashedHolder_ItsLockIsFreedByTheOs`, `LockOrder_IndexLockWhileHoldingStoreLock_IsRefused`, `Lock_IsExclusive_EvenAgainstReaders`, `StaleLockFile_IsNotAHeldLock_AndIsNeverDeleted`, `StoreLock_ReleasedOnDispose_EvenAfterException` |
+| F8 S3 | KILLED | `producer omitted from the name: Build_AnotherProducersIndex_IsLeftAlone_ThisProducerWritesItsOwn`, `Build_DryRun_WritesNothing_AndEstimatesFromTheModelGeometry`, `Build_EncodesEveryMissingChunk_StoreMatchesIndex`, `Build_MaxChunks_EncodesAtMostN_StatusListsTheRest`, `Build_MigratesAPhaseSStore_IndexRenamedOnce_RegistryKeepsRootAndSource`, `Build_NeverOverwritesAProducerPrefixCollision`, `Build_OtherTreeRoot_IsRefusedWithoutReroot`, `Build_Rerun_IsAllHits`, `Build_Selection_EncodesASelectedChunkWhoseTextAlsoOccursInAnUnselectedEarlierFile`, `Build_SkippedProject_ExitsNonZeroOnlyWithStrictFlag`, `Build_StoreWriteFailure_ExitsOne`, `Build_WithSelection_EncodesOnlySelectedChunks_ButIndexesTheTree`, `Compare_PrintsTheTable_NamesThePathOfEachTiming_AndFullRecomputeEqualsFullPrefill`, `Evict_AllForModel_RefusesRegistryIndexNamesOutsideTheStore`, `Evict_AllForModel_RemovesOnlyThatModelsEntriesAndIndexes`, `Evict_Apply_KeepsEntriesReferencedByAnyIndex`, `Evict_DryRun_DoesNotDelete_ApplyDeletesOnlyOrphans`, `Evict_KeepsServerLedgerKeys_AndAnUnreadableLedgerBlocksIt_StatusReportsTheLedger`, `Json_UsesTheMcpToolSchemaNames`, `Lock_ConcurrentBuildAndEvict_LeaveTheStoreComplete`, `Lock_EachPutTakesTheStoreLock_AHeldLockFailsTheBuildFast_StoreBusy`, `Lock_EvictAfterIndexPublished_KeepsReReferencedKeys_AndDoesNotWaitForTheBuild`, `Lock_HeldByAnotherWriter_BuildAndEvictApplyFail_DryRunsDoNot`, `Lock_IndexLockHeld_BuildIsBusy_DryRunIsNot`, `Paths_SpacesNonAsciiAndRelativeStore`, `Select_PathSymbolBudget_AndStoredFlags`, `Status_AfterEdit_ListsTheStaleFile_AndARebuildEncodesOnlyItsChangedChunks`, `Status_TextOutput_ListsMissingChunksByFileAndLineRange`, `SameChunkerIndexUpdates_Serialise`, `Names_ValidatedBeforeTheyReachAFileName_AndParseBack`, `OldIndexName_MigratedWhenProducerMatches`, `Orphans_CountKeysFromAllModelIndexes_RegistryIsNotAuthoritative`, `Registry_ConcurrentWriters_LoseNoRow`, `Registry_ListsEveryIndex_AndRebuildsWhenMissing`, `Registry_RebuiltRow_RecordsTheIndexProducer`, `TwoModelsSameChunker_TwoIndexFiles`, `TwoNamespaces_TwoIndexFilesAndLocks`, `TwoProducersSameModelAndNamespace_TwoIndexFiles` |
+| F9 S3 | KILLED | `Task 4b names not migrated: Build_AnotherProducersIndex_IsLeftAlone_ThisProducerWritesItsOwn`, `OldIndexName_MigratedWhenProducerMatches` |
+| F10 S3 | KILLED | `CLI saves over a producer-prefix collision: Build_NeverOverwritesAProducerPrefixCollision` |
+| F11 N2 | KILLED | `rebuilt row without the producer: Registry_RebuiltRow_RecordsTheIndexProducer` |
+| F12 N3 | KILLED | `registry read not retried: Registry_TransientReadError_IsRetried_PersistentOneBlocksOnlyThatSave` |
+| F13 N4 | KILLED | `.bad copy overwritten: Registry_Corrupt_IsRebuilt_KeptAsBad_AndNewerVersionIsNeverOverwritten` |
+| F14 N5 | KILLED | `access denied on a lock open not retried: LockFile_AccessDenied_IsRetriedWithinTheTimeout_ThenBusy` |
+| F15 N9 | KILLED | `registry failure after a migration rename not explained: OldIndexName_MigratedWhenProducerMatches` |

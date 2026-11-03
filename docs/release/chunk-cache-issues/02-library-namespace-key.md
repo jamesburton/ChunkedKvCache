@@ -19,7 +19,9 @@ What it adds:
   namespace `""` is hashed too (a zero length), never skipped, so no v4 key equals a v3 key.
 - **`public static class ChunkNamespace`**: `Default = ""`; `ForApiKey(apiKey)` = `"k-"` + the first 16 lowercase hex of
   SHA-256 over the key's UTF-8 bytes (a digest, never the key; stable; never equals `Default`; an empty key is refused).
-  `IsValid` / `Validate` / `MaxLength`: a namespace must match `^(|k-[0-9a-f]{16}|[a-z0-9._-]{1,64})$`, enforced by
+  `IsValid` / `Validate` / `MaxLength`: a namespace must match `^(|k-[0-9a-f]{16}|[a-z0-9._-]{1,64})$` and must not be
+  the reserved `default` (`ChunkNamespace.ReservedDefaultName`, the default namespace's tag in index file names; ruling
+  from the Task 4/4b review, S4), enforced by
   `ChunkKey.Create` and by `Assemble` up front. The namespace is hashed with a strict (throwing) UTF-8 encoder, so two
   lone-surrogate strings cannot collapse to the same U+FFFD bytes.
 - **`StoredContextAssembler.KeyOf(config, ids, @namespace = Default)`** and **`Assemble(..., query, @namespace =
