@@ -68,3 +68,10 @@ Per-PR sections live in the individual issue drafts. Wire-contract fixtures: see
 - #1540 tiled per-query-position attention; PR #1541 (dotllm-97's)
 
 Branch / commit / PR text uses `Refs #N`; `Closes #N` does not autoclose on dev.
+
+## Opened PRs (jamesburton/dotLLM, base `dev`)
+
+- #1547 client package (types, hashing, chat client; updated 2026-11-03: copyright line, fixture sync)
+- #1575 snapshot lineage (Refs #1557)
+- #1576 server behaviour pins (Refs #1543)
+- #1577 DotLLM.ChunkReuse core (Refs #1567); store PR (Refs #1568) stacked, opens after #1577 merges
