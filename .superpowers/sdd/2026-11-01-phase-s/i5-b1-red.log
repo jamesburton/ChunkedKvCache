@@ -1,0 +1,4 @@
+      4 error CS0234: The type or namespace name 'Applied' does not exist in the namespace 'DotLLM.ChunkReuse' (are you missing an assembly reference?) 
+      6 error CS0246: The type or namespace name 'ReuseLayout' could not be found (are you missing a using directive or an assembly reference?) 
+      4 error CS0246: The type or namespace name 'ReuseSpan' could not be found (are you missing a using directive or an assembly reference?) 
+Failed!  - Failed:    49, Passed:     0, Skipped:     0, Total:    49, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)
