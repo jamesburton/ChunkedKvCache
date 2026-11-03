@@ -163,6 +163,35 @@ budget and its LRU are shared: eviction prefers the writing namespace's own rows
 least recently used entries. Per-namespace budgets come with issue 16. The writer-wide `detail` values are visible to
 every authenticated tenant. The owner lock assumes a local file system.
 
+## Re-review fix round (second)
+
+Commits `95afe2b6` (deny-list), `fb8850de` (server), `bcc36799` (tests, written first and shown red: 16 failing),
+`eb0a1a68` + `6fdf4400` (docs).
+
+- **R1, stop rule.** The writer stops (`budget_exhausted`) only when not even a minimum-size entry (32 tokens of the
+  served model) would fit after evicting everything the server may evict; any other entry that cannot fit is dropped
+  alone (`entry_too_large`), whatever its size. So a fresh writer on a CLI-built store cannot be stopped by one large
+  chunk, and a store full of CLI entries plus a tiny server row stops instead of encoding and dropping every miss. An
+  entry larger than the whole budget is refused before the store is counted, and, once the writer has stored one entry
+  (bytes per token known), a chunk that could never fit is refused at admission (`over_budget`, no encode).
+- **R2, drive-relative names.** A path segment with a colon is checked on both sides of it (`secrets.json:stream` and
+  `C:secrets.json`, `D:.env`, `C:id_rsa`); `::` is still refused.
+- **Nits.** PEM: `PRIVATE KEY` anywhere on a `-----BEGIN ` or `-----END ` line (PGP `PRIVATE KEY BLOCK` included); a key
+  body split into a chunk with neither armour line is not detected (documented). Added patterns: `*.keystore`, `*.jks`,
+  `kubeconfig*`, `.kube/**`, `.docker/**`, `*.tfvars`, `*.tfstate` (`.aws/credentials` was already covered by
+  `credentials*`). NTFS hashed 8.3 names (`SE1A2B~1.JSO`) are denied when their extension could be a denied one.
+  Monotonic clocks for the quiet period, ticks and reload retries. Stored path prefixes are cut at a character boundary.
+  The misplaced `ServerState` doc comment is moved. `DisaggregatedScheduler` is not wired into the server, so the
+  activity stamp's `ContinuousBatchScheduler` counter covers every server path (documented).
+- **Measured worst-case request wait (S4).** Qwen3-4B-Instruct-2507 Q4_K_M, CPU, 8 threads, Strix Halo, one run under
+  the `cpu-bench` lock with the CPU otherwise lightly loaded: a 512-token chunk encodes in 8.4 s, a 2048-token chunk in
+  43.5 s. A request on a CPU server can therefore wait up to about 45 s behind one maximal background encode (about 8 s
+  behind a 512-token wire chunk). The 2048-token cap (`MaxEncodeTokens`) is a candidate to lower to 512 for CPU servers
+  (maintainer decision; fixed constants per ruling 61).
+- **For issue 16 (forget).** A path stored on a sighting row longer than 256 characters is a prefix plus a hash, so
+  forget must compare `SightingTable.StoredPath(requested)`, never the raw path.
+- **Still not on the deny-list** (for the Task 16/17 deny-list flag): `*.kdbx`, `*.p8`, `.pypirc`, `.gnupg/`.
+
 ## Acceptance criteria
 
 - [ ] PR targets `dev`, never `main`; `docs/SERVER.md` and `docs/CHUNK_CACHE.md` updated in the same PR.

@@ -146,3 +146,5 @@ warnings from the requests and compares them with `expected.json`, and checks th
 62. A hung encode may keep the model alive until process exit (no forced abort); the owner lock is kept too.
 63. The deny-list is a superset of ruling's list: `id_*` and `.git/**` stay; 8.3 short-name matching errs towards denying.
 64. The per-namespace sighting share is a fixed quarter of the table (25,000); all writer limits are constants in v1 (ruling 61).
+
+65. Background encode on CPU is capped at 512-token chunks (constant); larger chunks are refused at admission (`chunk_encode_skipped`, detail `too_large_for_cpu`). Measured on Qwen3-4B Q4_K_M, CPU, 8 threads: 512 tokens 8.35 s, 2048 tokens 43.5 s (so worst-case request wait ~8.4 s with the cap).
