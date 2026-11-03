@@ -520,3 +520,12 @@ I1b 15/16):**
   decision 6), §14 L5 (CPU F32 and Vulkan F32 only), L7 (B2). §12.5 exact overhead (A3, B7).
 - Not in this plan: paged / quantised / multi-slot assembly; persisted Vulkan entries (Phase D); the QR probe in the server;
   `lines-512` validation (E4c follow-up); CUDA; recurrent models.
+
+## Review-driven amendments (controller, 2026-11-03)
+
+- **Direction (James, via dotllm-97): no F32 dependence.** Part B is backend-agnostic through `IPositionedHostKvCache`; equivalence is tolerance-vs-measured-floor, not bit-exactness (CPU same-regime stays the F32 oracle); the target serving KV is F16 (dense Vulkan default, #1151/#1549), Q8_0 later (#1550). Consumer docs say: use F16 or lower KV, never require F32. G0 floors and G2b must be re-measured on F16 once the F16-default PR merges; F16 RoPE-shift accumulation (large deltas, repeated shifts) is being measured by the dotLLM session: do not assume.
+- **B1 done** (`feature/chunk-cache` `47dab813`): `promptTokens` required on `AssembleAt`; `Plan` reasons `prompt_length_changed` / `prompt_ids_changed` (via optional `expectedPromptIds`); `Dropped` lists unplaced hits with reasons.
+- **B2 done** (`feature/chunk-apply-seeder` `aceaf8ac`): interface in `DotLLM.Core.Attention`; fallback rolls back to exact restored rows; rulings 70-72.
+- **B3:** if a stored entry is missing, convert it to a hole and RE-PLAN (do not reuse the old plan); use `Dropped` reasons for the `chunks{hit,miss,ignored}` counts; the reported prompt time adds seed + prefill (ruling 71).
+- **B4 (Vulkan):** (a) new Vulkan caches are NOT zeroed: add a GPU test with NaN-filled holes (tiled attention reading rows past the query position times zero weight must not poison the output) or zero the holes; (b) lift the Vulkan F16 refusal and add F16 encode caches (after the dotLLM F16-default merges); device-to-device copy needs same-format caches; (c) the 100%-recompute exactness test must compare with an F16 PLAIN prefill within tolerance, not assume rounding is erased.
+- **B6 budget semantics:** B1's budget is a fraction of PLACED chunk rows (equal prefixes per chunk) plus every hole; the E4/G2b lab used a fraction of the WHOLE context (incl. the exact first chunk). `balanced` 0.20 therefore recomputes ~94% of the lab's per-chunk depth with symbol chunks and 83-88% with fixed 512-token chunks, plus all holes. The pass bar (masked-call EM ratio >= 0.76) was derived from G2b at 20%: re-derive the equivalent operating point or re-measure E4 with the placed-rows budget before calling the bar met.
