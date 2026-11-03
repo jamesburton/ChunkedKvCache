@@ -155,3 +155,9 @@ warnings from the requests and compares them with `expected.json`, and checks th
 67. Evict responses may carry extra output fields (`removed`, `warnings`); the MCP wrapper (Task 18) projects them out to fit the strict schema.
 68. `orphans` and a store-wide `all` evict are admin-only.
 69. The per-namespace budget counts only the server's ledger rows (documented); CLI-written offline entries are not counted.
+
+## Rulings from I5 B2 (controller, 2026-11-03)
+
+70. The engine's seeder hook trusts the in-process seeder's 'approximate from row N' tag (rows below N are stored as exact); the seeder is internal trusted code and this keeps exact reuse of leading glue; documented and pinned by tests.
+71. Seed time stays out of the engine's PrefillTimeMs; the server (B3) adds seed + prefill for the reported prompt time.
+72. The stale prefix-cache entry after a failed/cancelled plain request, and the fresh-cache leak on exception, are pre-existing engine bugs: candidates for a separate upstream issue (dotllm-97).

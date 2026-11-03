@@ -1,0 +1,96 @@
+BASELINE rc=0 failed=[] ['Passed!  - Failed:     0, Passed:   210, Skipped:     0, Total:   210, Duration: 26 s - DotLLM.Tests.Unit.dll (net10.0)']
+M1 KILLED (44s) approximate restore without the seeder opt-in (any seeder)
+    killed by: ['PromptKvSeederTests.ApproxRows_NotRestored_ForSeederWithoutOptIn']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 27 s - DotLLM.Tests.Unit.dll (net10.0)']
+M2 KILLED (37s) approximate restore for every request (no opt-in at all)
+    killed by: ['PromptKvSeederTests.ApproxRows_NotRestored_ForSeederWithoutOptIn', 'PromptKvSeederTests.Exact_AfterBalanced_SameSlot_RestoresExactRowsOnly']
+    ['Failed!  - Failed:     3, Passed:   207, Skipped:     0, Total:   210, Duration: 26 s - DotLLM.Tests.Unit.dll (net10.0)']
+M3 KILLED (37s) firstApproxRow dropped from PrefixCache.Store
+    killed by: ['PromptKvSeederTests.ApproxRows_NotRestored_ForSeederWithoutOptIn', 'PromptKvSeederTests.CachedTokens_CountExactRowsOnly_WhenApproxRestored', 'PromptKvSeederTests.Exact_AfterBalanced_SameSlot_RestoresExactRowsOnly', 'PromptKvSeederTests.Fallback_AfterApproxRestore_TruncatesToExactRows', 'PromptKvSeederTests.Seeder_StoresFirstApproxRowInPrefixCache', 'PromptKvSeederTests.Seeder_WithoutFirstApproxRow_TagsEverySeededRow', 'PromptKvSeederTests.Streaming_And_Blocking_BothCallSeeder']
+    ['Failed!  - Failed:     8, Passed:   202, Skipped:     0, Total:   210, Duration: 26 s - DotLLM.Tests.Unit.dll (net10.0)']
+M4 KILLED (36s) fallback truncates to the restored rows (approximate restored rows kept)
+    killed by: ['PromptKvSeederTests.Fallback_AfterApproxRestore_TruncatesToExactRows']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M5 KILLED (36s) fallback leaves the seeded length (no rollback, prefill from the current length)
+    killed by: ['PromptKvSeederTests.Fallback_AfterApproxRestore_TruncatesToExactRows', 'PromptKvSeederTests.InvalidSeedResult_FallsBackToPlainPrefill', 'PromptKvSeederTests.Seeder_FallbackReason_TruncatesToRestored', 'PromptKvSeederTests.Seeder_Throws_FallsBackToPlainPrefill_SameTokens']
+    ['Failed!  - Failed:     8, Passed:   202, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M6 KILLED (35s) cached_tokens = restored rows (approximate counted)
+    killed by: ['PromptKvSeederTests.CachedTokens_CountExactRowsOnly_WhenApproxRestored', 'PromptKvSeederTests.Fallback_AfterApproxRestore_TruncatesToExactRows']
+    ['Failed!  - Failed:     2, Passed:   208, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M7 KILLED (34s) seeder not ignored on the MTP path
+    killed by: ['PromptKvSeederTests.SeederIgnored_WhenMtpWouldRun']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M8 KILLED (40s) seeder not ignored on the prefix-trie path
+    killed by: ['PromptKvSeederTests.SeederNotCalled_OnHybridMtpDraftAdapterPaths']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 25 s - DotLLM.Tests.Unit.dll (net10.0)']
+M9 KILLED (35s) seeder not ignored with a LoRA adapter
+    killed by: ['PromptKvSeederTests.SeederNotCalled_OnHybridMtpDraftAdapterPaths']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M10 KILLED (35s) seeder not ignored with a draft model
+    killed by: ['PromptKvSeederTests.SeederNotCalled_OnHybridMtpDraftAdapterPaths']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M11 KILLED (39s) seeder not ignored with a hybrid strategy
+    killed by: ['PromptKvSeederTests.SeederNotCalled_OnHybridMtpDraftAdapterPaths']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 26 s - DotLLM.Tests.Unit.dll (net10.0)']
+M12 KILLED (35s) seeder not ignored for a recurrent model
+    killed by: ['PromptKvSeederTests.SeederNotCalled_OnHybridMtpDraftAdapterPaths']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M13 KILLED (35s) seeded rows stored exact (tag at SeededRows)
+    killed by: ['PromptKvSeederTests.ApproxRows_NotRestored_ForSeederWithoutOptIn', 'PromptKvSeederTests.CachedTokens_CountExactRowsOnly_WhenApproxRestored', 'PromptKvSeederTests.Exact_AfterBalanced_SameSlot_RestoresExactRowsOnly', 'PromptKvSeederTests.Fallback_AfterApproxRestore_TruncatesToExactRows', 'PromptKvSeederTests.Seeder_StoresFirstApproxRowInPrefixCache', 'PromptKvSeederTests.Seeder_WithoutFirstApproxRow_TagsEverySeededRow', 'PromptKvSeederTests.Streaming_And_Blocking_BothCallSeeder']
+    ['Failed!  - Failed:     8, Passed:   202, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M14 KILLED (45s) null FirstApproxRow treated as all-exact
+    killed by: ['PromptKvSeederTests.Seeder_WithoutFirstApproxRow_TagsEverySeededRow']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 27 s - DotLLM.Tests.Unit.dll (net10.0)']
+M15 KILLED (32s) restored approximate lineage not carried forward
+    killed by: ['PromptKvSeederTests.CachedTokens_CountExactRowsOnly_WhenApproxRestored']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 21 s - DotLLM.Tests.Unit.dll (net10.0)']
+M16 KILLED (36s) restored entry not narrowed before seeding
+    killed by: ['PromptKvSeederTests.Seeder_Cancelled_Propagates_AndLeavesNoStaleRows']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 25 s - DotLLM.Tests.Unit.dll (net10.0)']
+M17 KILLED (35s) exception message (may quote prompt) in the fallback reason
+    killed by: ['PromptKvSeederTests.Seeder_Throws_FallsBackToPlainPrefill_SameTokens']
+    ['Failed!  - Failed:     2, Passed:   208, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M18 KILLED (36s) free-text seeder reason passed through
+    killed by: ['PromptKvSeederTests.Seeder_FallbackReason_WithFreeText_IsNotPassedThrough']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 26 s - DotLLM.Tests.Unit.dll (net10.0)']
+M19 KILLED (35s) seed result not validated
+    killed by: ['PromptKvSeederTests.InvalidSeedResult_FallsBackToPlainPrefill']
+    ['Failed!  - Failed:     4, Passed:   206, Skipped:     0, Total:   210, Duration: 25 s - DotLLM.Tests.Unit.dll (net10.0)']
+M20 KILLED (36s) prefill ignores the seeded rows (starts at the restored rows)
+    killed by: ['PromptKvSeederTests.Exact_AfterBalanced_SameSlot_RestoresExactRowsOnly', 'PromptKvSeederTests.Seeder_IsKvDtypeAgnostic_QuantizedCache_SameTokensAsPlainOnSameDtype', 'PromptKvSeederTests.Seeder_PrefillStartsAtSeededRows']
+    ['Failed!  - Failed:     8, Passed:   202, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M21 KILLED (36s) no fresh cache when the rollback is impossible
+    killed by: ['PromptKvSeederTests.Fallback_WhenCacheCannotReturnToExactRows_UsesFreshCache']
+    ['Failed!  - Failed:     1, Passed:   209, Skipped:     0, Total:   210, Duration: 24 s - DotLLM.Tests.Unit.dll (net10.0)']
+M22 KILLED (7s) cancellation swallowed into the fallback
+    killed by: []
+    ["C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\TextGenerator.cs(2286,50): error CS8359: Filter expression is a constant 'false', consider removing the catch clause [C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\DotLLM.Engine.csproj]", 'C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\TextGenerator.cs(2288,13): error CS0162: Unreachable code detected [C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\DotLLM.Engine.csproj]']
+M23 KILLED (6s) streaming path does not seed
+    killed by: []
+    ['C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\TextGenerator.cs(1106,17): error CS0162: Unreachable code detected [C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\DotLLM.Engine.csproj]']
+M24 KILLED (6s) blocking path does not seed
+    killed by: []
+    ['C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\TextGenerator.cs(471,17): error CS0162: Unreachable code detected [C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\DotLLM.Engine.csproj]']
+M25 KILLED (38s) seam assumes an F32 SimpleKvCache (other dtypes refused)
+    killed by: ['PromptKvSeederTests.Seeder_IsKvDtypeAgnostic_QuantizedCache_SameTokensAsPlainOnSameDtype']
+    ['Failed!  - Failed:     2, Passed:   208, Skipped:     0, Total:   210, Duration: 27 s - DotLLM.Tests.Unit.dll (net10.0)']
+DONE
+--- rerun (non-constant forms; previous M22-M24 were compile errors, not kills)
+M22 SURVIVED (40s) cancellation swallowed into the fallback
+    killed by: []
+    ['Passed!  - Failed:     0, Passed:   210, Skipped:     0, Total:   210, Duration: 28 s - DotLLM.Tests.Unit.dll (net10.0)']
+M23 KILLED (8s) streaming path does not seed
+    killed by: []
+    ['C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\TextGenerator.cs(1106,17): error CS0162: Unreachable code detected [C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\DotLLM.Engine.csproj]']
+M24 KILLED (6s) blocking path does not seed
+    killed by: []
+    ['C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\TextGenerator.cs(471,17): error CS0162: Unreachable code detected [C:\\Users\\james\\AppData\\Local\\Temp\\claude\\C--Development-ChunkedkvCache\\e3a311cd-21c5-4c45-8a8a-705944ca30fb\\scratchpad\\i5b2\\repo\\src\\DotLLM.Engine\\DotLLM.Engine.csproj]']
+DONE
+--- rerun M23/M24 (non-constant form)
+M23 KILLED (37s) streaming path does not seed
+    killed by: ['PromptKvSeederTests.Exact_AfterBalanced_SameSlot_RestoresExactRowsOnly', 'PromptKvSeederTests.Seeder_PrefillStartsAtSeededRows', 'PromptKvSeederTests.Seeder_Throws_FallsBackToPlainPrefill_SameTokens', 'PromptKvSeederTests.Streaming_And_Blocking_BothCallSeeder']
+    ['Failed!  - Failed:     5, Passed:   205, Skipped:     0, Total:   210, Duration: 26 s - DotLLM.Tests.Unit.dll (net10.0)']
+M24 KILLED (41s) blocking path does not seed
+    killed by: ['PromptKvSeederTests.ApproxRows_NotRestored_ForSeederWithoutOptIn', 'PromptKvSeederTests.CachedTokens_CountExactRowsOnly_WhenApproxRestored', 'PromptKvSeederTests.Exact_AfterBalanced_SameSlot_RestoresExactRowsOnly', 'PromptKvSeederTests.Fallback_AfterApproxRestore_TruncatesToExactRows', 'PromptKvSeederTests.Fallback_WhenCacheCannotReturnToExactRows_UsesFreshCache', 'PromptKvSeederTests.InvalidSeedResult_FallsBackToPlainPrefill', 'PromptKvSeederTests.Seeder_Cancelled_Propagates_AndLeavesNoStaleRows', 'PromptKvSeederTests.Seeder_FallbackReason_TruncatesToRestored', 'PromptKvSeederTests.Seeder_FallbackReason_WithFreeText_IsNotPassedThrough', 'PromptKvSeederTests.Seeder_IsKvDtypeAgnostic_QuantizedCache_SameTokensAsPlainOnSameDtype', 'PromptKvSeederTests.Seeder_PrefillStartsAtSeededRows', 'PromptKvSeederTests.Seeder_StoresFirstApproxRowInPrefixCache', 'PromptKvSeederTests.Seeder_Throws_FallsBackToPlainPrefill_SameTokens', 'PromptKvSeederTests.Seeder_WithoutFirstApproxRow_TagsEverySeededRow', 'PromptKvSeederTests.Streaming_And_Blocking_BothCallSeeder']
+    ['Failed!  - Failed:    20, Passed:   190, Skipped:     0, Total:   210, Duration: 29 s - DotLLM.Tests.Unit.dll (net10.0)']
+DONE
