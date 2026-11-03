@@ -115,3 +115,11 @@ warnings from the requests and compares them with `expected.json`, and checks th
 43. The default shadow plan budget is 0.05 (as in the `response-shadow` fixture); a request's `recompute.budget` overrides it.
 44. With no store configured, misses carry no warning; `GET /v1/chunk-cache` reports `store: false`.
 45. `report: "per_chunk"` returns the summary until auth exists (Task 14).
+
+## Rulings from the Task 13 review (controller, 2026-11-03)
+
+46. `response-anthropic-delta.json` no longer carries `cache_read_input_tokens` (ruling 40 prevails; the field stays optional in `check.py`: if a server ever reports it, it must equal `tokens.prefix_reused`). Ruling 9 is amended accordingly.
+47. Streaming placement: `chunk_cache` rides on the chunk that carries `timings` (dotLLM's final chunk, the one with the finish reason). `response-stream-final.json` shows a final chunk carrying both `usage` and the report; where a server emits `usage` on a separate trailing chunk, the report stays on the finish-reason chunk beside `timings`. Clients scan every event for `chunk_cache`.
+48. `timings_ms.full_prefill_estimate` is an ESTIMATE of the unannotated prefill time (cost model, or the last measured full prefill of this model/backend if available), never simply the measured prefill of this request when reuse was applied; under `exact` (no reuse) it may equal `prefill`.
+49. Spans that cannot be verified because the server's verification budget ran out are IGNORED with the warning `chunk_verification_skipped` (warning only, NEVER a strict-mode error); `chunk_template_altered` is reserved for spans actually found altered. The shadow plan counts them as ignored.
+50. The default shadow plan budget is 0.05; `recompute.budget` in the request overrides it (ruling 43 stands).
