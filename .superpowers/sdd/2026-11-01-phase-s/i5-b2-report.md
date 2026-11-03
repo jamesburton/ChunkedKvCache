@@ -183,3 +183,53 @@ harness had counted those as kills. I re-ran them in non-constant form, and the 
    harmless, but the engine owner may prefer a `Generate` overload. The private `ResolveKvCache` gained `out` / optional
    parameters; there is no public API break apart from the additive members.
 5. **Fork `origin/dev` is 4 commits ahead of the base.** The upstream PR will need a rebase onto `dev` after #1575 lands.
+
+## Fix round (review `review-i5-b2-report.md`: ACCEPT, 4 should-fix): commit `b1257b86`
+
+**Status after the fix round: DONE.**
+
+**Rebase.** I fetched, then ran `git rebase --onto origin/dev 9188cfbc` locally. #1575 is on `dev`, so the branch is now on
+fork `origin/dev` `8221d6ce`: `c5ecf32b` (seam, was `aceaf8ac`) and `b1257b86` (fixes). The PR diff is B2 only. Nothing was
+pushed. The fix commit carries `Refs #1542 (#N)`; squash with an `(#N)` subject once the issue exists.
+
+**Should-fixes:**
+
+- **S1.** New `InferenceTimings.ComputedPromptTokenCount` = prompt − exact cached − approximate restored − seeded. It feeds
+  `PrefillTokensPerSec`, the `RequestTimingLog` line and the OTel prefill-token counter and rate. For OTel,
+  `TelemetryRecorder.Complete` subtracts the skipped rows; there is no public Telemetry API change.
+  - Tests: assertions in `Seeder_PrefillStartsAtSeededRows` and `CachedTokens_*`, and a `MeterListener` test
+    `Seeder_PrefillTokenMetric_CountsComputedRowsOnly`.
+  - B3 follow-up is listed in the issue draft: the server's `prompt_n` / `prompt_per_token_ms` use the same formula, and
+    `prompt_ms` needs `SeedMilliseconds` added.
+- **S2.** `PromptSeedResult` is now a record struct with init-only named properties holding only what the engine reads:
+  `SeededRows`, `FirstApproxRow`, `ChunkRows`, `ChunkRowsRecomputed`, `FallbackReason`. `AssemblyMs`, `RecomputeMs` and
+  `Forwards` are dropped; diagnostics stay on the seeder object.
+  - The seam, `InferenceOptions.KvSeeder` and the timing fields are documented as experimental (XML docs + KV_CACHE.md).
+    The repo has no `[Experimental]` convention.
+  - The issue draft notes that the maintainer may prefer a `Generate` parameter, like the adapter.
+- **S3.** New internal `PrefixCache.Remove(IKvCache)`. The fresh-cache fallback removes and disposes the old entry before it
+  allocates, so the peak never holds two caches and no empty most-recently-used entry is left behind.
+  - Test: entry count in `Fallback_WhenCacheCannotReturnToExactRows_UsesFreshCache`. Mutant M28 is killed.
+- **S4.** New test `Seeder_CancelledAfterApproxRestore_KeepsRestoredRows_ForLaterOptedInRequest` kills M22, so it is no
+  longer called equivalent.
+
+**Nits:**
+- Fatal exceptions (OOM, access violation, stack, SEH) are rethrown from the seeder catch (test
+  `Seeder_OutOfMemory_IsNotSwallowed`, M29). The rollback catch is now broad but never catches fatal exceptions.
+- "Single-slot" is corrected to "multi-entry LRU" in the docs and the draft.
+- The contract and docs now state that the tag is the seeder's promise that the rows below it are exact, and that it is
+  set only when rows were seeded.
+- The duplicated "1976 passed" line in the draft is fixed.
+- Dtype on a restored cache: not reachable today, because a `QuantizedKvCache` is never a prefix hit. This is noted, and
+  there is no test.
+
+**Tests** (CPU only, same filter):
+- `PromptKvSeederTests`: **37 / 37**.
+- Unit Engine + Server + Telemetry: **2010 passed, 16 skipped, 0 failed**.
+- `DotLLM.Cli` builds.
+
+On test-first order: the new tests were written together with the fixes. Their red is shown by the targeted mutants
+M22 and M26–M29, each of which reverts one fix.
+
+**Mutants:** archive of `b1257b86`, 213 tests in the filter, baseline green: **29 / 29 killed**. The log
+`i5-b2-mutants.log` now holds both rounds. M22 is killed; M26–M29 are new.

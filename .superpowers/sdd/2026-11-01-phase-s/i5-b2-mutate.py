@@ -54,6 +54,17 @@ MUTANTS = [
      'catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)', 'catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested && promptLen < 0)', 0),
     ('M23', 'streaming path does not seed', 'if (seeder is not null)\r\n            {', 'if (seeder is not null && promptLen < 0)\r\n            {', 0),
     ('M24', 'blocking path does not seed', 'if (seeder is not null)\r\n                (kvCache', 'if (seeder is not null && promptLen < 0)\r\n                (kvCache', 0),
+    ('M26', 'S1: computed prompt tokens include seeded/approximate rows (timings, log)',
+     'Math.Max(0, PrefillTokenCount - CachedTokenCount - ApproxPrefixTokens - SeededTokens)', 'Math.Max(0, PrefillTokenCount - CachedTokenCount)', 0,
+     'src/DotLLM.Engine/InferenceTimings.cs'),
+    ('M27', 'S1: OTel prefill-token metric counts seeded rows',
+     'promptTokens - skippedPromptTokens, cachedTokens', 'promptTokens, cachedTokens', 0, 'src/DotLLM.Engine/TelemetryRecorder.cs'),
+    ('M28', 'S3: fresh-cache fallback keeps the dead entry (Store([]) instead of Remove)',
+     'if (!entryBacked || !_prefixCache!.Remove(kvCache))\r\n            kvCache.Dispose();',
+     'if (entryBacked) _prefixCache!.Store([], kvCache);\r\n        else kvCache.Dispose();', 0),
+    ('M29', 'nit: fatal exceptions swallowed into the fallback',
+     'catch (Exception ex) when (!IsFatal(ex))\r\n        {\r\n            // The type only',
+     'catch (Exception ex)\r\n        {\r\n            // The type only', 0),
     ('M25', 'seam assumes an F32 SimpleKvCache (other dtypes refused)',
      'int promptLen = promptIds.Length;\r\n        int? restoredApproxFrom',
      'int promptLen = promptIds.Length;\r\n        if (kvCache is not KvCache.SimpleKvCache) return (kvCache, ownsKvCache, restoredRows, exactRows);\r\n        int? restoredApproxFrom', 0),
@@ -73,18 +84,31 @@ def test():
     return r.returncode, failed, summary
 
 
-original = TG.read_bytes().decode('utf-8')
-if '\r\n' not in original:
-    MUTANTS = [(a, b, c.replace('\r\n', '\n'), d.replace('\r\n', '\n'), e) for a, b, c, d, e in MUTANTS]
+MUTANTS = [m if len(m) == 6 else m + ('src/DotLLM.Engine/TextGenerator.cs',) for m in MUTANTS]
+originals = {}
+
+
+def source(rel):
+    if rel not in originals:
+        originals[rel] = (repo / rel).read_bytes().decode('utf-8')
+    return originals[rel]
+
+
+def fit(text, pat):
+    return pat if '\r\n' in text else pat.replace('\r\n', '\n')
+
+
 only = set(sys.argv[3:])
 if not only:
     rc, failed, summary = test()
     log.write(f'BASELINE rc={rc} failed={failed} {summary}\n'); log.flush()
-for mid, desc, old, new, occ in MUTANTS:
+for mid, desc, old, new, occ, rel in MUTANTS:
     if only and mid not in only:
         continue
-    n = original.count(old)
-    if n == 0:
+    path = repo / rel
+    original = source(rel)
+    old, new = fit(original, old), fit(original, new)
+    if original.count(old) == 0:
         log.write(f'{mid} NOT APPLIED (pattern missing): {desc}\n'); log.flush(); continue
     if occ == 'all':
         mutated = original.replace(old, new)
@@ -93,11 +117,13 @@ for mid, desc, old, new, occ in MUTANTS:
         for _ in range(occ + 1):
             idx = original.index(old, idx + 1)
         mutated = original[:idx] + new + original[idx + len(old):]
-    TG.write_bytes(mutated.encode('utf-8'))
+    path.write_bytes(mutated.encode('utf-8'))
     t0 = time.time()
-    rc, failed, summary = test()
-    status = 'KILLED' if failed or rc != 0 else 'SURVIVED'
+    try:
+        rc, failed, summary = test()
+    finally:
+        path.write_bytes(original.encode('utf-8'))
+    status = 'KILLED' if failed else ('COMPILE-ERROR (invalid)' if rc != 0 else 'SURVIVED')
     short = [f.replace('DotLLM.Tests.Unit.Engine.', '') for f in failed]
     log.write(f'{mid} {status} ({time.time()-t0:.0f}s) {desc}\n    killed by: {short}\n    {summary}\n'); log.flush()
-TG.write_bytes(original.encode('utf-8'))
 log.write('DONE\n')
