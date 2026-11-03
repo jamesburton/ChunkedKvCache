@@ -187,3 +187,39 @@ replaced.
    separate Vulkan-owner PR ahead of B4?
 4. **Trim instead of drop** for a final chunk that ends at the prompt end? That would mean placing n−1 rows of an entry and needs an
    `AssembleAt` row count. Not needed for chat prompts, which always end with the generation-prompt tokens.
+
+## Fix round (review `review-i5-b1-report.md`: approved, should-fix S1–S5 and nits)
+
+**Commit:** dotLLM `47dab813` on `feature/chunk-cache`. Nothing pushed.
+
+| item | change |
+|---|---|
+| S1 | **`promptTokens` is required** on all four `AssembleAt` overloads. An empty span is refused before any write (`RequirePromptTokens`). `Assemble` (running offsets) is unchanged. **`Plan` reasons are now accurate:** `prompt_length_changed` is the length-only check; `prompt_ids_changed` comes from the new optional `expectedPromptIds`, compared in full. The docs say that `AssembleAt` checks token identity at placement. New tests: `AssembleAt_SameLengthPromptWithDifferentIds_Refused` (a length-only plan accepts it, placement refuses it, nothing is written), `AssembleAt_EmptyPromptTokens_Refused_EveryOverload`, `Plan_ExpectedIdsDiffer_SameLength_NoReuse` |
+| S2 | `FirstApproxRow` is documented as the **placement-side** bound. The caller stores `min(restored entry's FirstApproxRow, this)`. Fixed in the XML docs, the remarks and the issue draft |
+| S3 | `Seeded_NaNFilledCache_HolesAndFutureRowsNeverRead` (budgets 0 / 0.2 / 1.0). The whole K/V buffer starts as NaN; the logits and all rows up to the prompt end are finite. It kills "hole not selected" at budgets 0 and 0.2 (F7). **B4 note:** a new `VulkanKvCache` is not zeroed, and tiled attention reading rows past the query position with zero weight can poison the output (0·NaN). B4 needs a GPU NaN-holes test or must zero the hole runs (in the issue draft) |
+| S4 | The F16 test doc, this report and the draft now state that the exact erasure holds only because the model's own writes stay F32 in the simulation. The B4 GPU test must compare against an **F16 plain prefill** within the G0 / G2b floors |
+| S5 | The budget semantics are documented in the `ReuseLayout` remarks and the issue draft: a fraction of placed rows, not of the whole context including the exact chunk 0 (E4 / G2b). `balanced` 0.20 recomputes about 94 % (symbol) or 83–88 % (fixed 512) of the lab's per-chunk depth, plus every hole. **The B6 note for the plan is left to the controller:** the G2b-derived EM bar of 0.76 assumes lab-equivalent depth |
+| N1 | `ReuseLayout.Dropped`: one `DroppedHit(SpanIndex, Reason)` per unplaced hit, sorted by span index. Reasons: `invalid`, `inside_prefix`, `straddles_prefix`, `overlap`, `at_prompt_end`, or the layout's reason when the whole plan refuses (e.g. `too_little_reuse`) |
+| N2 | Documented: a placed entry that fails at load means **re-plan without that hit**, not just skipping it |
+| N3 | New reason `prefix_covers_prompt` (it was `no_hits`) |
+| N4 | Documented that overlaps are resolved greedily: the earlier start wins |
+| Ruling 2 | `IRecomputeSelector.cs`'s crefs to research-only types (`SelectiveRecomputer`, `ContiguousRuns`) are now `<c>`. In a scratch copy of `feature/chunk-cache-upstream-prep` I moved `ReuseLayout.cs`, `IRecomputeSelector.cs` and `ChunkStartsSelector.cs` into the core project (out of `.Research`) and added the new `ChunkAssembler.cs`. **Core builds with 0 errors**, has no Vulkan or Roslyn reference, and `.Research` builds on top (0 errors). The files keep their paths on `feature/chunk-cache` (single assembly); the move happens in the I5-1 cut |
+
+**Red.** The new tests, copied into a `git archive 6bc0f393` copy, fail to compile there (`DroppedHit`, `DropReasons`, `Dropped`,
+`PromptLengthChanged`, `PrefixCoversPrompt`, `expectedPromptIds` missing; `i5-b1-fix-red.log`). The NaN test is a guard: the property
+already held at `6bc0f393`, as the reviewer's probe showed. Its discriminating power is shown by mutant F7.
+
+**Green.**
+- `ReuseLayoutTests` 31 + `ChunkAssemblerAtTests` 27 = **58 / 58**.
+- Full CPU suite: **6,992 passed, 56 skipped, 0 failed**.
+
+**Fix-round mutants** (`i5-b1-fix-mutants.log`, driver `i5-b1-fix-mutate.py`, run in a `git archive 47dab813` copy, 122 tests):
+**8 / 8 killed.**
+- F1: empty `promptTokens` accepted.
+- F2: `expectedPromptIds` ignored (only its length compared).
+- F3: a straddling hit reported as inside the prefix.
+- F4: too-little-reuse hits not reported.
+- F5: `prefix_covers_prompt` reported as `no_hits`.
+- F6: the token requirement also applied to `Assemble` (kills 16, including the existing assembly tests).
+- F7: hole not selected (killed by the NaN test, among others).
+- F8: `Dropped` unsorted.

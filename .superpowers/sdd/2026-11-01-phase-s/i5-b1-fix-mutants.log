@@ -1,0 +1,10 @@
+# B1 mutants on C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\i5b1fix\mut
+
+F1 | empty promptTokens accepted by AssembleAt | KILLED | AssembleAt_EmptyPromptTokens_Refused_EveryOverload [('Failed!', '1', '121')]
+F2 | Plan ignores expectedPromptIds | KILLED | Plan_ExpectedIdsDiffer_SameLength_NoReuse [('Failed!', '1', '121')]
+F3 | straddling hit reported as inside the prefix | KILLED | Plan_DroppedHits_CarryReasons [('Failed!', '1', '121')]
+F4 | too-little-reuse hits not reported as dropped | KILLED | Plan_TooLittleReuse_KeptHitsReportedWithLayoutReason [('Failed!', '1', '121')]
+F5 | prefix covering the prompt reported as no_hits | KILLED | Plan_RestoredCoversPrompt_NoReuse [('Failed!', '1', '121')]
+F6 | prompt-token requirement also applied to Assemble | KILLED | Assembler_RefusesCacheWithoutPositionedIo, Backend_Tag_IsInKeyAndFingerprint, CpuBackend_RoundTrip_EqualsOldPath, AssembleAt_AtRunningOffsets_EqualsAssemble, AssembleAt_EmptyPromptTokens_Refused_EveryOverload, Assemble_ChunksExceedCapacity_ThrowsAndWritesNothing, Assemble_IntoNonEmptyCache_AppendsAtCurrentLength, Assemble_OneTokenChunk_AtNonZeroOffset_MatchesModelKey (+23) [('Failed!', '31', '91')]
+F7 | hole not selected (NaN test must kill it too) | KILLED | AssembleAt_F16Storage_WithinRounding_BelowReuseFloor, HolesThenRecompute_EqualsFullPrefill_WhenEverythingSelected(restored: 0), HolesThenRecompute_EqualsFullPrefill_WhenEverythingSelected(restored: 12), HolesThenRecompute_EqualsFullPrefill_WhenEverythingSelected(restored: 7), Seeded_NaNFilledCache_HolesAndFutureRowsNeverRead(budget: 0), 20000000000000001), Seeded_NaNFilledCache_HolesAndFutureRowsNeverRead(budget: 1), Seeded_NoChunkBudget_HolesRecomputed_RowsBeforeFirstPlacementExact (+5) [('Failed!', '13', '109')]
+F8 | dropped list not sorted by span index | KILLED | Plan_DroppedHits_CarryReasons, Plan_TooLittleReuse_KeptHitsReportedWithLayoutReason [('Failed!', '2', '120')]

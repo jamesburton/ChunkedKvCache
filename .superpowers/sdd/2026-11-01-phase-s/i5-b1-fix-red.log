@@ -1,0 +1,6 @@
+     16 error CS0117: 'ReuseLayout' does not contain a definition for 'DropReasons' 
+      2 error CS0117: 'ReuseLayout.Reasons' does not contain a definition for 'PrefixCoversPrompt' 
+      4 error CS0117: 'ReuseLayout.Reasons' does not contain a definition for 'PromptLengthChanged' 
+     22 error CS0246: The type or namespace name 'DroppedHit' could not be found (are you missing a using directive or an assembly reference?) 
+      8 error CS1061: 'ReuseLayout' does not contain a definition for 'Dropped' and no accessible extension method 'Dropped' accepting a first argument of type 'ReuseLayout' could be found (are you missing a using directive or an assembly reference?) 
+      6 error CS1739: The best overload for 'Plan' does not have a parameter named 'expectedPromptIds' 
