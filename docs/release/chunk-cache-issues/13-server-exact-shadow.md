@@ -34,31 +34,53 @@ What it adds:
 
 - **The server references `DotLLM.ChunkReuse`** (store, `ChunkKey`, `ChunkFingerprint`, `GgufIdentity`,
   `ChunkTokenization`). Maintainer decision: that assembly brings `Microsoft.CodeAnalysis.CSharp` (Roslyn, used by the
-  symbol chunker) and `DotLLM.Vulkan` into the server's dependency graph.
+  symbol chunker) and `DotLLM.Vulkan` into the server's dependency graph, and the `DotLLM.Server` package now depends on
+  a `DotLLM.ChunkReuse` package (the release workflow must publish it, or the key/store/tokenisation/identity types move
+  into a small assembly without Roslyn or Vulkan first). With the flag off the chunk-cache runtime is never constructed;
+  whether the CLR still loads the assembly was not measured. The opt-in AOT publish of `dotllm` was tried on this branch
+  and fails before this code matters, on three pre-existing IL3050 errors in endpoints this PR does not touch
+  (`SettingsEndpoint`, `OllamaApiEndpoint`, `ModelManagementEndpoint`); the AOT effect of the new reference is unverified.
 - **`ServerModelIdentity`**: content model id (`GgufIdentity.ModelId`, sampled), tokenizer id, quantisation label,
   backend tag and stored K/V type (F32), folded into the fingerprint the `chunkcache` CLI uses. An entry the CLI built
   for the same GGUF (without `--strict-model-id`) is a hit; the CLI's index loads under the server's identity (same
-  producer hash). Computed once per loaded model.
-- **`ChunkCachePipeline`**, per located span in prompt order:
+  producer hash; `ServerIdentity_EqualsCliModelHandle` pins id, tokenizer id, label, fingerprint and producer against the
+  CLI's own model handle). The quantisation label comes from one helper, `GgufIdentity.QuantizationLabel` (the CLI's
+  `ModelHandle` should call it too: follow-up on the library branch). Computed once per loaded model under a lock; a
+  failure is cached as `chunk_model_unsupported`, never a 500.
+- **Silent disagreements (always misses, never false hits)**, documented: a store built with `--strict-model-id`,
+  server `--rope-*` overrides, a CPU-built store served on Vulkan (or the reverse), a quantisation label `unknown` on one
+  side. The capabilities endpoint (issue 14) must expose the fingerprint inputs: model id (sampled or full), tokenizer
+  id, quantisation label, backend tag, K/V dtype, producer hash and the RoPE parameters.
+- **`ChunkCachePipeline`**, per located span in prompt order (at most 1,024 per request; the rest are
+  `chunk_verification_skipped`):
   1. ids = `ChunkTokenization.Encode(text)` (`EncodeRaw(MarkUntrustedSpecials(text))`, contract ruling 21);
   2. fewer than `min_chunk_tokens` (default 32, server tokenizer) → `chunk_ignored_too_short` (warning only);
   3. **token check**: equal text is not equal tokens at a span's edges. The span counts only if its ids occur in the
      whole-prompt ids exactly where its characters are; otherwise `chunk_template_altered`. Catches BPE merges across
      a span edge, a SentencePiece leading space, and a Qwen3 assistant span holding a live `<think>` (located by the
-     locator, rejected here). Linear in the prompt: with a proven token boundary after the previous span the glue is
-     encoded alone and compared; otherwise the prefix is encoded and must be a prefix of the prompt's ids; prefix
-     encodes are capped at 4 × the prompt length (+64 Ki chars), spans past the cap are ignored as unverified;
-  4. store lookup (`IChunkStore.Contains`) under the server key in the caller's namespace (server-assigned; the
-     default namespace until authentication, issue 14). A store failure is a miss.
+     locator, rejected here). Linear in the prompt: with a token boundary known after the previous span the glue is
+     encoded alone and compared, tolerating a leading piece every encode adds (SentencePiece's dummy space prefix:
+     150 valid spans verify with no prefix encode); otherwise the prefix is encoded and must be a prefix of the prompt's
+     ids. Prefix encodes are capped at 4 × the prompt length (+64 Ki chars); a span that cannot be placed once the cap
+     is spent is ignored with **`chunk_verification_skipped`** (ruling 49: warning only, never a strict error;
+     `chunk_template_altered` only for spans found different). Strict span-level errors follow document order (ruling 4);
+  4. store lookup (`IChunkStore.Contains`, header only: at most 8 KiB read) under the server key in the caller's
+     namespace (server-assigned; the default namespace until authentication, issue 14). A store failure is a miss.
+- **Cost before generation** (documented): all of the above runs on the request thread before the scheduler queue,
+  under `exact` too: up to 4 sentinel renders, one extra whole-prompt encode, linear glue/span encodes, capped prefix
+  encodes, at most 1,024 header reads.
 - **`--chunk-store <dir>`**: the store to look chunks up in, **read-only** (never written, encoded into or created; the
-  sole-writer encode path, budget and admission are issue 15). No store: every verified chunk is a miss. A configured
+  sole-writer encode path, budget and admission are issue 15). Needs `--chunk-cache`; resolved to a full path at
+  startup; opened without ever creating its root. No store: every verified chunk is a miss. A configured
   root that does not exist: misses plus `chunk_store_unavailable` (strict: 503 `api_error`).
 - **Response `chunk_cache` object** (spec §5.9, contract rulings 5–10; shapes pinned against the contract fixtures):
-  on the blocking response (both surfaces), the OpenAI streaming **finish-reason chunk** beside `timings`, and the
-  Anthropic `message_delta` beside `usage`. `chunks{annotated, prefix, hit, miss, ignored}` partition the annotations;
+  on the blocking response (both surfaces), the OpenAI streaming **finish-reason chunk** beside `timings` (ruling 47),
+  and the Anthropic `message_delta` beside `usage` (usage unchanged, rulings 40/46). `chunks{annotated, prefix, hit, miss, ignored}` partition the annotations;
   `tokens` is `prompt = prefix_reused + prefilled` (nothing applied: chunk counters 0; `prefix_reused` =
-  `cached_tokens`); `shadow` adds `plan` (selector `chunk_starts`, budget 0.2, its own partition,
-  `predicted_ttft_ms`, `full_prefill_estimate_ms`); `timings_ms`; `warnings` merged per code across parser, locator
+  `cached_tokens`); `shadow` adds `plan` (selector `chunk_starts`, budget 0.05 or the request's
+  `recompute.budget` in 0..1 (ruling 50; anything else `chunk_annotation_malformed`), its own partition,
+  `predicted_ttft_ms`, `full_prefill_estimate_ms`); `timings_ms` (`full_prefill_estimate` an estimate of the unannotated
+  prefill, ruling 48); `warnings` merged per code across parser, locator
   and execution (ruling 38). `report: "none"` omits the object. `timings` gains `chunk_n` / `chunk_recomputed_n` (0) on
   annotated requests only.
 - **Cost model** (`ChunkCostModel`, embedded `chunk-cost-model.json` with sources): Vulkan 16 µs per recomputed row ×
@@ -86,10 +108,12 @@ What it adds:
       exactly like the plain body on both surfaces, blocking and streaming (ids, timestamps and timing values blanked);
       nothing chunk-related appears.
 - [ ] Flag on, `exact`: same generated tokens, usage and `cached_tokens` as the unannotated request on an identical
-      server, cold and warm, blocking and streaming, on both prompt-cache paths (paged trie + scheduler; single-slot
-      prefix cache) and both surfaces.
+      server, cold and warm, blocking and streaming, on three prompt-cache configurations (single-slot prefix cache;
+      the default paged KV + scheduler, which `ServerStartup` runs without the prefix trie, so no cross-request prefix
+      reuse exists there at all; paged + scheduler with the trie wired in) and both surfaces (Anthropic prefix reuse
+      checked against an OpenAI twin's `cached_tokens`).
 - [ ] Review focus: `exact` right after `shadow` on the same slot equals unannotated-after-unannotated (tokens and
-      `cached_tokens`), blocking and streaming, both paths.
+      `cached_tokens`, > 0 where the configuration reuses prefixes), blocking and streaming, all three configurations.
 - [ ] An approximate prefix snapshot on the slot (rows after `r` from other tokens) is restored only up to `r`:
       `cached_tokens = prefix_reused = r` and the output equals a cold unannotated request.
 - [ ] `shadow` with a store pre-filled (CPU encode) for half the chunks: hits and misses counted, chunk token positions
@@ -106,7 +130,13 @@ What it adds:
 - [ ] Report on the finish-reason chunk only (not on other chunks, not on the `include_usage` chunk) and on the
       Anthropic `message_delta`; `chunk_n` / `chunk_recomputed_n` present (0).
 - [ ] `/metrics` counters move by exactly one request's report; no namespace in the exposition.
-- [ ] Bounded work: 1,500 spans (half glued without a newline) cost ≤ 8 × the prompt length in tokenizer characters.
+- [ ] Bounded work: 1,000 spans (half glued without a newline) cost ≤ 8 × the prompt length in tokenizer characters,
+      also when every span needs the prefix fallback; more than 1,024 spans: the rest `chunk_verification_skipped`.
+- [ ] Ruling 49: valid spans the verification budget cannot reach are `chunk_verification_skipped` and a strict request
+      is answered (no 400); a SentencePiece tokenizer with a dummy space prefix verifies 150 valid spans, strict ok.
+- [ ] Ruling 50: plan budget 0.05 by default, `recompute.budget` overrides, invalid values malformed (strict 400).
+- [ ] Strict span-level error follows document order (ruling 4); a failing model identity is `chunk_model_unsupported`
+      (computed once, never a 500); `--chunk-store` without `--chunk-cache` is rejected.
 - [ ] No new `JsonSerializerContext`; the new response DTOs have no init-property initializers and are covered by
       `JsonContextDefaultsTests`.
 - [ ] Correctness tests shown to fail against mutants (table below, also in the PR body).
@@ -155,3 +185,30 @@ segmented tokenisation: the token check accepts any located span), M2 (report om
 | M27 | missing store root created instead of reported | `MissingStoreRoot_Warns_StrictIs503` |
 
 Logs: `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-13-mutants.log`; script `phase-i-task-13-mutate.py`.
+
+### Review fix round (rulings 46–50)
+
+Archive of `10149688`, same filter; baseline 204 / 204. **26 mutants + L0, all killed** (M1 first failed to build on
+CS0162 and was re-expressed with a runtime-true condition). Eleven earlier mutants re-run against the new code (M1, M1b,
+M2, M3, M4, M10, M12, M14, M20, M21, M25: all killed); new ones:
+
+| mutant | change | killed by |
+|---|---|---|
+| L0 | stub (plans and reports nothing) | 25 tests |
+| F1 | plan ignores the request's `recompute.budget` | `Plan_Budget_DefaultsTo005_RequestOverrides_InvalidIsMalformed` |
+| F1b | default budget 0.2 | `Plan_Budget_…` |
+| F2 | budget above 1 accepted | `Plan_Budget_…` |
+| F3 | a span past the verification budget reported as altered (strict 400) | `ValidSpansPastTheVerificationBudget_Skipped_NeverAltered_StrictOk` |
+| F4 | skipped spans become strict errors | `ValidSpansPastTheVerificationBudget_…` |
+| F5 | no leading-piece tolerance on the glue path | `SentencePieceLeadingSpace_ManyValidSpans_AllVerified_StrictOk` |
+| F6 | identity failure not caught (no `chunk_model_unsupported`) | `IdentityFailure_IsModelUnsupported_CachedPerModel_NeverThrows` |
+| F7 | identity failure not cached | `IdentityFailure_…` |
+| F8 | strict span error = first recorded, not first in document order | `Strict_SpanLevelError_FollowsDocumentOrder` |
+| F9 | no cap on planned spans | `ManySpans_CappedAtMaxPlannedSpans_RestSkipped` |
+| F10 | `--chunk-store` accepted without `--chunk-cache` | `ChunkStore_ParsedOnBothPaths` |
+| F11 | `--chunk-store` kept relative | `ChunkStore_ParsedOnBothPaths` |
+| F12 | `full_prefill_estimate` ignores the measured rate | `FullPrefillEstimate_IsAnEstimate_OfTheNonPrefixRows`, `Shadow_PlanCountsHitsAndMisses` |
+| F13 | server quantisation label differs from the shared helper | `ServerIdentity_EqualsCliModelHandle`, `ShadowKey_…` |
+| F14 | missing store root created by the server | `MissingStoreRoot_Warns_StrictIs503` |
+
+Logs: `phase-i-task-13-fix-mutants.log`; script `phase-i-task-13-fix-mutate.py`.
