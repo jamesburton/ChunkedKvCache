@@ -148,3 +148,10 @@ warnings from the requests and compares them with `expected.json`, and checks th
 64. The per-namespace sighting share is a fixed quarter of the table (25,000); all writer limits are constants in v1 (ruling 61).
 
 65. Background encode on CPU is capped at 512-token chunks (constant); larger chunks are refused at admission (`chunk_encode_skipped`, detail `too_large_for_cpu`). Measured on Qwen3-4B Q4_K_M, CPU, 8 threads: 512 tokens 8.35 s, 2048 tokens 43.5 s (so worst-case request wait ~8.4 s with the cap).
+
+## Rulings from Task 16 (controller, 2026-11-03)
+
+66. `path` forget removes stored entries/ledger rows/sightings/queued encodes the server owns and REPORTS (`kept_referenced`) entries still referenced by a CLI index; it never edits index files. `namespace`/`all` forget also delete that namespace's own index files (never legacy-named files or other namespaces').
+67. Evict responses may carry extra output fields (`removed`, `warnings`); the MCP wrapper (Task 18) projects them out to fit the strict schema.
+68. `orphans` and a store-wide `all` evict are admin-only.
+69. The per-namespace budget counts only the server's ledger rows (documented); CLI-written offline entries are not counted.
