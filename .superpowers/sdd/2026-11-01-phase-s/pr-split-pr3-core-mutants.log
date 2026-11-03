@@ -1,0 +1,139 @@
+# set pr03, copy C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\mut-pr03
+BASELINE: ['Passed!  - Failed:     0, Passed:    99, Skipped:     0, Total:    99, Duration: 959 ms - DotLLM.Tests.Unit.dll (net10.0)'] failed=[]
+T5-M2 (hash over UTF-16): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 960 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.WireChunkingTests.Hash_IsSha256OfUtf8_LowercaseHex
+T5-M3 (round trip compares lengths only): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 923 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.WireChunkingTests.VerifyRoundTrip_SameLengthDifferentIds_Fails
+T5-M12 (FixedSizeChunker id slices eligible): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.WireChunkingTests.FixedSizeChunker_IdSlices_NotWireEligible_LinesChunker_Eligible
+T5-M13 (lines-512 on the allow-list now): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 892 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.WireChunkingTests.Lines512_IsPendingNotEligible
+T5-M14 (IsWireChunker ignores the list (any symbol-*)): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.WireChunkingTests.Lines512_IsPendingNotEligible
+B-M1 (unmarked EncodeRaw): KILLED ['Failed!  - Failed:     8, Passed:    91, Skipped:     0, Total:    99, Duration: 865 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.ChunkWithThinkTag_StoreAndChatPathIdsEqual
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.Encode_NeverAddsBos_EvenWhenTheTokenizerFramesEncode
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.FixedSizeChunker_UsesChunkTokenization
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_CrlfBackOff_UsesChunkTokenization
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_UsesChunkTokenization
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.PreMarkedOrCallerMarkerText_EncodesAsTheChatPathDoes
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.RealQwen3_ChunkWithThinkTag_StoreAndChatPathIdsEqual
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.VerifyRoundTrip_SpecialSpellingChunk_Passes
+B-M2 (marking applied twice (expected equivalent: marking is idempotent)): SURVIVED ['Passed!  - Failed:     0, Passed:    99, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+B-M3 (Encode (BOS framing) instead of EncodeRaw): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 943 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.Encode_NeverAddsBos_EvenWhenTheTokenizerFramesEncode
+B-M7 (LinesChunker rest-fits check on EncodeRaw): KILLED ['Failed!  - Failed:     3, Passed:    96, Skipped:     0, Total:    99, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_SpecialSpellingNearLimit_StaysWithinN
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_UsesChunkTokenization
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.VerifyRoundTrip_SpecialSpellingChunk_Passes
+B-M8 (LinesChunker binary-search probes on bare EncodeRaw): KILLED ['Failed!  - Failed:     4, Passed:    95, Skipped:     0, Total:    99, Duration: 859 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_CrlfBackOff_UsesChunkTokenization
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_SpecialSpellingNearLimit_StaysWithinN
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_UsesChunkTokenization
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.VerifyRoundTrip_SpecialSpellingChunk_Passes
+B-M9 (LinesChunker line-end probe on EncodeRaw): KILLED ['Failed!  - Failed:     2, Passed:    97, Skipped:     0, Total:    99, Duration: 945 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_UsesChunkTokenization
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.VerifyRoundTrip_SpecialSpellingChunk_Passes
+B-M10 (LinesChunker CRLF back-off probe on EncodeRaw): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 729 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_CrlfBackOff_UsesChunkTokenization
+B-M11 (FixedSizeChunker on EncodeRaw): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.FixedSizeChunker_UsesChunkTokenization
+B-M12 (VerifyRoundTrip on EncodeRaw): KILLED ['Failed!  - Failed:     2, Passed:    97, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.LinesChunker_SpecialSpellingNearLimit_StaysWithinN
+    DotLLM.Tests.Unit.ChunkReuse.ChunkTokenizationTests.VerifyRoundTrip_SpecialSpellingChunk_Passes
+N1 (namespace not hashed): KILLED ['Failed!  - Failed:     2, Passed:    97, Skipped:     0, Total:    99, Duration: 878 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DiffersByNamespace
+N2 (default namespace skipped (null-skip), scheme v4): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 839 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+N2b (default namespace skipped and scheme left at v3): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 855 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+N3 (namespace hashed but the scheme string not bumped): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 980 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+N4 (namespace hashed without its length prefix): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 850 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+N5 (namespace hashed after the tokens (field order)): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 816 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+N8 (ForApiKey returns the full 64-hex digest): KILLED ['Failed!  - Failed:     3, Passed:    96, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.ForApiKey_IsStable_AndNeverEqualsDefault
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DiffersByNamespace
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Null_IsNotValid
+N9 (ForApiKey drops the k- prefix): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 880 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.ForApiKey_IsStable_AndNeverEqualsDefault
+N10 (ForApiKey hashes UTF-16 instead of UTF-8): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 944 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.ForApiKey_IsStable_AndNeverEqualsDefault
+N11 (ForApiKey accepts an empty key): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 938 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.ForApiKey_IsStable_AndNeverEqualsDefault
+N12 (ForApiKey returns the key itself (no digest)): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 985 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.ForApiKey_IsStable_AndNeverEqualsDefault
+F1 (ChunkKey.Create skips the validity rule (null check only)): KILLED ['Failed!  - Failed:    11, Passed:    88, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Invalid_IsRefusedEverywhere(ns:
+F2 (namespace encoded with the replacing UTF-8 encoder (expected equivalent: the rule admits ASCII only)): SURVIVED ['Passed!  - Failed:     0, Passed:    99, Skipped:     0, Total:    99, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+F3 (F1 + F2: no rule and the replacing encoder (lone surrogates collide)): KILLED ['Failed!  - Failed:    12, Passed:    87, Skipped:     0, Total:    99, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Invalid_IsRefusedEverywhere(ns:
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_LoneSurrogates_NeverShareAKey
+F4 (IsValid accepts upper case): KILLED ['Failed!  - Failed:     2, Passed:    97, Skipped:     0, Total:    99, Duration: 896 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Invalid_IsRefusedEverywhere(ns:
+F5: PATTERN NOT FOUND ONCE (0): 'if (value is null || value.Length > MaxLength) return false;'
+F6 (IsValid accepts '/' and '\\'): KILLED ['Failed!  - Failed:     2, Passed:    97, Skipped:     0, Total:    99, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Invalid_IsRefusedEverywhere(ns:
+F7 (IsValid accepts anything non-null): KILLED ['Failed!  - Failed:    10, Passed:    89, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Invalid_IsRefusedEverywhere(ns:
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_LoneSurrogates_NeverShareAKey
+F8 (Validate accepts invalid values (null check only)): KILLED ['Failed!  - Failed:    12, Passed:    87, Skipped:     0, Total:    99, Duration: 931 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Invalid_IsRefusedEverywhere(ns:
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_LoneSurrogates_NeverShareAKey
+F10: PATTERN NOT FOUND ONCE (0): 'if (value is null || value.Length > MaxLength) return false;'
+G09 (key field order swapped (fingerprint / tokenizer)): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+G10 (key token count not hashed): KILLED ['Failed!  - Failed:     1, Passed:    98, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+F13 (positioning not hashed): KILLED ['Failed!  - Failed:     2, Passed:    97, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DiffersWhenModelTokenizerRopeOrEngineVersionChanges(field:
+M11 (CPU fingerprint also hashes the backend field): SURVIVED ['Passed!  - Failed:     0, Passed:    99, Skipped:     0, Total:    99, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+M12 (fingerprint omits the backend for every tag): SURVIVED ['Passed!  - Failed:     0, Passed:    99, Skipped:     0, Total:    99, Duration: 992 ms - DotLLM.Tests.Unit.dll (net10.0)']
+done
+# set pr03, copy C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\mut-pr03b
+BASELINE: ['Passed!  - Failed:     0, Passed:   100, Skipped:     0, Total:   100, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)'] failed=[]
+F5 (IsValid has no length bound): KILLED ['Failed!  - Failed:     1, Passed:    99, Skipped:     0, Total:   100, Duration: 848 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Invalid_IsRefusedEverywhere(ns:
+F10 (IsValid treats null as valid): KILLED ['Failed!  - Failed:     1, Passed:    99, Skipped:     0, Total:   100, Duration: 931 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Null_IsNotValid
+F11 (reserved name 'default' accepted (Task 4b rule)): KILLED ['Failed!  - Failed:     1, Passed:    99, Skipped:     0, Total:   100, Duration: 929 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Namespace_Invalid_IsRefusedEverywhere(ns:
+M11 (CPU fingerprint also hashes the backend field): KILLED ['Failed!  - Failed:     1, Passed:    99, Skipped:     0, Total:   100, Duration: 985 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.ChunkFingerprint_BackendTag_CpuKeepsThePreSeamValue_OtherTagsDiffer
+M12 (fingerprint omits the backend for every tag): KILLED ['Failed!  - Failed:     1, Passed:    99, Skipped:     0, Total:   100, Duration: 748 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.ChunkFingerprint_BackendTag_CpuKeepsThePreSeamValue_OtherTagsDiffer
+RP-M1 (RoPE delta sign flipped): KILLED ['Failed!  - Failed:     6, Passed:    94, Skipped:     0, Total:   100, Duration: 827 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_IntoNonEmptyCache_AppendsAtCurrentLength
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_OneTokenChunk_AtNonZeroOffset_MatchesModelKey
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_ReorderedChunks_ShiftsByNewOffsets
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_SameChunkTwice_ProducesDistinctPositions
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.RopeShift_ShiftedKeys_EqualKeysComputedAtTargetPosition(arch:
+RP-M2 (RoPE pairing swapped (NeoX <-> Norm)): KILLED ['Failed!  - Failed:     6, Passed:    94, Skipped:     0, Total:   100, Duration: 841 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_IntoNonEmptyCache_AppendsAtCurrentLength
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_OneTokenChunk_AtNonZeroOffset_MatchesModelKey
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_ReorderedChunks_ShiftsByNewOffsets
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_SameChunkTwice_ProducesDistinctPositions
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.RopeShift_ShiftedKeys_EqualKeysComputedAtTargetPosition(arch:
+RP-M4 (CPU backend never shifts keys): KILLED ['Failed!  - Failed:     4, Passed:    96, Skipped:     0, Total:   100, Duration: 838 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_IntoNonEmptyCache_AppendsAtCurrentLength
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_OneTokenChunk_AtNonZeroOffset_MatchesModelKey
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_ReorderedChunks_ShiftsByNewOffsets
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_SameChunkTwice_ProducesDistinctPositions
+RP-M5 (assembly starts at 0 instead of CurrentLength): KILLED ['Failed!  - Failed:     2, Passed:    98, Skipped:     0, Total:   100, Duration: 848 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_ChunksExceedCapacity_ThrowsAndWritesNothing
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_IntoNonEmptyCache_AppendsAtCurrentLength
+RP-R1b (RopeShift skips the last head of the slice): KILLED ['Failed!  - Failed:     6, Passed:    94, Skipped:     0, Total:   100, Duration: 797 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_IntoNonEmptyCache_AppendsAtCurrentLength
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_OneTokenChunk_AtNonZeroOffset_MatchesModelKey
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_ReorderedChunks_ShiftsByNewOffsets
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_SameChunkTwice_ProducesDistinctPositions
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.RopeShift_ShiftedKeys_EqualKeysComputedAtTargetPosition(arch:
+RP-R2 (encoder context guard removed): KILLED ['Failed!  - Failed:     1, Passed:    99, Skipped:     0, Total:   100, Duration: 923 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Encode_ChunkLongerThanContext_Throws
+RP-R3 (assembler capacity guard removed): KILLED ['Failed!  - Failed:     1, Passed:    99, Skipped:     0, Total:   100, Duration: 817 ms - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkAssemblyTests.Assemble_ChunksExceedCapacity_ThrowsAndWritesNothing
+done

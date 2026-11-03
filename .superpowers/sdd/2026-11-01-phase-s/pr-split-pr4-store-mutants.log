@@ -1,0 +1,113 @@
+# set pr04, copy C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\mut-pr04
+BASELINE: ['Passed!  - Failed:     0, Passed:   186, Skipped:     0, Total:   186, Duration: 3 s - DotLLM.Tests.Unit.dll (net10.0)'] failed=[]
+M1 (header written but tag never checked on read (any bytes accepted)): KILLED ['Failed!  - Failed:     3, Passed:   183, Skipped:     0, Total:   186, Duration: 3 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTampered_IsMiss(tamper:
+M1b (reader ignores the header tag and reports cpu): KILLED ['Failed!  - Failed:     5, Passed:   181, Skipped:     0, Total:   186, Duration: 3 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTagLongerThanMax_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTampered_WellFormedTag_IsReportedAsWritten
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_PutOverEntryWithOtherBackendTag_ReplacesIt
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoreHeader_PersistsBackendTag
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_HeaderBackendTampered_IsMissAndReencoded
+M2 (assembler keys on cpu regardless of the backend): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_KeysOnItsTag_AndNeverHitsCpuEntries
+M3 (v1 accepted (read as cpu, no tag field)): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_FormatV1File_IsMiss
+M4 (hit check ignores the entry's backend): KILLED ['Failed!  - Failed:     3, Passed:   183, Skipped:     0, Total:   186, Duration: 3 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_EntryBackendDiffers_IsRejectedAndReencoded
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_HeaderBackendTampered_IsMissAndReencoded
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_FindsCpuTaggedEntryUnderItsOwnKey_IsRejectedAndReencoded
+M5 (identity check recomputes the fingerprint with the cpu tag): KILLED ['Failed!  - Failed:     2, Passed:   184, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_FindsCpuTaggedEntryUnderItsOwnKey_IsRejectedAndReencoded
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_KeysOnItsTag_AndNeverHitsCpuEntries
+M6 (misses encoded on the CPU backend (entries stamped cpu)): KILLED ['Failed!  - Failed:     2, Passed:   184, Skipped:     0, Total:   186, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_FindsCpuTaggedEntryUnderItsOwnKey_IsRejectedAndReencoded
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_KeysOnItsTag_AndNeverHitsCpuEntries
+M7 (ForModel fingerprints with the cpu tag for every backend): KILLED ['Failed!  - Failed:     2, Passed:   184, Skipped:     0, Total:   186, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_FindsCpuTaggedEntryUnderItsOwnKey_IsRejectedAndReencoded
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_KeysOnItsTag_AndNeverHitsCpuEntries
+M8 (Put does not validate the backend tag): KILLED ['Failed!  - Failed:     5, Passed:   181, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_PutRejectsMalformedBackendTag(tag:
+M9 (HeaderBytes omits the backend tag): KILLED ['Failed!  - Failed:    64, Passed:   122, Skipped:     0, Total:   186, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_ChangedProducerKey_IsMiss(field:
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_ConcurrentPutSameKey_LeavesOneValidEntry
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_DeletedShardOrRoot_EnumerationTolerates
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_DtypeTagMismatch_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_EntryUnderAnotherKeysName_IsTreatedAsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_Evict_RemovesEntry_AndMissingEvictIsNoOp
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_FormatV1File_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_FormatVersionMismatch_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTagLongerThanMax_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTag_Layout
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTampered_IsMiss(tamper:
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTampered_WellFormedTag_IsReportedAsWritten
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_IdenticalChunksFromTwoFiles_OneEntry
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_IgnoresTempAndForeignFiles
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_LayersWithDifferentStrides_RoundTrip
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_OtherNamespaceKey_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_PutExistingValidKey_KeepsExistingFile
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_PutOverEntryWithOtherBackendTag_ReplacesIt
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_PutRejectsMalformedBackendTag(tag:
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_PutWhileReaderHoldsValidDestination_Succeeds
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_RepairWhileReaderHoldsCorruptFile_ThrowsBusyWithoutRetrying
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_RoundTrip_IsBitExact
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_SweepTempFiles_RemovesOnlyOldTemps_AndStatsCountThemSeparately
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_TrailingGarbage_IsTreatedAsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_TruncatedFile_IsTreatedAsMiss(where:
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_ColdThenWarm_HitMissCounts
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_ConcurrentSameChunks_NoCorruption
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_CorruptOrForeignFile_IsMiss_ReencodedAndReplaced(damage:
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_FromStore_EqualsFreshEncode_BitExact
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_ModelChanged_AllMisses
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_NonEmptyDestination_AppendsAtItsLength_AndReportsTheOffset
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_StaleSchemaEntry_IsMissNotError
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_StoreBusy_UsesFreshEntry_AndALaterCallRepairs
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_StoresUnderTheCanonicalKey
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_WithoutDestination_ReturnsEntriesOnly
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoreHeader_PersistsBackendTag
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_HeaderBackendTampered_IsMissAndReencoded
+M10 (destination not vetted by the backend): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_UnusableDestination_ThrowsBeforeAnyStoreReadOrEncode(problem:
+M11 (CPU fingerprint also hashes the backend field): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_DefaultCtor_KeysOnCpu
+M12 (fingerprint omits the backend for every tag): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_KeysOnItsTag_AndNeverHitsCpuEntries
+M13 (tag length upper bound not checked): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTagLongerThanMax_IsMiss
+TF1 (header comparison applied only for the cpu assembler (phase-i-task-1 F1)): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_OtherBackend_FindsCpuTaggedEntryUnderItsOwnKey_IsRejectedAndReencoded
+TF2 (Put keeps any valid entry regardless of its tag (phase-i-task-1 F2)): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_PutOverEntryWithOtherBackendTag_ReplacesIt
+N1 (namespace not hashed): KILLED ['Failed!  - Failed:     5, Passed:   181, Skipped:     0, Total:   186, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DefaultNamespace_GoldenV4
+    DotLLM.Tests.Unit.ChunkReuse.ChunkKeyTests.Key_DiffersByNamespace
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_OtherNamespaceKey_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_OtherNamespace_AllMisses
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.StoredAssembly_DefaultCtor_KeysOnCpu
+N6 (Assemble looks up in the default namespace whatever it is given): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_OtherNamespace_AllMisses
+N7 (KeyOf drops its namespace): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_OtherNamespace_AllMisses
+N14: PATTERN NOT FOUND ONCE (0): '        ArgumentNullException.ThrowIfNull(store);\r\n        ArgumentNullException'
+F9 (Assemble checks only null up front (KeyOf validates before the first store read)): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 1 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_OtherNamespace_AllMisses
+S1 (FileChunkStore.Contains ignores the key name (any entry file counts)): KILLED ['Failed!  - Failed:    37, Passed:   149, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_ChangedProducerKey_IsMiss(field:
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_DeletedShardOrRoot_EnumerationTolerates
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_DtypeTagMismatch_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_EntryUnderAnotherKeysName_IsTreatedAsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_Evict_RemovesEntry_AndMissingEvictIsNoOp
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_FormatV1File_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_FormatVersionMismatch_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTagLongerThanMax_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_HeaderBackendTampered_IsMiss(tamper:
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_OtherNamespaceKey_IsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_TrailingGarbage_IsTreatedAsMiss
+    DotLLM.Tests.Unit.ChunkReuse.ChunkStoreTests.Store_TruncatedFile_IsTreatedAsMiss(where:
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_CorruptOrForeignFile_IsMiss_ReencodedAndReplaced(damage:
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_StoreBusy_UsesFreshEntry_AndALaterCallRepairs
+done
+# set pr04, copy C:\Users\james\AppData\Local\Temp\claude\C--Development-ChunkedkvCache\e3a311cd-21c5-4c45-8a8a-705944ca30fb\scratchpad\mut-pr04
+BASELINE: ['Passed!  - Failed:     0, Passed:   186, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)'] failed=[]
+N14 (Assemble and KeyOf accept a null namespace as the default (re-created on today's Validate call)): KILLED ['Failed!  - Failed:     1, Passed:   185, Skipped:     0, Total:   186, Duration: 2 s - DotLLM.Tests.Unit.dll (net10.0)']
+    DotLLM.Tests.Unit.ChunkReuse.StoredAssemblyTests.Assemble_OtherNamespace_AllMisses
+done
