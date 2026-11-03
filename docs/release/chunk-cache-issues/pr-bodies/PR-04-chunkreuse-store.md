@@ -1,17 +1,4 @@
-# PR 4 body draft: chunk store and store-backed assembly
-
-> **DRAFT, not opened.** Branch `pr/chunkreuse-store` (local, worktree
-> `C:\Development\dotLLM\.claude\worktrees\pr04-store`), 2 commits stacked on `pr/chunkreuse-core` (PR 3), tip
-> `68973c2c`. **Open only after PR 3 merges**: then `git rebase origin/dev` (drops PR 3's commits) and re-run the filter.
-> Issue: draft `../01b-library-store.md` (**not filed yet**). Base: `dev`.
-
-## Title
-
-Chunk reuse: file chunk store (`.ckv`, backend tag in the header) and store-backed context assembly
-
-## Body
-
-Refs #1542 (umbrella: chunk-level KV reuse). Refs #1568 (this PR's issue). **Stacked on the core PR (PR 3, #1567)**: open it after PR 3 merges (rebase with `git rebase --onto origin/dev pr/chunkreuse-core`); until then this branch contains PR 3's commits. `DotLLM.ChunkReuse` stays `IsPackable=false`.
+Refs #1568 (this PR's issue). Refs #1542 (umbrella: chunk-level KV reuse). **Follows the core PR #1577** (`DotLLM.ChunkReuse` core library, merged into `dev` as `f782c729`); this branch is rebased onto that `dev` and contains only its own 2 commits. `DotLLM.ChunkReuse` stays `IsPackable=false`.
 
 ### Summary
 
@@ -37,7 +24,7 @@ Persistence for encoded chunks, and assembly of a context from it. Still no cons
 
 ### Scope
 
-`git diff --stat pr/chunkreuse-core` (9 files, +2,760 / -1):
+`git diff --stat origin/dev` (9 files, +2,760 / -1):
 
 ```
  docs/CHUNK_REUSE.md                                       |   46 ++   ("On-disk store", "Store-backed assembly")
@@ -63,7 +50,10 @@ path (DirectStorage / zero-copy import) is Phase D, not this PR.
 | run | result |
 |---|---|
 | `dotnet build tests/DotLLM.Tests.Unit/DotLLM.Tests.Unit.csproj -c Release -m:2` | 0 errors |
-| `--filter FullyQualifiedName~DotLLM.Tests.Unit.ChunkReuse` (cumulative with PR 3) | **187 passed**, 0 skipped, 0 failed |
+| `--filter FullyQualifiedName~DotLLM.Tests.Unit.ChunkReuse` (cumulative with #1577) | **187 passed**, 0 skipped, 0 failed |
+| `--filter "FullyQualifiedName!~DotLLM.Tests.Unit.Vulkan&Category!=GPU"` | **6,475 passed**, 56 skipped, 0 failed (6,531) |
+
+Re-run after rebase: both rows above are from the branch rebased onto `dev` at `f782c729` (#1577 merged), tip `df861ebc`.
 
 `ChunkStoreTests` (round trip bit-exact incl. NaN payloads / signed zero / subnormals, every corruption mode a miss,
 backend-tag layout and tampering, busy / repair, concurrent puts, temp sweep, store side of a changed key /
@@ -74,11 +64,11 @@ Not in this PR: the index-namespace test (index PR), the research-lab guard (for
 
 ### Mutant evidence
 
-Re-run on this cut: `git archive` of `pr/chunkreuse-store` (`89a842ea`; the later rebase onto PR 3's extra test commit
-changed no file of this PR) into a throwaway copy, one mutant at a time, `--filter
-FullyQualifiedName~DotLLM.Tests.Unit.ChunkReuse`, Release, CPU, `DOTLLM_SKIP_VULKAN=1`. Baseline passes. **22 / 22
-killed.** Runner / log (ChunkedkvCache): `.superpowers/sdd/2026-11-01-phase-s/pr-split-pr3-pr4-mutants.py` (set `pr04`),
-`pr-split-pr4-store-mutants.log`.
+Re-run after rebase onto `dev` (`f782c729`): `git archive` of `pr/chunkreuse-store` (`df861ebc`) into a throwaway copy,
+one mutant at a time, `--filter FullyQualifiedName~DotLLM.Tests.Unit.ChunkReuse`, Release, CPU,
+`DOTLLM_SKIP_VULKAN=1`. Baseline 187 passed. **22 / 22 killed** (same result as the pre-rebase cut `89a842ea`).
+Runner / logs (ChunkedkvCache): `.superpowers/sdd/2026-11-01-phase-s/pr-split-pr3-pr4-mutants.py` (set `pr04`),
+`pr-split-pr4-store-mutants-rebased.log` (this run), `pr-split-pr4-store-mutants.log` (pre-rebase).
 
 | mutant | change | killed by |
 |---|---|---|
@@ -113,7 +103,7 @@ them, so they were not re-run.
 
 ### Conventions checklist
 
-- [x] Targets `dev`, not `main`; opened after PR 3 merges, rebased on `dev`. `Closes #N` does not auto-close on `dev`.
+- [x] Targets `dev`, not `main`; opened after #1577 merged, rebased on `dev`. `Closes #N` does not auto-close on `dev`.
 - [x] Issue first: draft `01b-library-store.md` (filed as #1568).
 - [x] Owning doc in the same PR: `docs/CHUNK_REUSE.md` store sections.
 - [x] XML docs on all public API; warnings as errors.
