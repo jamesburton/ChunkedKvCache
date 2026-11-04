@@ -26,6 +26,11 @@
 7. Open for dotllm-97: F16 RoPE-shift accumulation question (answer after the shift-shader fix lands); applied reuse (B3/B4) must target the F16 default.
 8. LOW priority, exploration only: NPU (XDNA2) for chunk-cache work. Lookup/index/hash is I/O + hashing and recompute is GPU, so no fit today; the only plausible use is an NPU-run embedder for semantic chunk selection (new scope; dotLLM #1321 NPU background embedder is unmeasured). Prior art is desk-only: `dotLLM/.planning/notes/gaia-lemonade-research.md` (hybrid NPU+iGPU flow doesn't list Strix Halo; FLM/ryzenai-llm closed-source). `STRIX_HALO.md` NPU + DirectML rows are STUB/unverified. James is raising the neurosymbolic-ai 'DirectML/ONNX for NPU' mapping in the dotLLM session.
 
+## Queue (trigger -> action; act when the trigger fires, one at a time)
+1. dotllm-93 reports PR 6 up + CI-green -> tell James; PR 6 merges only on his go. After it merges: pull dev, start the wiring PR for dotLLM issue #1632 (ours; see Current state), cut locally, Docker-check, ask James before push.
+2. `cpu-bench` lock free (check `list_locks` at each wake) -> re-run Task 19 e2e (A3, A6, A3g, A6m) in `experiments/e2e-chunkcache/` against `feature/chunk-cache-server` `22bdd19a` or newer; hold `cpu-bench` only while running.
+3. Wiring PR merged -> next PRs per `docs/superpowers/plans/2026-11-03-pr-split.md` (7, 8 ...) via dotllm-93's session, one at a time on James's go.
+
 ## Decisions (don't relitigate)
 - Default policy `exact`; lossy reuse opt-in per request AND server flag; `auto` stays exact until a quality cell validates. Cost: naive reuse loses accuracy, ChunkStarts 5-20% recovers 63-87% of gap (E4).
 - No F32 dependence (James): backend-agnostic via `IPositionedHostKvCache`, tolerance vs measured floors, F16 target, Q8_0 later, F32 only CPU oracle.
