@@ -11,6 +11,7 @@ param(
     [string[]] $Sizes = @('2k', '8k'),
     [string] $Worktree = 'C:\Development\dotLLM\.claude\worktrees\chunk-vulkan',
     [string] $LockName = 'chunk-vulkan-t2',
+    [ValidateSet('f32','f16')] [string] $VkStorage = 'f32',   # F16: dense Vulkan KV default (dotLLM PR #1597); use a new -OutDir so F32 results stay untouched
     [switch] $Smoke,
     [switch] $NoBuild
 )
@@ -53,7 +54,7 @@ if (-not $NoBuild) {
     if ($LASTEXITCODE -ne 0) { throw 'build failed' }
 }
 New-Item -ItemType Directory -Force $OutDir | Out-Null
-$logDir = Join-Path $here 'logs'
+$logDir = Join-Path $OutDir 'logs'
 New-Item -ItemType Directory -Force $logDir | Out-Null
 
 $cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1)
@@ -79,7 +80,7 @@ foreach ($label in $Sizes) {
             '--corpus-dirs', (($corpora.Values | ForEach-Object { Join-Path $Snapshots $_[0] }) -join ','),
             '--hashes', (($corpora.Values | ForEach-Object { $_[3] }) -join ','),
             '--contexts', $contexts, '--kept-dir', $corpusDir, '--mode', $s.mode, '--context', $s.context,
-            '--ref-block', 512, '--blocks', $s.blocks, '--label', $(if ($Smoke) { "$label-smoke" } else { $label }), '--out-dir', $OutDir)
+            '--ref-block', 512, '--vk-storage', $VkStorage, '--blocks', $s.blocks, '--label', $(if ($Smoke) { "$label-smoke" } else { $label }), '--out-dir', $OutDir)
         $logPath = Join-Path $logDir "$stem.log"
         $wtDirty = @(git -C $Worktree status --porcelain)
         $holder = (& $gitBash $lock status) -join ' '

@@ -719,6 +719,7 @@ section); report `.superpowers/sdd/2026-11-01-phase-s/phase-i-task-9-report.md`;
 is one global version and its golden test pins CPU K/V bits only. Vulkan K/V also depend on the shader binaries and the
 driver (Task 1's merge alone changed four `.spv` files). Either a per-backend schema version, or the shader set and driver
 identity hashed into the Vulkan fingerprint. Until decided, Task 15 stores CPU entries only. (Also a Phase D question.)
+TODO (f16 review, finding 3): `ServerModelIdentity.BackendTagFor` maps every `vulkan*` device to the F32 tag `vulkan`, but dense Vulkan KV is F16 since #1597; tag from the real KV storage (`vulkan-f16`) when Vulkan execution lands. Also: the F16 device key shift now stores RNE + saturating (shader changed), which is one more input to the shader-set identity above.
 Constraint from the same review: `FileChunkStore.Put` replaces an existing entry whose header tag differs (Task 1 fix round),
 but the sole writer should still evict a rejected entry before `Put`, as `StoredContextAssembler` does.
 
@@ -909,6 +910,28 @@ stays `[]` and validation is Phase I5's (§5.11). The chunker is renamed `LinesC
 - [ ] **Step 5:** Rerun the round-trip census (`ChunkKvLab roundtrip`, three frozen corpora, `lines-512` and `symbol-512`)
   under the new tokenisation; record counts and chunk-id hashes beside Task 5b's re-pin in `experiments/corpus.md`
   (expected 0 failures); commit; write the issue draft; report to the user.
+
+**Part A findings folded in (I5 Part A e2e, 2026-11-04, `experiments/e2e-chunkcache/README.md`):**
+
+- **F-A1 (chunker x tokenizer boundary):** a `symbol-512` chunk often starts with a newline that merges with the previous
+  chunk's trailing newline into one token (`
+` + `
+` -> `
+
+`). Shown back to back, every chunk is ignored with
+  `chunk_template_altered` (server check is correct). `lines-512` has the same exposure (boundaries fall after a line end).
+  Only a glue header ending in a non-whitespace character before each chunk avoided it (check A3g). Task 19 must make the
+  chunkers boundary-stable (a boundary is accepted only where the tokenisation of the concatenation equals the concatenation
+  of the tokenisations, backing off otherwise, using `ChunkTokenization.Encode` like the size probes), or the contract must
+  state the glue rule; decide with evidence (census of how many boundaries are unstable on the three frozen corpora).
+  Re-pin the chunk-id hashes if boundaries move (expected: they do for `symbol-512`; check the store/wire fixtures).
+- **F-A2 (Anthropic join rule x chunker):** inline blocks are joined with `
+`; a chunk ending in `
+` merges with it, so all
+  inline chunks are ignored (A6). A manifest over a string message works (A6m). Fix with F-A1 or state the client rule in
+  the contract (`docs/contracts/chunk-cache-v1/README.md`, `check.py` must pass).
+- **Docs drift:** `docs/CHUNK_CACHE.md` says the default paged CPU path has no prefix reuse; the e2e run restored 2,672 of
+  2,676 tokens on a repeat. Correct the text.
 
 ### Task 20: Speed checkpoint with the tiled kernel; cost-model calibration (gate G-tiled) [GPU-lock]
 

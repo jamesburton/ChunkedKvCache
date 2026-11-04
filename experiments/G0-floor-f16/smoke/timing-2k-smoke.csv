@@ -1,0 +1,9 @@
+size,corpus,plan,context_id,context_tokens,arm,block,prefill_ms,forwards
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,2045,vk512,512,1011,4
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,2045,vk512-rerun,512,945,4
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,2045,vk2048,2048,1041,1
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,2045,vk96,96,1909,22
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,2045,vk64,64,2173,32
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,2045,vk8,8,7185,256
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,2045,vk1,1,37266,2045
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,2045,cpu512,512,17830,4

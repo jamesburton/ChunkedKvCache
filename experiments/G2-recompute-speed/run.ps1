@@ -14,6 +14,7 @@ param(
     [string] $OutDir = $PSScriptRoot,
     [string] $Worktree = 'C:\Development\dotLLM\.claude\worktrees\chunk-vulkan',
     [string] $LockName = 'chunk-vulkan-t4',
+    [ValidateSet('f32','f16')] [string] $VkStorage = 'f32',   # F16: dense Vulkan KV default (dotLLM PR #1597); use a new -OutDir so F32 results stay untouched
     [switch] $Smoke,
     [switch] $NoBuild
 )
@@ -60,6 +61,9 @@ $groupSpec = @{
     # Reruns after dotllm-97's #1540 agent ran GPU unit tests during the first G2b timing groups (its lock request had timed out).
     'b-2k-timing-r2'  = @{ label = 'b-2k-r2'; context = 2048; mode = 'kept'; contexts = '3,3,2'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
     'b-8k-timing-r2'  = @{ label = 'b-8k-r2'; context = 8192; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
+    'b-4k-timing'     = @{ label = 'b-4k'; context = 4096; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 3, '--eval', 0) }
+    'b-2k-evalS'      = @{ label = 'b-2k-evalS'; context = 2048; mode = 'kept'; contexts = '3,3,2'; maxRows = 128; extra = @('--repeats', 1, '--eval', 1, '--full-blocks', 512) }
+    'b-4k-eval'       = @{ label = 'b-4k-eval'; context = 4096; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 1, '--eval', 1, '--full-blocks', 512) }
     'b-8k-eval'       = @{ label = 'b-8k-eval'; context = 8192; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 1, '--eval', 1, '--full-blocks', 512) }
     '8k-eval'    = @{ label = '8k-eval'; context = 8192; mode = 'unfiltered'; contexts = '1,1,0'; maxRows = 128; extra = @('--repeats', 1, '--eval', 1, '--full-blocks', 512) }
 }
@@ -76,7 +80,7 @@ if (-not $NoBuild) {
     if ($LASTEXITCODE -ne 0) { throw 'build failed' }
 }
 New-Item -ItemType Directory -Force $OutDir | Out-Null
-$logDir = Join-Path $here 'logs'
+$logDir = Join-Path $OutDir 'logs'
 New-Item -ItemType Directory -Force $logDir | Out-Null
 
 $cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1)
@@ -108,7 +112,7 @@ foreach ($group in $Groups) {
             '--corpus-dirs', (($corpora.Values | ForEach-Object { Join-Path $Snapshots $_[0] }) -join ','),
             '--hashes', (($corpora.Values | ForEach-Object { $_[3] }) -join ','),
             '--contexts', $contexts, '--kept-dir', $corpusDir, '--mode', $s.mode, '--context', $s.context,
-            '--max-rows', $s.maxRows, '--label', $label, '--out-dir', $OutDir) + $s.extra
+            '--max-rows', $s.maxRows, '--label', $label, '--vk-storage', $VkStorage, '--out-dir', $OutDir) + $s.extra
         $logPath = Join-Path $logDir "recompute-$label.log"
         $wtDirty = @(git -C $Worktree status --porcelain)
         $holder = (& $gitBash $lock status) -join ' '

@@ -1,0 +1,8 @@
+size,corpus,plan,context_id,task_id,task_index,pair,rows,kl_mean,kl_max,top1,ref_mask_nll,mask_nll,ref_mask_em,mask_em
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,"src/AFClaude/FoundryTools.cs:23:48",0,c_vk512_rerun,32,0,0,1,0.482660507,0.482660507,1,1
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,"src/AFClaude/FoundryTools.cs:23:48",0,b_vk512_vs_vk2048,32,0.000152182,0.00179317,1,0.482660507,0.526695008,1,1
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,"src/AFClaude/FoundryTools.cs:23:48",0,b_vk512_vs_vk96,32,0.000146907,0.000908505,1,0.482660507,0.503434031,1,1
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,"src/AFClaude/FoundryTools.cs:23:48",0,b_vk512_vs_vk64,32,0.000146907,0.000908505,1,0.482660507,0.503434031,1,1
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,"src/AFClaude/FoundryTools.cs:23:48",0,b_vk512_vs_vk8,32,0.000163369,0.00183941,1,0.482660507,0.466246464,1,1
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,"src/AFClaude/FoundryTools.cs:23:48",0,b_vk512_vs_vk1,32,0.000143735,0.00148508,1,0.482660507,0.479783745,1,1
+2k-smoke,afclaude,0,afclaude/symbol/s0/kept/p0,"src/AFClaude/FoundryTools.cs:23:48",0,a_cpu_vs_vk512,32,0.0023606,0.02621,1,0.329170459,0.482660507,1,1

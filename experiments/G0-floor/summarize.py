@@ -1,7 +1,7 @@
 """G0 numerical floor: summary tables from the `ChunkKvLab floor` CSVs.
 
 usage: uv run summarize.py [<dir with floor-*.csv, contexts-*.csv, tasks-*.csv, timing-*.csv>]   (default: this directory)
-writes summary.md and tolerance.csv next to this script. Standard library only.
+writes summary.md and tolerance.csv next to the CSVs (SRC). Standard library only.
 
 Definitions (README, "What was measured"):
 - per-layer floor = pooled over every context row of every context: mean and nearest-rank p99 of the per-row relative L2
@@ -189,12 +189,12 @@ def main():
         if E4.exists() and any(r['context_id'].endswith('/kept/p0') for r in tasks):
             out += e4_section(tasks, pairs)
 
-    with open(HERE / 'tolerance.csv', 'w', newline='', encoding='utf-8') as f:
+    with open(SRC / 'tolerance.csv', 'w', newline='', encoding='utf-8') as f:
         w = csv.DictWriter(f, fieldnames=['size', 'pair', 'metric', 'floor', 'max_context_ratio'])
         w.writeheader()
         for t in tol:
             w.writerow({k: (f'{v:.6g}' if isinstance(v, float) else v) for k, v in t.items()})
-    (HERE / 'summary.md').write_text('\n'.join(out) + '\n', encoding='utf-8')
+    (SRC / 'summary.md').write_text('\n'.join(out) + '\n', encoding='utf-8')
     print(f'wrote summary.md and tolerance.csv ({", ".join(labels)})')
 
 

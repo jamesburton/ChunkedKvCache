@@ -89,6 +89,49 @@ plain text, as on the chat path, instead of as one control id. Same snapshots, s
 - Round trip after 5b (file-range text tokenised with `ChunkTokenization.Encode`): symbol 0 / 8,138, lines 0 / 3,996,
   fixed (id slices) 3 / 3,972 file-range failures (all DocAgent, the known multi-byte cut); text-first invariants OK.
 
+### Re-pin after Phase I Task 19 (chunk edges are token-stable)
+
+From dotLLM `2fdfae4d` (`feature/chunk-cache-server`) both wire chunkers accept a chunk edge only where `Encode(left + right) ==
+Encode(left) ++ Encode(right)` (`ChunkBoundary`, `ChunkTokenization.Encode`). Census = `ChunkKvLab roundtrip --chunkers symbol,lines`
+(new "edges" line), same snapshots and Qwen3-4B-Instruct-2507 Q4_K_M tokenizer, adjacent chunks of one file (edges are counted
+within a file). **Before** = dotLLM `bf6480c4`, **after** = `2fdfae4d`. "Unstable back to back" = the harness shows chunks with
+nothing between them; "unstable under a newline join" = chunk A + `"\n"` + chunk B (the Anthropic converter's inline join), checked
+against `Encode(A) ++ Encode("\n") ++ Encode(B)`.
+
+| corpus | chunker | edges | unstable back to back before | after | unstable under newline join before | after | chunks ending in a newline |
+|---|---|---:|---:|---:|---:|---:|---:|
+| codesharp | symbol-512 | 6,196 | 5,471 (88.3 %) | **0** | 6,196 | 6,171 | 6,196 |
+| DocAgent | symbol-512 | 423 | 382 (90.3 %) | **0** | 423 | 423 | 423 |
+| AFClaude | symbol-512 | 65 | 57 (87.7 %) | **0** | 65 | 65 | 65 |
+| codesharp | lines-512 | 2,400 | 0 | 0 | 2,393 | 2,393 | 2,400 |
+| DocAgent | lines-512 | 121 | 0 | 0 | 120 | 120 | 121 |
+| AFClaude | lines-512 | 21 | 0 | 0 | 21 | 21 | 21 |
+
+Totals: `symbol-512` 5,910 of 6,684 edges (88.4 %) were unstable back to back, now 0; `lines-512` 0 of 2,542 before and after.
+Under a newline join 99.6 % (`symbol-512`) and 99.7 % (`lines-512`) of edges merge, because every chunk of both chunkers is whole
+lines and ends in a newline. **Decision:** the chunkers do not try to avoid a trailing newline (it is the chunk definition; ending before
+the newline only moves the merge to the next chunk's start); the join rule is a client rule (contract ruling 75) and is documented
+beside `chunk_template_altered` in `docs/CHUNK_CACHE.md`.
+
+| corpus | chunker | chunks | tokens before | tokens after | chunk-id sha256 before | chunk-id sha256 after |
+|---|---|---:|---:|---:|---|---|
+| codesharp | symbol-512 | 7,586 | 1,535,740 | 1,530,305 | `364db68b1b21f7969dbf7d55e92277164ca23826954e794cac4bb065a28d8d2f` | **`3abfc1df33d163484aa44b586016b38ffca8274522566840bef77f8718f2cff3`** |
+| DocAgent | symbol-512 | 478 | 76,017 | 75,636 | `5d7e4560f8fea99d4b076d95e4ff4dcb0271f4572a3a0f6e1117eff00d4346c7` | **`f6865497f417863c92632ad00ca0592cf79c940303cf5fac141e7fb62037453e`** |
+| AFClaude | symbol-512 | 74 | 12,744 | 12,687 | `2601bb059c4f2cf9ae2ad558e0824a04086e5bab24c3771efe9405826545a938` | **`54b3d4d1b0ab79294f6565b8b74c86da477fffe3e787f84b6dd51367793d618e`** |
+| all three | lines-512, fixed-512 | | | | unchanged (`1712a814…`/`6b12c314…`/`49bbc654…`; `fb35a894…`/`8d083a63…`/`b90ef5fa…`) | unchanged |
+
+Chunk counts did not change; edges moved (blank lines now end the previous symbol chunk instead of starting the next), so chunk ids
+(`path:startLine-endLine@offset`) and hashes moved for `symbol-512`. Symbol chunk token totals now equal one tokenisation of the file
+(they were 0.3-0.5 % higher because each chunk was tokenised alone with its own leading newline token). Round trip after Task 19: symbol 0 / 8,138,
+lines 0 / 3,996 file-range failures; text-first invariants OK.
+
+- **Experiments E3, E4, E4b, E7, G0, G2 (and `graph-build.md`) were produced at the pre-Task-19 `symbol-512` boundaries.** Their
+  `run.ps1` `--expect-hash` values stay at the 5b pins above on purpose (they name the snapshot of chunks that produced the recorded
+  results); a rerun on dotLLM at or after `2fdfae4d` needs the "after" hashes and gives different chunk boundaries (not comparable
+  cell by cell).
+- Not re-pinned, unchanged by construction: `lines-512` and `fixed-512` hashes; the wire fixtures `inline.json`, `manifest.json`,
+  etc. (they hash fixed text, not chunker output). The `capabilities.json` fixture changed (`wire_chunkers`); see the contract README ruling 73.
+
 ## Tasks
 
 **Generator** (`CrossFileTaskGenerator`, defaults used here): mask a call site's callee name and arguments; the **required chunk**

@@ -113,7 +113,7 @@
 - Test: `tests/DotLLM.Tests.Unit/ChunkReuse/ContextSelectorTests.cs`
 
 **Interfaces:**
-- Produces: `ContextSelector.Select(SelectionRequest request, ScanResult scan, ReferenceGraph graph, IGitInfo git) -> IReadOnlyList<ChunkRef>`; `SelectionRequest` has any of `Paths` (globs), `Symbol` plus `Hops`, `ChangedSince` (git ref), and a `TokenBudget`; result order is deterministic and trimmed to the budget with the reason recorded per chunk.
+- Produces: `ContextSelector.Select(SelectionRequest request, IReadOnlyList<SourceFile> files, ReferenceGraph graph, IGitInfo git, IChunker chunker, <token counter>) -> IReadOnlyList<ChunkRef>` (or equivalent). `files` are the corpus files, already relativised (for a solution: the scan's authored files after `RelativizeScan`). `DotLLM.ChunkReuse` must not depend on `DotLLM.ChunkReuse.Solution`: `ScanResult` lives there and that assembly references `DotLLM.ChunkReuse`, so taking a `ScanResult` would be circular. Scan-specific concerns (skipped projects, diagnostics) stay in the CLI layer (Task 7). `SelectionRequest` has any of `Paths` (globs), `Symbol` plus `Hops`, `ChangedSince` (git ref), and a `TokenBudget`; result order is deterministic and trimmed to the budget with the reason recorded per chunk.
 
 - [ ] **Step 1: Write failing tests:** `Select_Glob_ReturnsMatchingFiles`; `Select_SymbolNeighbourhood_IncludesDefinitionAndCallersWithinHops`; `Select_ChangedSince_UsesGitDiff` (fake `IGitInfo`); `Select_OverBudget_TrimsLowestPriorityFirst`; `Select_Deterministic`.
 - [ ] **Step 2:** Run; expected FAIL. **Step 3:** Implement. **Step 4:** Rerun; PASS with mutants. **Step 5:** Commit.
