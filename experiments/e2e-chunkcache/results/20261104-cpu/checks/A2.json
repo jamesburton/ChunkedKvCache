@@ -1,0 +1,51 @@
+{
+ "id": "A2",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "versions": [
+   1
+  ],
+  "selectors": [
+   "chunk_starts"
+  ],
+  "wire_chunkers": [
+   "symbol-512"
+  ],
+  "auto_validated": [],
+  "model.supported": true,
+  "store.entries": 10,
+  "store.dtype": "f32"
+ },
+ "observed": {
+  "status": 200,
+  "versions": [
+   1
+  ],
+  "policies": [
+   "exact",
+   "shadow",
+   "balanced",
+   "fast",
+   "auto"
+  ],
+  "selectors": [
+   "chunk_starts"
+  ],
+  "wire_chunkers": [
+   "symbol-512"
+  ],
+  "auto_validated": [],
+  "model_supported": true,
+  "model_backend": "cpu",
+  "expected_backend": "cpu",
+  "kv_dtype": "f32",
+  "store_entries": 10,
+  "store_dtype": "f32"
+ },
+ "evidence_files": [
+  "evidence/A2-capabilities.json"
+ ],
+ "wall_s": 0.0,
+ "phase": "ro"
+}

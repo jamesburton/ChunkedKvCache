@@ -1,0 +1,34 @@
+{
+ "id": "A3g",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "hit": 8,
+  "miss": 4,
+  "ignored": 0,
+  "hit_tokens": 1500
+ },
+ "observed": {
+  "chunks": {
+   "annotated": 12,
+   "prefix": 0,
+   "hit": 8,
+   "miss": 4,
+   "ignored": 0
+  },
+  "policy_applied": "exact",
+  "plan_chunk_reused": 1500,
+  "predicted_ttft_ms": 24735,
+  "full_prefill_estimate_ms": 56663,
+  "per_chunk_mismatch": {},
+  "layout": "chunk",
+  "warnings": [],
+  "prompt_tokens": 2676,
+  "prompt_ms": 56662.923200000005
+ },
+ "evidence_files": [
+  "evidence/A3g-response-report.json"
+ ],
+ "wall_s": 66.5,
+ "phase": "ro"
+}

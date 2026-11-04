@@ -1,0 +1,88 @@
+{
+ "id": "A3",
+ "passed": false,
+ "void": false,
+ "expected": {
+  "hit": 8,
+  "miss": 4,
+  "ignored": 0,
+  "hit_tokens": 1500
+ },
+ "observed": {
+  "chunks": {
+   "annotated": 12,
+   "prefix": 0,
+   "hit": 0,
+   "miss": 0,
+   "ignored": 12
+  },
+  "policy_applied": "exact",
+  "plan_chunk_reused": 0,
+  "predicted_ttft_ms": 50094,
+  "full_prefill_estimate_ms": 50094,
+  "per_chunk_mismatch": {
+   "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:1-27@0": [
+    "ignored",
+    "hit"
+   ],
+   "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:28-43@1438": [
+    "ignored",
+    "hit"
+   ],
+   "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:44-57@2437": [
+    "ignored",
+    "hit"
+   ],
+   "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:58-74@3311": [
+    "ignored",
+    "hit"
+   ],
+   "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:1-18@0": [
+    "ignored",
+    "hit"
+   ],
+   "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:19-23@952": [
+    "ignored",
+    "hit"
+   ],
+   "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:24-28@1239": [
+    "ignored",
+    "hit"
+   ],
+   "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:36-40@1679": [
+    "ignored",
+    "hit"
+   ],
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0": [
+    "ignored",
+    "miss"
+   ],
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585": [
+    "ignored",
+    "miss"
+   ],
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993": [
+    "ignored",
+    "miss"
+   ],
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155": [
+    "ignored",
+    "miss"
+   ]
+  },
+  "layout": "file",
+  "warnings": [
+   {
+    "code": "chunk_template_altered",
+    "count": 12
+   }
+  ],
+  "prompt_tokens": 2392,
+  "prompt_ms": 50094.4937
+ },
+ "evidence_files": [
+  "evidence/A3-response-report.json"
+ ],
+ "wall_s": 60.2,
+ "phase": "ro"
+}

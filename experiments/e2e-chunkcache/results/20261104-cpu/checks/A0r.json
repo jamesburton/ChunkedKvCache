@@ -1,0 +1,19 @@
+{
+ "id": "A0r",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "encoded": 10,
+  "indexed_chunks": 10
+ },
+ "observed": {
+  "exit": 0,
+  "encoded": 10,
+  "indexed_chunks": 10,
+  "store_ckv_files": 10,
+  "wall_s": 23.2
+ },
+ "evidence_files": [],
+ "wall_s": 23.2,
+ "phase": "build2"
+}

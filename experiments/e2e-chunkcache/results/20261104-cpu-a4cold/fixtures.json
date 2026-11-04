@@ -1,0 +1,206 @@
+{
+ "F1": {
+  "role": "F1",
+  "name": "ChunkNamespace.cs",
+  "path": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs",
+  "chunks": [
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:1-27@0",
+    "path": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs",
+    "start_line": 1,
+    "end_line": 27,
+    "tokens": 337,
+    "hash": "sha256:83c496bf4287395e29bad51a50ba203e1d99caefa01dc32440ae1b03dec6b6a6",
+    "key": "d840d4d22091c060c9ce65d94648edfdbd464fa2452a75f477d96f04edc024aa",
+    "text": "using System.Security.Cryptography;\nusing System.Text;\n\nnamespace DotLLM.ChunkReuse.Store;\n\n/// <summary>\n/// Store partitions (<see cref=\"ChunkKey.Create\"/>'s <c>namespace</c>). The namespace is hashed into every key, so entries written in\n/// one namespace are never hits in another, and an index (whose producer identity is the key of no tokens) saved under one\n/// namespace loads empty under another. A server with any API key, or more than one client, uses one namespace per key\n/// (<see cref=\"ForApiKey\"/>); a namespace-free store (<see cref=\"Default\"/>) is for single-user local servers only.\n/// </summary>\npublic static class ChunkNamespace\n{\n    /// <summary>The single-user namespace. It is hashed like any other (an empty length-prefixed string), not skipped.</summary>\n    public const string Default = \"\";\n\n    private const int DigestHexChars = 16;\n\n    /// <summary>Longest valid namespace, in characters (all ASCII, so also in bytes).</summary>\n    public const int MaxLength = 64;\n\n    /// <summary>\n    /// The one reserved name, <c>default</c>: it stands for <see cref=\"Default\"/> in index file names\n    /// (<see cref=\"ChunkIndex.DefaultPath(string, string, string, string, string)\"/>), so no namespace may be called that (else the\n    /// default namespace and a namespace named <c>default</c> would share, and clobber, one index file).\n    /// </summary>\n    public const string ReservedDefaultName = \"default\";\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:28-43@1438",
+    "path": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs",
+    "start_line": 28,
+    "end_line": 43,
+    "tokens": 306,
+    "hash": "sha256:d376bb5ae364980c18dd639583d79a170382bb97310d2575039adea4d8b09abd",
+    "key": "5e5f93daf574d4fd35bed2f7dde5125f8b40c5fa060c16b82a933b73476659fb",
+    "text": "\n    /// <summary>\n    /// True when <paramref name=\"value\"/> is a valid namespace: <c>^(|k-[0-9a-f]{16}|[a-z0-9._-]{1,64})$</c> except the reserved\n    /// <see cref=\"ReservedDefaultName\"/>, i.e. the empty <see cref=\"Default\"/>, a <see cref=\"ForApiKey\"/> value, or 1-64\n    /// characters of <c>[a-z0-9._-]</c>. Valid namespaces are plain ASCII, so they can go into a key, a file name, a JSON ledger\n    /// or a log line without escaping, and no two distinct strings encode to the same bytes.\n    /// </summary>\n    /// <param name=\"value\">Candidate; null is not valid.</param>\n    /// <returns>Whether it is valid.</returns>\n    public static bool IsValid(string? value)\n    {\n        if (value is null || value.Length > MaxLength || value == ReservedDefaultName) return false;\n        foreach (char c in value)\n            if (c is not ((>= 'a' and <= 'z') or (>= '0' and <= '9') or '.' or '_' or '-')) return false;\n        return true; // k-[0-9a-f]{16} is a subset of [a-z0-9._-]{1,64}\n    }\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:44-57@2437",
+    "path": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs",
+    "start_line": 44,
+    "end_line": 57,
+    "tokens": 187,
+    "hash": "sha256:00eca201c02ac7aed81fb110f95731ff91798cf573306bcb9d9f8c34c85e9c77",
+    "key": "127ca82bf14df952018359d45c029fe3817d699f3d50cc2b9bf7dcf2bdc86fd1",
+    "text": "\n    /// <summary>Throws unless <paramref name=\"value\"/> is a valid namespace (<see cref=\"IsValid\"/>).</summary>\n    /// <param name=\"value\">Candidate.</param>\n    /// <param name=\"paramName\">Parameter name reported in the exception.</param>\n    /// <exception cref=\"ArgumentNullException\"><paramref name=\"value\"/> is null.</exception>\n    /// <exception cref=\"ArgumentException\"><paramref name=\"value\"/> is not a valid namespace.</exception>\n    public static void Validate(string value, string paramName = \"namespace\")\n    {\n        ArgumentNullException.ThrowIfNull(value, paramName);\n        if (!IsValid(value))\n            throw new ArgumentException(\n                $\"A chunk namespace is empty, k-<16 hex> or 1-{MaxLength} characters of [a-z0-9._-] other than '{ReservedDefaultName}'; got {value.Length} characters that are not.\",\n                paramName);\n    }\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:58-74@3311",
+    "path": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs",
+    "start_line": 58,
+    "end_line": 74,
+    "tokens": 255,
+    "hash": "sha256:a038606079d87fa4680e8eeaf89611101b61385f318e8a29abdaaa7954d50ef5",
+    "key": "8e16c5253ded870078a76174e942cedb8ca87b5e5fd0e6afe83de5755055857a",
+    "text": "\n    /// <summary>\n    /// The namespace of an API key: <c>\"k-\"</c> + the first 16 lowercase hex characters of SHA-256 over the key's UTF-8 bytes.\n    /// It holds a digest, never the key, is stable across processes, and never equals <see cref=\"Default\"/>.\n    /// </summary>\n    /// <param name=\"apiKey\">The caller's API key; not empty (a caller without a key uses <see cref=\"Default\"/>).</param>\n    /// <returns>The namespace, e.g. <c>k-e0dbaa0c6455768b</c>.</returns>\n    /// <exception cref=\"ArgumentNullException\"><paramref name=\"apiKey\"/> is null.</exception>\n    /// <exception cref=\"ArgumentException\"><paramref name=\"apiKey\"/> is empty.</exception>\n    public static string ForApiKey(string apiKey)\n    {\n        ArgumentException.ThrowIfNullOrEmpty(apiKey);\n        Span<byte> digest = stackalloc byte[SHA256.HashSizeInBytes];\n        SHA256.HashData(Encoding.UTF8.GetBytes(apiKey), digest);\n        return \"k-\" + Convert.ToHexStringLower(digest[..(DigestHexChars / 2)]);\n    }\n}\n",
+    "stored": null
+   }
+  ]
+ },
+ "F2": {
+  "role": "F2",
+  "name": "IChunkStore.cs",
+  "path": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs",
+  "chunks": [
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:1-18@0",
+    "path": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs",
+    "start_line": 1,
+    "end_line": 18,
+    "tokens": 236,
+    "hash": "sha256:c9b976ea6675f871245b5fa22d788ca3317dec25a5077a42b35e15bc1aaffcec",
+    "key": "e2e514c5e994c853ab8f0ba825bf972e3766c8b24fbe57078b5c111f734d1e48",
+    "text": "namespace DotLLM.ChunkReuse.Store;\n\n/// <summary>\n/// Content-addressed store of encoded chunks. A damaged, foreign or mismatched entry is a miss, never a wrong hit.\n/// </summary>\n/// <remarks>\n/// The store does not check how an entry was computed. Callers must put only K/V that match the key: for the default\n/// <see cref=\"ChunkPositioning.Isolated\"/> keys, an isolated <see cref=\"ChunkEncoder\"/> encode at positions <c>0..n-1</c> by the\n/// model the key's fingerprint names. A recompute output (K/V conditioned on preceding chunks) put under an isolated key would be\n/// accepted by every later reader.\n/// </remarks>\npublic interface IChunkStore\n{\n    /// <summary>Loads the entry for <paramref name=\"key\"/>.</summary>\n    /// <param name=\"key\">Chunk key.</param>\n    /// <param name=\"entry\">The entry when found and valid.</param>\n    /// <returns>Whether a valid entry exists.</returns>\n    bool TryGet(ChunkKey key, out ChunkKvEntry entry);\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:19-23@952",
+    "path": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs",
+    "start_line": 19,
+    "end_line": 23,
+    "tokens": 76,
+    "hash": "sha256:ddd7d86b8af8f77dfae9bdc3e4173f4dc9b3b7373ce3f66d34a27e4642ba9edf",
+    "key": "63b62d564c7d7e9c9466a06ab6e001e407b094498a07c52708900eb093827ddd",
+    "text": "\n    /// <summary>Stores <paramref name=\"entry\"/> under <paramref name=\"key\"/>; a valid existing entry is kept (same key, same content).</summary>\n    /// <param name=\"key\">Chunk key.</param>\n    /// <param name=\"entry\">The entry.</param>\n    void Put(ChunkKey key, ChunkKvEntry entry);\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:24-28@1239",
+    "path": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs",
+    "start_line": 24,
+    "end_line": 28,
+    "tokens": 52,
+    "hash": "sha256:28879c7cb250f3ce086c4969dd1ec76aef59f932a2828267e78918c3b97139cb",
+    "key": "e82d8e2f42797de358b973b998adac6380c25941581c64852eb113a42a093c5a",
+    "text": "\n    /// <summary>Whether a valid entry exists for <paramref name=\"key\"/>.</summary>\n    /// <param name=\"key\">Chunk key.</param>\n    /// <returns>Whether it exists.</returns>\n    bool Contains(ChunkKey key);\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:29-32@1448",
+    "path": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs",
+    "start_line": 29,
+    "end_line": 32,
+    "tokens": 31,
+    "hash": "sha256:3b1cb71bbce5221294d2cbe90e9801c29d5ef841cc5ded2f2f9ba469db170e16",
+    "key": "7285dee8bbe46fc4c358aed64f6ad581f1ea29600406dd5c3a9c07c67c86c971",
+    "text": "\n    /// <summary>The keys of the stored entries.</summary>\n    /// <returns>The keys.</returns>\n    IEnumerable<ChunkKey> Keys();\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:33-35@1579",
+    "path": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs",
+    "start_line": 33,
+    "end_line": 35,
+    "tokens": 24,
+    "hash": "sha256:64731d6c4513a8dd2f6bc98f6fad3c9233bf06fbba4461925eae2c53fc99f67b",
+    "key": "15ad952be601662b760ef72a9012287b3c7c5a98c23d915287f1f307ea607619",
+    "text": "\n    /// <summary>Total size of the stored entries in bytes.</summary>\n    long TotalBytes { get; }\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:36-40@1679",
+    "path": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs",
+    "start_line": 36,
+    "end_line": 40,
+    "tokens": 51,
+    "hash": "sha256:efcbc6aa976e7342d08c6da7ef1e1d2fbd58d51aeb93f18419929ee3f72af63c",
+    "key": "7b14d3be1755c4b4898b3bb2637c8fc5666c1887b36791c4e593a1ccf3315ecd",
+    "text": "\n    /// <summary>Removes the entry for <paramref name=\"key\"/>; a missing entry is a no-op.</summary>\n    /// <param name=\"key\">Chunk key.</param>\n    void Evict(ChunkKey key);\n}\n",
+    "stored": null
+   }
+  ]
+ },
+ "F3": {
+  "role": "F3",
+  "name": "ChunkStoreBusyException.cs",
+  "path": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs",
+  "chunks": [
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0",
+    "path": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs",
+    "start_line": 1,
+    "end_line": 22,
+    "tokens": 368,
+    "hash": "sha256:5575a99a21dc660b3ff89450bd547849969311a942e09ce47083469bca3d1634",
+    "key": "6868164acf13d18685f9d487ad15ac0ab88ff4620772f5afb2e868872386bca4",
+    "text": "namespace DotLLM.ChunkReuse.Store;\n\n/// <summary>\n/// The store is busy: <see cref=\"FileChunkStore.Put\"/> could not replace an invalid file at the entry's path because another\n/// handle holds it (on Windows a mapped file cannot be replaced; nothing was stored, the key stays a miss and a later Put can\n/// repair it; on Linux and macOS the rename replaces a held file, so this case does not arise there), or, as <see cref=\"ChunkStoreLockTimeoutException\"/>, a store or index lock was held by another writer for the\n/// whole timeout. Either way nothing was written; retrying later is safe.\n/// </summary>\n/// <remarks>\n/// A busy <i>entry</i> is transient and local: <see cref=\"StoredContextAssembler\"/> serves the encoded K/V and leaves the key a\n/// miss. A <see cref=\"ChunkStoreLockTimeoutException\"/> is not tolerated that way (another writer kept the store lock past the\n/// timeout): the assembler lets it propagate, and callers stop and report \"the store is unavailable\" (CLI <c>store_busy</c>,\n/// server <c>chunk_store_unavailable</c>). Catch this base type to report either.\n/// </remarks>\npublic class ChunkStoreBusyException : IOException\n{\n    /// <summary>Creates the exception for an entry that could not be replaced.</summary>\n    /// <param name=\"path\">The entry path that could not be replaced.</param>\n    /// <param name=\"inner\">The rename failure.</param>\n    public ChunkStoreBusyException(string path, Exception inner)\n        : base($\"Chunk store entry '{path}' is invalid and held open by another reader; it was not replaced.\", inner)\n        => Path = path;\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585",
+    "path": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs",
+    "start_line": 23,
+    "end_line": 30,
+    "tokens": 94,
+    "hash": "sha256:d04ce34c680cea55b4d21216acdb5567898c3492c4afde9686950eedf0859536",
+    "key": "3ea96bb0e5df568270a72ffa1d599ef602e2c1a32fb43a7a76e58b7b6f238c9c",
+    "text": "\n    /// <summary>Creates the exception with a custom message (derived types).</summary>\n    /// <param name=\"path\">The file that was busy.</param>\n    /// <param name=\"message\">The message.</param>\n    /// <param name=\"inner\">The underlying failure, or null.</param>\n    protected ChunkStoreBusyException(string path, string message, Exception? inner)\n        : base(message, inner)\n        => Path = path;\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993",
+    "path": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs",
+    "start_line": 31,
+    "end_line": 34,
+    "tokens": 39,
+    "hash": "sha256:7f130c856ad4143ae223770b27892e6db4ec92c492c7c0042c987aaed78f153d",
+    "key": "3fc210daec02cf0d1b60a0160f79118cc8a2f3e752ce8cf4f8b1d83897a11679",
+    "text": "\n    /// <summary>The busy file: the entry path that could not be replaced, or the lock file that could not be taken.</summary>\n    public string Path { get; }\n}\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155",
+    "path": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs",
+    "start_line": 35,
+    "end_line": 48,
+    "tokens": 218,
+    "hash": "sha256:b17d0ef4bd488ef9ec9ca1a7a93e358d793448e0954664be771585015f0e60f8",
+    "key": "4c6b8c0141e832d4988a33989355548c0d195bce0ad39362718d64fd1976ac9c",
+    "text": "\n/// <summary>\n/// A store lock (<see cref=\"ChunkIndex.AcquireStoreLock\"/>) or an index lock (<see cref=\"ChunkIndex.AcquireIndexLock(string, string, string, string, string, TimeSpan)\"/>)\n/// was held by another writer (another process, or another handle in this one) for the whole timeout. Nothing was written.\n/// </summary>\npublic sealed class ChunkStoreLockTimeoutException : ChunkStoreBusyException\n{\n    /// <summary>Creates the exception.</summary>\n    /// <param name=\"lockPath\">The lock file.</param>\n    /// <param name=\"timeout\">How long the caller waited.</param>\n    /// <param name=\"inner\">The last open failure (sharing violation), or null.</param>\n    public ChunkStoreLockTimeoutException(string lockPath, TimeSpan timeout, Exception? inner)\n        : base(lockPath, $\"The chunk store lock '{lockPath}' is held by another writer (waited {timeout.TotalSeconds:0.###} s).\", inner)\n        => Timeout = timeout;\n",
+    "stored": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:49-52@3080",
+    "path": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs",
+    "start_line": 49,
+    "end_line": 52,
+    "tokens": 23,
+    "hash": "sha256:6f38cebf1be27ce7ef573369814d64ee48781237ba698ececd72059e5602ded9",
+    "key": "5193e8a20ace7b4ecf6b3a070f4d6539f499fec61d32d0725c74fc74dfa41f3c",
+    "text": "\n    /// <summary>How long the caller waited.</summary>\n    public TimeSpan Timeout { get; }\n}\n",
+    "stored": null
+   }
+  ]
+ },
+ "F4": {
+  "role": "F4",
+  "name": "StoreStats.cs",
+  "path": "src/DotLLM.ChunkReuse/Store/StoreStats.cs",
+  "chunks": [
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/StoreStats.cs:1-8@0",
+    "path": "src/DotLLM.ChunkReuse/Store/StoreStats.cs",
+    "start_line": 1,
+    "end_line": 8,
+    "tokens": 169,
+    "hash": "sha256:3b4263d127a040776f3f0568fceae795da534a0c6f415b2b2197cb4da21864f6",
+    "key": "de5153425eaccd22cc2df7e6864cca4c99e8ad4074d529fe60cbd9262a7cccd8",
+    "text": "namespace DotLLM.ChunkReuse.Store;\n\n/// <summary>Size of a <see cref=\"FileChunkStore\"/>: entries and leftover temp files counted separately.</summary>\n/// <param name=\"Entries\">Entry files (<c>.ckv</c> with a well-formed key name; content not validated).</param>\n/// <param name=\"EntryBytes\">Bytes of the entry files (<see cref=\"IChunkStore.TotalBytes\"/>).</param>\n/// <param name=\"TempFiles\">Store temp files (<c>&lt;key&gt;.&lt;guid&gt;.tmp</c>): writes in flight or left by a crashed writer.</param>\n/// <param name=\"TempBytes\">Bytes of the temp files.</param>\npublic readonly record struct StoreStats(int Entries, long EntryBytes, int TempFiles, long TempBytes);\n",
+    "stored": null
+   }
+  ]
+ }
+}

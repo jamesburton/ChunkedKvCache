@@ -1,0 +1,45 @@
+{
+ "id": "A8",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "encode_queued_1st": 0,
+  "encode_queued_2nd": 719,
+  "store.entries": 14,
+  "third_request_F3_status": "hit"
+ },
+ "observed": {
+  "f3_annotated_chunks": 4,
+  "f3_tokens": 719,
+  "max_f3_chunk_tokens": 368,
+  "encode_queued_1st": 0,
+  "encode_queued_2nd": 719,
+  "warnings_2nd": [
+   {
+    "code": "chunk_encode_queued",
+    "count": 4
+   }
+  ],
+  "entries_after": 14,
+  "entries_expected": 14,
+  "poll_s": 18.1,
+  "third_chunks": {
+   "annotated": 12,
+   "prefix": 0,
+   "hit": 12,
+   "miss": 0,
+   "ignored": 0
+  },
+  "f3_third_status": {
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0": "hit",
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585": "hit",
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993": "hit",
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155": "hit"
+  }
+ },
+ "evidence_files": [
+  "evidence/A8-requests.json"
+ ],
+ "wall_s": 139.0,
+ "phase": "write"
+}

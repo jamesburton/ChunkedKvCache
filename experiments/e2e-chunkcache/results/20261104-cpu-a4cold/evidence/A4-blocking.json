@@ -1,0 +1,313 @@
+[
+ {
+  "status": 200,
+  "text": "The code defines a namespace system and store interface for securely and uniquely partitioning chunk",
+  "tokens": [
+   "The",
+   " code",
+   " defines",
+   " a",
+   " namespace",
+   " system",
+   " and",
+   " store",
+   " interface",
+   " for",
+   " securely",
+   " and",
+   " uniquely",
+   " partition",
+   "ing",
+   " chunk"
+  ],
+  "token_source": "logprobs",
+  "cached_tokens": 0,
+  "prompt_tokens": 2681,
+  "prompt_ms": 58885.0866,
+  "report": null,
+  "wall_s": 60.23697566986084,
+  "finish_reason": "length",
+  "label": "plain1"
+ },
+ {
+  "status": 200,
+  "text": "The code defines a namespace system and store interface for securely and uniquely partitioning chunk",
+  "tokens": [
+   "The",
+   " code",
+   " defines",
+   " a",
+   " namespace",
+   " system",
+   " and",
+   " store",
+   " interface",
+   " for",
+   " securely",
+   " and",
+   " uniquely",
+   " partition",
+   "ing",
+   " chunk"
+  ],
+  "token_source": "logprobs",
+  "cached_tokens": 2672,
+  "prompt_tokens": 2681,
+  "prompt_ms": 338.3204,
+  "report": {
+   "v": 1,
+   "policy_requested": "exact",
+   "policy_applied": "exact",
+   "reason": null,
+   "chunks": {
+    "annotated": 12,
+    "prefix": 12,
+    "hit": 0,
+    "miss": 0,
+    "ignored": 0
+   },
+   "tokens": {
+    "prompt": 2681,
+    "prefix_reused": 2672,
+    "prefix_reused_approx": 0,
+    "chunk_reused": 0,
+    "chunk_recomputed": 0,
+    "prefilled": 9,
+    "encode_queued": 0
+   },
+   "timings_ms": {
+    "assembly": 0,
+    "probe": 0,
+    "recompute": 0,
+    "prefill": 338,
+    "full_prefill_estimate": 338
+   },
+   "warnings": []
+  },
+  "wall_s": 1.6003639698028564,
+  "finish_reason": "length",
+  "label": "ann1"
+ },
+ {
+  "status": 200,
+  "text": "The code defines a namespace system and store interface for securely and uniquely partitioning chunk",
+  "tokens": [
+   "The",
+   " code",
+   " defines",
+   " a",
+   " namespace",
+   " system",
+   " and",
+   " store",
+   " interface",
+   " for",
+   " securely",
+   " and",
+   " uniquely",
+   " partition",
+   "ing",
+   " chunk"
+  ],
+  "token_source": "logprobs",
+  "cached_tokens": 2672,
+  "prompt_tokens": 2681,
+  "prompt_ms": 336.4678,
+  "report": null,
+  "wall_s": 1.5476841926574707,
+  "finish_reason": "length",
+  "label": "plain2"
+ },
+ {
+  "status": 200,
+  "text": "The code defines a namespace system and store interface for securely and uniquely partitioning chunk",
+  "tokens": [
+   "The",
+   " code",
+   " defines",
+   " a",
+   " namespace",
+   " system",
+   " and",
+   " store",
+   " interface",
+   " for",
+   " securely",
+   " and",
+   " uniquely",
+   " partition",
+   "ing",
+   " chunk"
+  ],
+  "token_source": "logprobs",
+  "cached_tokens": 2672,
+  "prompt_tokens": 2681,
+  "prompt_ms": 337.7351,
+  "report": {
+   "v": 1,
+   "policy_requested": "exact",
+   "policy_applied": "exact",
+   "reason": null,
+   "chunks": {
+    "annotated": 12,
+    "prefix": 12,
+    "hit": 0,
+    "miss": 0,
+    "ignored": 0
+   },
+   "tokens": {
+    "prompt": 2681,
+    "prefix_reused": 2672,
+    "prefix_reused_approx": 0,
+    "chunk_reused": 0,
+    "chunk_recomputed": 0,
+    "prefilled": 9,
+    "encode_queued": 0
+   },
+   "timings_ms": {
+    "assembly": 0,
+    "probe": 0,
+    "recompute": 0,
+    "prefill": 338,
+    "full_prefill_estimate": 338
+   },
+   "warnings": []
+  },
+  "wall_s": 1.5498580932617188,
+  "finish_reason": "length",
+  "label": "ann2"
+ },
+ {
+  "status": 200,
+  "text": "The code defines a namespace system and store interface for securely and uniquely partitioning chunk",
+  "tokens": [
+   "The",
+   " code",
+   " defines",
+   " a",
+   " namespace",
+   " system",
+   " and",
+   " store",
+   " interface",
+   " for",
+   " securely",
+   " and",
+   " uniquely",
+   " partition",
+   "ing",
+   " chunk"
+  ],
+  "token_source": "logprobs",
+  "cached_tokens": 2672,
+  "prompt_tokens": 2681,
+  "prompt_ms": 339.3999,
+  "report": {
+   "v": 1,
+   "policy_requested": "shadow",
+   "policy_applied": "exact",
+   "reason": null,
+   "chunks": {
+    "annotated": 12,
+    "prefix": 12,
+    "hit": 0,
+    "miss": 0,
+    "ignored": 0
+   },
+   "tokens": {
+    "prompt": 2681,
+    "prefix_reused": 2672,
+    "prefix_reused_approx": 0,
+    "chunk_reused": 0,
+    "chunk_recomputed": 0,
+    "prefilled": 9,
+    "encode_queued": 0
+   },
+   "plan": {
+    "selector": "chunk_starts",
+    "budget": 0.05,
+    "tokens": {
+     "prompt": 2681,
+     "prefix_reused": 2672,
+     "prefix_reused_approx": 0,
+     "chunk_reused": 0,
+     "chunk_recomputed": 0,
+     "prefilled": 9,
+     "encode_queued": 0
+    },
+    "predicted_ttft_ms": 339,
+    "full_prefill_estimate_ms": 339
+   },
+   "timings_ms": {
+    "assembly": 0,
+    "probe": 0,
+    "recompute": 0,
+    "prefill": 339,
+    "full_prefill_estimate": 339
+   },
+   "warnings": []
+  },
+  "wall_s": 1.5300812721252441,
+  "finish_reason": "length",
+  "label": "shadow_warm"
+ },
+ {
+  "status": 200,
+  "text": "The code defines a namespace system and store interface for securely and uniquely partitioning chunk",
+  "tokens": [
+   "The",
+   " code",
+   " defines",
+   " a",
+   " namespace",
+   " system",
+   " and",
+   " store",
+   " interface",
+   " for",
+   " securely",
+   " and",
+   " uniquely",
+   " partition",
+   "ing",
+   " chunk"
+  ],
+  "token_source": "logprobs",
+  "cached_tokens": 2672,
+  "prompt_tokens": 2681,
+  "prompt_ms": 336.8433,
+  "report": {
+   "v": 1,
+   "policy_requested": "exact",
+   "policy_applied": "exact",
+   "reason": null,
+   "chunks": {
+    "annotated": 12,
+    "prefix": 12,
+    "hit": 0,
+    "miss": 0,
+    "ignored": 0
+   },
+   "tokens": {
+    "prompt": 2681,
+    "prefix_reused": 2672,
+    "prefix_reused_approx": 0,
+    "chunk_reused": 0,
+    "chunk_recomputed": 0,
+    "prefilled": 9,
+    "encode_queued": 0
+   },
+   "timings_ms": {
+    "assembly": 0,
+    "probe": 0,
+    "recompute": 0,
+    "prefill": 337,
+    "full_prefill_estimate": 337
+   },
+   "warnings": []
+  },
+  "wall_s": 1.5104186534881592,
+  "finish_reason": "length",
+  "label": "exact_warm"
+ }
+]

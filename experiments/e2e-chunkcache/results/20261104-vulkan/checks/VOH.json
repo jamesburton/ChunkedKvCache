@@ -1,0 +1,30 @@
+{
+ "id": "VOH",
+ "passed": false,
+ "void": false,
+ "expected": {
+  "median(annotated) - median(plain) prompt_ms": "< 5"
+ },
+ "observed": {
+  "plain_prompt_ms": [
+   1355.5477,
+   1360.4468000000002,
+   1357.1390000000001,
+   1363.4831000000001,
+   1358.8569
+  ],
+  "annotated_prompt_ms": [
+   1364.8042,
+   1387.0207,
+   1350.7721,
+   1354.0163,
+   1377.1055000000001
+  ],
+  "median_overhead_ms": 5.947300000000041,
+  "median_plain_ms": 1358.8569,
+  "median_annotated_ms": 1364.8042
+ },
+ "evidence_files": [],
+ "wall_s": 17.3,
+ "phase": "vk-ro"
+}

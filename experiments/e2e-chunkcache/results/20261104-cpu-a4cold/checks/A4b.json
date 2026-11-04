@@ -1,0 +1,56 @@
+{
+ "id": "A4b",
+ "passed": true,
+ "void": false,
+ "expected": "all token ids identical to plain1 (blocking and streaming)",
+ "observed": {
+  "blocking": {
+   "token_diffs": {},
+   "cached_tokens": {
+    "plain1": 0,
+    "ann1": 2682,
+    "plain2": 2682,
+    "ann2": 2682,
+    "shadow_warm": 2682,
+    "exact_warm": 2682
+   },
+   "cached_tokens_ann2_equals_plain2": true,
+   "token_source": "logprobs",
+   "prompt_ms": {
+    "plain1": 59265.9044,
+    "ann1": 84.39439999999999,
+    "plain2": 89.9119,
+    "ann2": 88.0301,
+    "shadow_warm": 86.8934,
+    "exact_warm": 91.5133
+   }
+  },
+  "streaming": {
+   "token_diffs": {},
+   "cached_tokens": {
+    "plain1": 14,
+    "ann1": 2682,
+    "plain2": 2682,
+    "ann2": 2682,
+    "shadow_warm": 2682,
+    "exact_warm": 2682
+   },
+   "cached_tokens_ann2_equals_plain2": true,
+   "token_source": "logprobs",
+   "prompt_ms": {
+    "plain1": 57361.392700000004,
+    "ann1": 84.06370000000001,
+    "plain2": 84.97879999999999,
+    "ann2": 85.7907,
+    "shadow_warm": 84.8536,
+    "exact_warm": 80.9076
+   }
+  }
+ },
+ "evidence_files": [
+  "evidence/A4b-blocking.json",
+  "evidence/A4b-streaming.json"
+ ],
+ "wall_s": 135.0,
+ "phase": "nopaged"
+}

@@ -1,0 +1,54 @@
+{
+ "prewarm": {
+  "status": 200,
+  "body": {
+   "requested": 1,
+   "already_stored": 0,
+   "queued": 1,
+   "queued_tokens": 169,
+   "refused": 0,
+   "refused_reasons": []
+  }
+ },
+ "entries_after_prewarm": [
+  14,
+  15
+ ],
+ "default_evict": {
+  "status": 200,
+  "body": {
+   "evicted": 0,
+   "freed_bytes": 0,
+   "kept_referenced": 0,
+   "dry_run": true,
+   "removed": {
+    "ledger_rows": 0,
+    "index_files": 0,
+    "sightings": 0,
+    "queued": 0
+   }
+  }
+ },
+ "path_evict": {
+  "status": 200,
+  "body": {
+   "evicted": 0,
+   "freed_bytes": 0,
+   "kept_referenced": 4,
+   "dry_run": false,
+   "removed": {
+    "ledger_rows": 4,
+    "index_files": 0,
+    "sightings": 4,
+    "queued": 0
+   }
+  }
+ },
+ "f3_files_before_evict": 4,
+ "f3_files_after": 4,
+ "cli_files_after": 10,
+ "default_evict_deleted_nothing": true,
+ "cli_index_covers_f3": true,
+ "post_forget_encode_queued": 0,
+ "post_forget_warnings": []
+}

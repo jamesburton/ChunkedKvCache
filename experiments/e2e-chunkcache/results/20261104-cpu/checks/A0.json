@@ -1,0 +1,24 @@
+{
+ "id": "A0",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "exit": 0,
+  "encoded": 10,
+  "store_ckv_files": 10,
+  "wall_s": "<= 180"
+ },
+ "observed": {
+  "exit": 0,
+  "encoded": 10,
+  "store_ckv_files": 10,
+  "wall_s": 28.1,
+  "tokens_per_second": 66.59169997197367,
+  "encoded_tokens": 1555
+ },
+ "evidence_files": [
+  "evidence/A0-build.json"
+ ],
+ "wall_s": 28.1,
+ "phase": "build"
+}

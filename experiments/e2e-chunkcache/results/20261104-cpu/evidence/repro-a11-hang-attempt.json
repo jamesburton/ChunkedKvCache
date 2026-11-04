@@ -1,0 +1,31 @@
+{
+ "events": [
+  "01:35:04 prewarm K_A -> 200 {'requested': 1, 'already_stored': 0, 'queued': 1, 'queued_tokens': 169, 'refused': 0, 'refused_reasons': []}",
+  "01:35:09 K_A probe 1: 200 chunks={'annotated': 1, 'prefix': 0, 'hit': 0, 'miss': 1, 'ignored': 0} cached=0 in 5.3s",
+  "01:35:14 K_A probe 2: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 1.3s",
+  "01:35:19 K_A probe 3: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:35:24 K_A probe 4: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:35:29 K_A probe 5: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:35:34 K_A probe 6: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:35:39 K_A probe 7: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:35:44 K_A probe 8: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:35:49 K_A probe 9: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:35:54 K_A probe 10: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:35:59 K_A probe 11: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:03 K_A probe 12: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:08 K_A probe 13: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:13 K_A probe 14: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:18 K_A probe 15: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:23 K_A probe 16: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:28 K_A probe 17: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:33 K_A probe 18: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:38 K_A probe 19: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:43 K_A probe 20: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:48 K_A probe 21: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:53 K_A probe 22: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:36:58 K_A probe 23: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:37:03 K_A probe 24: 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s",
+  "01:37:07 K_B probe (identical prompt): 200 chunks={'annotated': 1, 'prefix': 1, 'hit': 0, 'miss': 0, 'ignored': 0} cached=224 in 0.9s"
+ ],
+ "hang": false
+}

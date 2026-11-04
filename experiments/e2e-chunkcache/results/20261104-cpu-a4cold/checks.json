@@ -1,0 +1,138 @@
+{
+ "A0": {
+  "id": "A0",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "exit": 0,
+   "encoded": 10,
+   "store_ckv_files": 10,
+   "wall_s": "<= 180"
+  },
+  "observed": {
+   "exit": 0,
+   "encoded": 10,
+   "store_ckv_files": 10,
+   "wall_s": 28.0,
+   "tokens_per_second": 66.24986935355346,
+   "encoded_tokens": 1555
+  },
+  "evidence_files": [
+   "evidence/A0-build.json"
+  ],
+  "wall_s": 28.0,
+  "phase": "build"
+ },
+ "A4": {
+  "id": "A4",
+  "passed": true,
+  "void": false,
+  "expected": "all token ids identical to plain1 (blocking and streaming)",
+  "observed": {
+   "blocking": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 0,
+     "ann1": 2672,
+     "plain2": 2672,
+     "ann2": 2672,
+     "shadow_warm": 2672,
+     "exact_warm": 2672
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 58885.0866,
+     "ann1": 338.3204,
+     "plain2": 336.4678,
+     "ann2": 337.7351,
+     "shadow_warm": 339.3999,
+     "exact_warm": 336.8433
+    }
+   },
+   "streaming": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 0,
+     "ann1": 2672,
+     "plain2": 2672,
+     "ann2": 2672,
+     "shadow_warm": 2672,
+     "exact_warm": 2672
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 57990.687,
+     "ann1": 334.1757,
+     "plain2": 336.6711,
+     "ann2": 334.43240000000003,
+     "shadow_warm": 332.52389999999997,
+     "exact_warm": 341.2435
+    }
+   }
+  },
+  "evidence_files": [
+   "evidence/A4-blocking.json",
+   "evidence/A4-streaming.json"
+  ],
+  "wall_s": 134.9,
+  "phase": "ro"
+ },
+ "A4b": {
+  "id": "A4b",
+  "passed": true,
+  "void": false,
+  "expected": "all token ids identical to plain1 (blocking and streaming)",
+  "observed": {
+   "blocking": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 0,
+     "ann1": 2682,
+     "plain2": 2682,
+     "ann2": 2682,
+     "shadow_warm": 2682,
+     "exact_warm": 2682
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 59265.9044,
+     "ann1": 84.39439999999999,
+     "plain2": 89.9119,
+     "ann2": 88.0301,
+     "shadow_warm": 86.8934,
+     "exact_warm": 91.5133
+    }
+   },
+   "streaming": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 14,
+     "ann1": 2682,
+     "plain2": 2682,
+     "ann2": 2682,
+     "shadow_warm": 2682,
+     "exact_warm": 2682
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 57361.392700000004,
+     "ann1": 84.06370000000001,
+     "plain2": 84.97879999999999,
+     "ann2": 85.7907,
+     "shadow_warm": 84.8536,
+     "exact_warm": 80.9076
+    }
+   }
+  },
+  "evidence_files": [
+   "evidence/A4b-blocking.json",
+   "evidence/A4b-streaming.json"
+  ],
+  "wall_s": 135.0,
+  "phase": "nopaged"
+ }
+}

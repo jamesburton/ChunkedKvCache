@@ -1,0 +1,8 @@
+model Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf: Qwen, 36 layers, 8192 B/token/layer; id 383e0dc94d87; fingerprint 0921b80ed9e7 [0.3 s]
+directory C:\Development\dotLLM-e2e\e2e-repo: 15 files (none left out by the directory rules) [0.0 s]
+selection: 10 chunks / 1555 tokens selected (0 trimmed) [2.6 s]
+waiting up to 30 s for the index lock of index-symbol-512.96f13c6777b2.8984200d.default.json ...
+waiting up to 30 s for the store lock ...
+index index-symbol-512.96f13c6777b2.8984200d.default.json: 15 files, 323 chunks (322 distinct keys, 49658 tokens); added 323, removed 0, unchanged 0; 322 distinct chunks missing from the store, 10 of them selected [1.1 s]
+to encode: 10 chunks, 1555 tokens, about 437.35 MiB (8192 B/token/layer x 36 layers, F32); the whole tree would need about 13.63 GiB
+  encoded 4/10 chunks, 1085 tokens, 63 tokens/s, ~0.1 min left

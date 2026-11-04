@@ -1,0 +1,107 @@
+{
+ "v": 1,
+ "policy_requested": "shadow",
+ "policy_applied": "exact",
+ "reason": null,
+ "chunks": {
+  "annotated": 12,
+  "prefix": 0,
+  "hit": 8,
+  "miss": 4,
+  "ignored": 0
+ },
+ "tokens": {
+  "prompt": 2676,
+  "prefix_reused": 32,
+  "prefix_reused_approx": 0,
+  "chunk_reused": 0,
+  "chunk_recomputed": 0,
+  "prefilled": 2644,
+  "encode_queued": 0
+ },
+ "plan": {
+  "selector": "chunk_starts",
+  "budget": 0.05,
+  "tokens": {
+   "prompt": 2676,
+   "prefix_reused": 32,
+   "prefix_reused_approx": 0,
+   "chunk_reused": 1500,
+   "chunk_recomputed": 78,
+   "prefilled": 1144,
+   "encode_queued": 0
+  },
+  "predicted_ttft_ms": 24735,
+  "full_prefill_estimate_ms": 56663
+ },
+ "timings_ms": {
+  "assembly": 0,
+  "probe": 0,
+  "recompute": 0,
+  "prefill": 56663,
+  "full_prefill_estimate": 56663
+ },
+ "warnings": [],
+ "per_chunk": [
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:1-27@0",
+   "status": "hit",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:28-43@1438",
+   "status": "hit",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:44-57@2437",
+   "status": "hit",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:58-74@3311",
+   "status": "hit",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:1-18@0",
+   "status": "hit",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:19-23@952",
+   "status": "hit",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:24-28@1239",
+   "status": "hit",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:36-40@1679",
+   "status": "hit",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0",
+   "status": "miss",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585",
+   "status": "miss",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993",
+   "status": "miss",
+   "why": null
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155",
+   "status": "miss",
+   "why": null
+  }
+ ]
+}

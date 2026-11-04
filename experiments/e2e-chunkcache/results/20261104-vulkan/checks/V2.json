@@ -1,0 +1,25 @@
+{
+ "id": "V2",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "hit": 0,
+  "miss": 12
+ },
+ "observed": {
+  "chunks": {
+   "annotated": 12,
+   "prefix": 0,
+   "hit": 0,
+   "miss": 12,
+   "ignored": 0
+  },
+  "policy_applied": "exact",
+  "warnings": []
+ },
+ "evidence_files": [
+  "evidence/V2-report.json"
+ ],
+ "wall_s": 1.9,
+ "phase": "vk-ro"
+}

@@ -1,0 +1,19 @@
+{
+ "id": "A1",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "capabilities_status": 404,
+  "annotated_has_chunk_cache": false,
+  "tokens_equal": true
+ },
+ "observed": {
+  "capabilities_status": 404,
+  "annotated_has_chunk_cache": false,
+  "tokens_equal": true,
+  "token_source": "logprobs"
+ },
+ "evidence_files": [],
+ "wall_s": 61.0,
+ "phase": "off"
+}

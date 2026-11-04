@@ -19,6 +19,7 @@ param(
     [int] $Threads = 8,
     [int] $CtxSize = 8192,
     [int] $BasePort = 18080,
+    [int] $Repeats = 5,                # VOH: alternating plain / annotated(exact) pairs
     [string] $LockHolder = ''
 )
 $ErrorActionPreference = 'Stop'
@@ -71,7 +72,7 @@ if (-not (Test-Path (Join-Path $repo 'src\DotLLM.ChunkReuse\Store\ChunkKey.cs'))
 
 # Provenance
 $snap = ($Model -split 'snapshots\\')[1] -split '\\' | Select-Object -First 1
-$gpu = Get-CimInstance Win32_VideoController | Select-Object -First 1
+$gpu = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -like '*Radeon*' -or $_.Name -like '*NVIDIA*' } | Select-Object -First 1
 $meta = [ordered]@{
     run_id = $RunId; backend = $Backend; date = (Get-Date -Format o)
     server_commit = $ServerCommit; client_commit = $ClientCommit; export_dirty = 0
@@ -83,6 +84,7 @@ $meta = [ordered]@{
 }
 $metaPath = Join-Path $out 'meta.json'
 
+$Only = @($Only | ForEach-Object { $_ -split ',' } | Where-Object { $_ })   # `pwsh -File` passes -Only A,B as one string
 $wantAll = ($Only.Count -eq 0)
 function Want([string] $id) { return $wantAll -or ($Only -contains $id) }
 function WantAny([string[]] $ids) { foreach ($i in $ids) { if (Want $i) { return $true } }; return $false }
@@ -97,7 +99,8 @@ function Start-Server([string] $name, [string[]] $extra) {
     $errlog = Join-Path $runWork "server-$name.err.log"
     $args1 = @('serve', $Model, '--port', "$script:port", '--host', '127.0.0.1', '--no-warmup', '--no-browser', '--no-ui',
                '--threads', "$Threads", '--ctx-size', "$CtxSize") + $extra
-    if ($Backend -eq 'vulkan') { $args1 += @('--device', 'vulkan') }
+    # `serve` defaults to --device auto (CUDA, else Vulkan, else CPU): always name the device (finding of run0: the default is Vulkan here)
+    $args1 += @('--device', $Backend)
     $p = Start-Process -FilePath $dotllm -ArgumentList $args1 -PassThru -NoNewWindow -RedirectStandardOutput $log -RedirectStandardError $errlog
     $sw = [Diagnostics.Stopwatch]::StartNew()
     $base = "http://127.0.0.1:$script:port"
@@ -118,22 +121,23 @@ function Stop-Server($s) {
     Start-Sleep -Seconds 2
 }
 
-function Run-Checks([string] $phase, $srv, [string[]] $ids, [string[]] $more = @()) {
+function Run-Checks([string] $phase, $srv, [string[]] $ids, [string[]] $more = @(), [string] $st = '') {
+    if (-not $st) { $st = $store }
     $ids = @($ids | Where-Object { Want $_ })
     if ($ids.Count -eq 0) { return }
     $sw = [Diagnostics.Stopwatch]::StartNew()
-    $a = @('check') + $ids + @('--base-url', $srv.Base, '--model-name', $srv.Model, '--store', $store, '--store2', $store2, '--out', $out,
+    $a = @('check') + $ids + @('--base-url', $srv.Base, '--model-name', $srv.Model, '--store', $st, '--store2', $store2, '--out', $out,
         '--model', $Model, '--cc-exe', $cc, '--repo', $repo, '--threads', "$Threads", '--smoke-dll', $smokeDll,
-        '--server-log', $srv.ErrLog, '--phase', $phase) + $more
+        '--server-log', $srv.ErrLog, '--phase', $phase, '--expect-backend', $Backend, '--repeats', "$Repeats") + $more
     $rc = Py $a
     if ($rc -ne 0) { $script:fail++ }
     $timeline["phase_$phase"] = [math]::Round($sw.Elapsed.TotalSeconds, 1)
 }
 
-function Server-Phase([string] $phase, [string[]] $extra, [string[]] $ids, [string[]] $more = @()) {
+function Server-Phase([string] $phase, [string[]] $extra, [string[]] $ids, [string[]] $more = @(), [string] $st = '') {
     if (-not (WantAny $ids)) { return }
     $s = Start-Server $phase $extra
-    try { Run-Checks $phase $s $ids $more } finally { Stop-Server $s }
+    try { Run-Checks $phase $s $ids $more $st } finally { Stop-Server $s }
 }
 
 try {
@@ -152,18 +156,32 @@ try {
         # A1: flag off
         Server-Phase 'off' @() @('A1')
         # read-only store, chunk cache on (default paged/scheduler path)
-        Server-Phase 'ro' @('--chunk-cache', '--chunk-store', $store) @('A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A12')
+        Server-Phase 'ro' @('--chunk-cache', '--chunk-store', $store) @('A2', 'A3', 'A3g', 'A4', 'A5', 'A6', 'A6m', 'A7', 'A12')
         # warm-slot neutrality on the prefix-cache path (--no-paged)
         Server-Phase 'nopaged' @('--no-paged', '--chunk-cache', '--chunk-store', $store) @('A4b')
         # sole writer
         Server-Phase 'write' @('--chunk-cache', '--chunk-store', $store, '--chunk-store-write', '--chunk-store-budget', '4GB') @('A8', 'A9', 'A10', 'A12')
+        # A10r: forget on a store whose CLI index covers only F1+F2 (so server-written F3 entries are unreferenced)
+        if (WantAny @('A10r')) {
+            $f12 = Join-Path $E2eRoot 'e2e-repo-f12'
+            $store12 = Join-Path $runWork 'store-f12'
+            $d = Join-Path $f12 'src\DotLLM.ChunkReuse\Store'
+            New-Item -ItemType Directory -Force $d | Out-Null
+            foreach ($n in @('ChunkNamespace.cs', 'IChunkStore.cs')) {
+                Copy-Item (Join-Path $repo "src\DotLLM.ChunkReuse\Store\$n") (Join-Path $d $n) -Force
+            }
+            if (Test-Path $store12) { Remove-Item -Recurse -Force $store12 }
+            $rc = Py @('check', 'A0r', '--store', $store12, '--out', $out, '--model', $Model, '--cc-exe', $cc, '--repo', $f12, '--threads', "$Threads", '--phase', 'build2')
+            if ($rc -ne 0) { $script:fail++ }
+            Server-Phase 'write2' @('--chunk-cache', '--chunk-store', $store12, '--chunk-store-write', '--chunk-store-budget', '4GB') @('A10r') @() $store12
+        }
         # auth + namespaces
         if (WantAny @('A11')) {
             $ka = & $py -I -c "import secrets;print(secrets.token_urlsafe(32))"
             $kb = & $py -I -c "import secrets;print(secrets.token_urlsafe(32))"
             $keys = Join-Path $runWork 'keys.txt'
             "$ka admin`n$kb`n" | Set-Content -Encoding ascii $keys
-            Server-Phase 'auth' @('--chunk-cache', '--chunk-store', $store, '--chunk-store-write', '--chunk-store-budget', '4GB', '--chunk-cache-api-keys', $keys) @('A11', 'A12') @('--key-a', $ka, '--key-b', $kb)
+            Server-Phase 'auth' @('--chunk-cache', '--chunk-store', $store, '--chunk-store-write', '--chunk-store-budget', '4GB', '--chunk-cache-api-keys', $keys) @('A11', 'A12') @("--key-a=$ka", "--key-b=$kb")
         }
     } else {
         if ($StoreFrom) {

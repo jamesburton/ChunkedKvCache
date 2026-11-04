@@ -1,0 +1,1 @@
+{"hit": 0, "miss": 0, "prefix": 96, "ignored": 0, "tokens": {"prompt": 21456, "prefix_reused": 21456, "prefix_reused_approx": 0, "chunk_reused": 0, "chunk_recomputed": 0, "prefilled": 0, "encode_queued": 0}}

@@ -1,0 +1,58 @@
+{
+ "id": "A12",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "hit": 2,
+  "miss": 5,
+  "prefix": 0,
+  "ignored": 0,
+  "tokens": {
+   "prompt": 1896,
+   "prefix_reused": 0,
+   "prefix_reused_approx": 0,
+   "chunk_reused": 0,
+   "chunk_recomputed": 0,
+   "prefilled": 1896,
+   "encode_queued": 0
+  }
+ },
+ "observed": {
+  "delta_hit": 2.0,
+  "delta_miss": 5.0,
+  "delta_prefix": 0.0,
+  "delta_ignored": 0.0,
+  "tokens_prompt": {
+   "delta": 1896.0,
+   "present": true
+  },
+  "tokens_prefix_reused": {
+   "delta": 0.0,
+   "present": true
+  },
+  "tokens_prefix_reused_approx": {
+   "delta": 0.0,
+   "present": true
+  },
+  "tokens_chunk_reused": {
+   "delta": 0.0,
+   "present": true
+  },
+  "tokens_chunk_recomputed": {
+   "delta": 0.0,
+   "present": true
+  },
+  "tokens_prefilled": {
+   "delta": 1896.0,
+   "present": true
+  },
+  "tokens_encode_queued": {
+   "delta": 0.0,
+   "present": true
+  },
+  "namespace_labels": []
+ },
+ "evidence_files": [],
+ "wall_s": 0.0,
+ "phase": "auth"
+}

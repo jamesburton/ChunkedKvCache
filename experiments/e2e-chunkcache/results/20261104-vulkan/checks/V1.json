@@ -1,0 +1,66 @@
+{
+ "id": "V1",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "model.backend": "vulkan",
+  "A4 passes": true
+ },
+ "observed": {
+  "blocking": {
+   "token_diffs": {},
+   "cached_tokens": {
+    "plain1": 0,
+    "ann1": 0,
+    "plain2": 0,
+    "ann2": 0,
+    "shadow_warm": 0,
+    "exact_warm": 0
+   },
+   "cached_tokens_ann2_equals_plain2": true,
+   "token_source": "logprobs",
+   "prompt_ms": {
+    "plain1": 1445.1014,
+    "ann1": 1362.9742,
+    "plain2": 1359.1741,
+    "ann2": 1375.2358,
+    "shadow_warm": 1363.5393,
+    "exact_warm": 1358.9182
+   }
+  },
+  "streaming": {
+   "token_diffs": {},
+   "cached_tokens": {
+    "plain1": 0,
+    "ann1": 0,
+    "plain2": 0,
+    "ann2": 0,
+    "shadow_warm": 0,
+    "exact_warm": 0
+   },
+   "cached_tokens_ann2_equals_plain2": true,
+   "token_source": "logprobs",
+   "prompt_ms": {
+    "plain1": 1361.577,
+    "ann1": 1359.7884,
+    "plain2": 1359.2416,
+    "ann2": 1358.9467,
+    "shadow_warm": 1362.9119999999998,
+    "exact_warm": 1365.6417999999999
+   }
+  },
+  "capabilities": {
+   "status": 200,
+   "backend": "vulkan",
+   "supported": true,
+   "kv_dtype": "f32",
+   "store_entries": 16
+  }
+ },
+ "evidence_files": [
+  "evidence/V1-blocking.json",
+  "evidence/V1-streaming.json"
+ ],
+ "wall_s": 23.3,
+ "phase": "vk-ro"
+}

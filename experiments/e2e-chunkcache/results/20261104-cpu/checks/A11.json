@@ -1,0 +1,77 @@
+{
+ "id": "A11",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "no key": 401,
+  "K_A F1 hit": 0,
+  "K_A F4 hit": 1,
+  "K_B F4 hit": 0,
+  "K_B namespace evict leaves K_A": true,
+  "K_B capabilities entries": 0,
+  "namespace strings leaked": []
+ },
+ "observed": {
+  "no_key_status": 401,
+  "K_A_shadow_F1_hit": {
+   "annotated": 4,
+   "prefix": 0,
+   "hit": 0,
+   "miss": 4,
+   "ignored": 0
+  },
+  "prewarm_K_A": {
+   "status": 200,
+   "queued": 1
+  },
+  "entries_before_after_prewarm": [
+   15,
+   16
+  ],
+  "K_A_F4": {
+   "annotated": 1,
+   "prefix": 0,
+   "hit": 1,
+   "miss": 0,
+   "ignored": 0
+  },
+  "K_B_F4": {
+   "annotated": 1,
+   "prefix": 0,
+   "hit": 0,
+   "miss": 1,
+   "ignored": 0
+  },
+  "K_B_evict_namespace": {
+   "status": 200,
+   "body": {
+    "evicted": 0,
+    "freed_bytes": 0,
+    "kept_referenced": 0,
+    "dry_run": false,
+    "removed": {
+     "ledger_rows": 0,
+     "index_files": 0,
+     "sightings": 1,
+     "queued": 0
+    }
+   }
+  },
+  "files_unchanged_by_K_B_evict": true,
+  "K_A_F4_after_K_B_evict": {
+   "annotated": 1,
+   "prefix": 0,
+   "hit": 1,
+   "miss": 0,
+   "ignored": 0
+  },
+  "caps_K_B_entries": 0,
+  "caps_K_A_entries": 16,
+  "namespace_strings_found": []
+ },
+ "evidence_files": [
+  "evidence/A11.json"
+ ],
+ "wall_s": 40.1,
+ "phase": "auth"
+}

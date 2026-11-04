@@ -1,0 +1,27 @@
+{
+ "id": "A9",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "same key file names": true,
+  "payload bytes equal": true,
+  "status lists F3 stored": true
+ },
+ "observed": {
+  "cli_exit": 0,
+  "cli_files": 5,
+  "server_f3_files": 4,
+  "f3_keys": 5,
+  "names_equal_for_server_written": true,
+  "payload_differences": {},
+  "select_stored_annotated_f3": {
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0": true,
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585": true,
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993": true,
+   "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155": true
+  }
+ },
+ "evidence_files": [],
+ "wall_s": 19.3,
+ "phase": "write"
+}

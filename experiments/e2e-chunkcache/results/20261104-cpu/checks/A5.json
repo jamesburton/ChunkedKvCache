@@ -1,0 +1,21 @@
+{
+ "id": "A5",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "strict": "400 invalid_request_error chunk_hash_mismatch",
+  "non_strict": "200 + warning chunk_hash_mismatch"
+ },
+ "observed": {
+  "strict_status": 400,
+  "strict_type": "invalid_request_error",
+  "strict_code": "chunk_hash_mismatch",
+  "nonstrict_status": 200,
+  "nonstrict_warnings": [
+   "chunk_hash_mismatch"
+  ]
+ },
+ "evidence_files": [],
+ "wall_s": 1.3,
+ "phase": "ro"
+}

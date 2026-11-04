@@ -116,10 +116,10 @@ def manifest_entries(placed, message_index, wrong_hash_at=None):
 
 
 def build_openai(model, file_sels, policy=None, report="per_chunk", strict=False, max_tokens=16, stream=False,
-                 wrong_hash_at=None, options=None, annotate=True, layout="chunk"):
+                 wrong_hash_at=None, options=None, annotate=True, layout="chunk", system=SYSTEM):
     prompt, placed = build_prompt(file_sels, layout)
     body = {"model": model, "temperature": 0, "max_tokens": max_tokens, "logprobs": True,
-            "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt},
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt},
                          {"role": "user", "content": QUERY}]}
     if stream:
         body["stream"] = True
@@ -160,6 +160,16 @@ def build_anthropic(model, file_sels, policy="shadow", max_tokens=16, stream=Tru
     body = {"model": model, "max_tokens": max_tokens, "temperature": 0, "stream": stream, "system": SYSTEM,
             "messages": [{"role": "user", "content": blocks}],
             "chunk_cache": {"v": 1, "policy": policy, "report": "per_chunk"}}
+    return body, placed
+
+
+def build_anthropic_manifest(model, file_sels, policy="shadow", max_tokens=16, stream=True):
+    """Anthropic surface with a manifest over ONE string message (spec: string message content is part 0)."""
+    prompt, placed = build_prompt(file_sels, "chunk")
+    text = prompt + QUERY
+    body = {"model": model, "max_tokens": max_tokens, "temperature": 0, "stream": stream, "system": SYSTEM,
+            "messages": [{"role": "user", "content": text}],
+            "chunk_cache": {"v": 1, "policy": policy, "report": "per_chunk", "chunks": manifest_entries(placed, 0)}}
     return body, placed
 
 
@@ -328,7 +338,7 @@ def derived_namespace(api_key):
 # ----------------------------------------------------------------------------------------------------------------------
 
 class Http:
-    def __init__(self, base_url, api_key=None, timeout=600):
+    def __init__(self, base_url, api_key=None, timeout=300):
         self.base = base_url.rstrip("/")
         self.api_key = api_key
         self.timeout = timeout
@@ -620,13 +630,13 @@ def chk_A2(ctx):
     m, st = j.get("model") or {}, j.get("store") or {}
     obs = {"status": s, "versions": j.get("versions"), "policies": j.get("policies"), "selectors": j.get("selectors"),
            "wire_chunkers": j.get("wire_chunkers"), "auto_validated": j.get("auto_validated"), "model_supported": m.get("supported"),
-           "model_backend": m.get("backend"), "kv_dtype": m.get("kv_dtype"), "store_entries": st.get("entries"),
+           "model_backend": m.get("backend"), "expected_backend": ctx.a.expect_backend, "kv_dtype": m.get("kv_dtype"), "store_entries": st.get("entries"),
            "store_dtype": st.get("dtype")}
     ok = (s == 200 and j.get("versions") == [1]
           and set(["exact", "shadow", "balanced", "fast", "auto"]) <= set(j.get("policies") or [])
           and j.get("selectors") == ["chunk_starts"] and j.get("wire_chunkers") == [CHUNKER]
           and j.get("auto_validated") == [] and m.get("supported") is True and st.get("entries") == n_enc
-          and st.get("dtype") == "f32")
+          and st.get("dtype") == "f32" and (not ctx.a.expect_backend or m.get("backend") == ctx.a.expect_backend))
     return result("A2", ok, {"versions": [1], "selectors": ["chunk_starts"], "wire_chunkers": [CHUNKER], "auto_validated": [],
                              "model.supported": True, "store.entries": n_enc, "store.dtype": "f32"}, obs,
                   [ctx.evidence("A2-capabilities.json", j)])
@@ -665,7 +675,9 @@ def chk_A3g(ctx):
 
 
 def neutrality_sequence(ctx, stream, cid, roles=("F1", "F2", "F3")):
-    kw = {"stream": stream}
+    # a system message of its own per (check, transport): plain1 is then a COLD prefill, not a restore of an earlier
+    # check's identical prompt (a first run of this suite had cached_tokens 2672 on all six requests of A4)
+    kw = {"stream": stream, "system": f"{SYSTEM} [{cid} {'stream' if stream else 'blocking'}]"}
     plain, _ = build_openai(ctx.model_name, ctx.sel(*roles), annotate=False, **kw)
     ann, _ = build_openai(ctx.model_name, ctx.sel(*roles), policy="exact", report="summary", **kw)
     shadow, _ = build_openai(ctx.model_name, ctx.sel(*roles), policy="shadow", report="summary", **kw)
@@ -738,6 +750,22 @@ def chk_A6(ctx):
     return result("A6", ok, {"message_delta.chunk_cache.chunks": want}, obs, [ctx.evidence("A6-report.json", rep or {})])
 
 
+def chk_A6m(ctx):
+    """A6 with a manifest over one string message: the same chunk layout as A3g, so the same counts."""
+    body, placed = build_anthropic_manifest(ctx.model_name, ctx.sel("F1", "F2", "F3"))
+    r = ctx.http.messages_stream(body)
+    if r.get("status") != 200:
+        return result("A6m", False, "200", {"status": r.get("status"), "body": r.get("error_text", "")[:500]})
+    rep = r["report"]
+    hit, miss = split_roles(ctx, ("F1", "F2"), ("F3",))
+    want = {"hit": len(hit), "miss": len(miss), "ignored": 0}
+    if rep:
+        ctx.count(rep)
+    obs = {"report_present": rep is not None, "chunks": (rep or {}).get("chunks"), "warnings": (rep or {}).get("warnings")}
+    ok = rep is not None and all((rep.get("chunks") or {}).get(k) == v for k, v in want.items())
+    return result("A6m", ok, {"message_delta.chunk_cache.chunks": want}, obs, [ctx.evidence("A6m-report.json", rep or {})])
+
+
 def chk_A7(ctx):
     a = ctx.a
     prompt, placed = build_prompt(ctx.sel("F1", "F2", "F3"))
@@ -780,7 +808,9 @@ def chk_A8(ctx):
                 "warnings_2nd": (r2.get("report") or {}).get("warnings")})
     entries, waited = ctx.poll_entries(n_enc + len(f3), 120)
     obs.update({"entries_after": entries, "entries_expected": n_enc + len(f3), "poll_s": round(waited, 1)})
-    r3 = f3_request(ctx)
+    # a different system message: the prompt cache then restores no rows, so the F3 chunks are looked up (an identical
+    # prompt is restored whole and the chunks are reported `prefix`, by design)
+    r3 = f3_request(ctx, system="You are a terse code reviewer.")
     ch3 = (r3.get("report") or {}).get("chunks") or {}
     per3 = {c["id"]: c["status"] for c in (r3.get("report") or {}).get("per_chunk", [])}
     f3_status = {c["id"]: per3.get(c["id"]) for c in f3}
@@ -830,12 +860,20 @@ def chk_A9(ctx):
     return result("A9", ok, {"same key file names": True, "payload bytes equal": True, "status lists F3 stored": True}, obs)
 
 
-def chk_A10(ctx):
+def chk_A10(ctx, cid="A10", plan_literal=True):
     h = ctx.http
     n_enc = len(ctx.fx["F1"]["chunks"]) + len(ctx.fx["F2"]["chunks"])
     f3 = annotated_chunks(ctx.fx["F3"])
     f4 = annotated_chunks(ctx.fx["F4"])
+    f3_keys = {c["key"] for c in ctx.fx["F3"]["chunks"]}
+    cli_keys = {c["key"] for r_ in ("F1", "F2") for c in ctx.fx[r_]["chunks"]}
     obs = {}
+    if not plan_literal:
+        # A10r: the store's CLI index covers only F1+F2, so the server-written F3 entries are not index-referenced
+        for _ in range(2):
+            f3_request(ctx)
+        entries0, _w = ctx.poll_entries(n_enc + len(f3), 120)
+        obs["entries_after_f3_encode"] = entries0
     before_entries = ctx.caps()[1]["store"]["entries"]
     texts = [{"id": c["id"], "text": c["text"], "source": {"path": ctx.fx["F4"]["path"]}} for c in f4]
     s, pw, _ = h.json("POST", "/v1/chunk-cache/prewarm", {"texts": texts})
@@ -843,33 +881,49 @@ def chk_A10(ctx):
     entries, waited = ctx.poll_entries(before_entries + len(f4), 120)
     obs["entries_after_prewarm"] = [before_entries, entries]
     files_before = ctx.store_files()
-    s, ev, _ = h.json("POST", "/v1/chunk-cache/evict", {})
-    obs["default_evict"] = {"status": s, "body": ev}
+    s_def, ev_def, _ = h.json("POST", "/v1/chunk-cache/evict", {})
+    obs["default_evict"] = {"status": s_def, "body": ev_def}
     files_after_default = ctx.store_files()
-    f3_files = [f for f in ctx.store_files() if Path(f).stem in {c["key"] for c in ctx.fx["F3"]["chunks"]}]
-    s, ev, _ = h.json("POST", "/v1/chunk-cache/evict", {"mode": "path", "path": ctx.fx["F3"]["path"], "dry_run": False})
-    obs["path_evict"] = {"status": s, "body": ev}
+    f3_files = [f for f in files_after_default if Path(f).stem in f3_keys]
+    s_p, ev_p, _ = h.json("POST", "/v1/chunk-cache/evict", {"mode": "path", "path": ctx.fx["F3"]["path"], "dry_run": False})
+    obs["path_evict"] = {"status": s_p, "body": ev_p}
     files_final = ctx.store_files()
-    cli_keys = {c["key"] for r_ in ("F1", "F2") for c in ctx.fx[r_]["chunks"]}
-    f3_keys = {c["key"] for c in ctx.fx["F3"]["chunks"]}
     remaining_cli = [f for f in files_final if Path(f).stem in cli_keys]
     remaining_f3 = [f for f in files_final if Path(f).stem in f3_keys]
     obs.update({"f3_files_before_evict": len(f3_files), "f3_files_after": len(remaining_f3), "cli_files_after": len(remaining_cli),
-                "default_evict_deleted_nothing": files_before == files_after_default})
-    r = f3_request(ctx)
+                "default_evict_deleted_nothing": files_before == files_after_default,
+                "cli_index_covers_f3": plan_literal})
+    r = f3_request(ctx, system="You are a terse code reviewer.")
     rep = r.get("report") or {}
     obs["post_forget_encode_queued"] = (rep.get("tokens") or {}).get("encode_queued")
     obs["post_forget_warnings"] = rep.get("warnings")
     ok = (s == 200 and pw and pw.get("queued") == len(f4) and entries == before_entries + len(f4)
-          and obs["default_evict"]["status"] in (200, 403) and obs["default_evict_deleted_nothing"]
+          and s_def == 200 and obs["default_evict_deleted_nothing"] and s_p == 200
           and not remaining_f3 and len(remaining_cli) == n_enc and obs["post_forget_encode_queued"] == 0)
-    return result("A10", ok, {"prewarm.queued": len(f4), "default evict deletes nothing": True, "path evict removes F3 files": True,
-                              "CLI F1/F2 files kept": n_enc, "post-forget F3 request queues": 0}, obs,
-                  [ctx.evidence("A10.json", obs)])
+    return result(cid, ok, {"prewarm.queued": len(f4), "default evict deletes nothing": True, "path evict removes F3 files": True,
+                            "CLI F1/F2 files kept": n_enc, "post-forget F3 request queues": 0}, obs,
+                  [ctx.evidence(f"{cid}.json", obs)])
 
 
-def write_keys(path, ka, kb):
-    Path(path).write_text(f"{ka} admin\n{kb}\n", encoding="utf-8")
+def chk_A10r(ctx):
+    return chk_A10(ctx, "A10r", plan_literal=False)
+
+
+def chk_A0r(ctx):
+    """Builds the F1+F2 store from a fixture directory holding only those two files (the index covers nothing else)."""
+    a = ctx.a
+    cmd = [a.cc_exe, "build", "--model", a.model, "--store", a.store, "--directory", a.repo, "--chunker", "symbol",
+           "--path", FILES["F1"], "--path", FILES["F2"], "--threads", str(a.threads), "--json"]
+    code, out, err, wall = run_cc(cmd, a.model)
+    j = None
+    try:
+        j = json.loads(out)
+    except ValueError:
+        pass
+    n = len(ctx.fx["F1"]["chunks"]) + len(ctx.fx["F2"]["chunks"])
+    obs = {"exit": code, "encoded": (j or {}).get("encoded_chunks"), "indexed_chunks": (j or {}).get("chunks"),
+           "store_ckv_files": len(ctx.store_files()), "wall_s": round(wall, 1)}
+    return result("A0r", code == 0 and obs["encoded"] == n and obs["indexed_chunks"] == n, {"encoded": n, "indexed_chunks": n}, obs)
 
 
 def chk_A11(ctx):
@@ -885,23 +939,22 @@ def chk_A11(ctx):
     texts = [{"id": c["id"], "text": c["text"], "source": {"path": ctx.fx["F4"]["path"]}} for c in f4]
     s, pw, _ = h.json("POST", "/v1/chunk-cache/prewarm", {"texts": texts}, key=ka)
     obs["prewarm_K_A"] = {"status": s, "queued": (pw or {}).get("queued")}
-    # wait (<= 120 s) until K_A's own request sees the prewarmed F4 chunk (encodes run after 2 s of quiet)
-    t0 = time.time()
-    rka = None
-    while time.time() - t0 < 120:
-        rka, _ = shadow_request(ctx, ("F4",), key=ka)
-        if ((rka.get("report") or {}).get("chunks") or {}).get("hit") == len(f4):
-            break
-        time.sleep(4)
+    # K_A is admin: its capabilities show store-wide entries; wait (<= 120 s) for the prewarm encode (runs after 2 s of quiet)
+    base_entries = ctx.caps(ka)[1]["store"]["entries"]
+    entries, waited = ctx.poll_entries(base_entries + len(f4), 120, key=ka)
+    obs["entries_before_after_prewarm"] = [base_entries, entries]
+    # every probe carries its own system message: an identical prompt would be restored whole by the prompt cache, which
+    # is shared by all callers (documented), and its chunks reported `prefix` instead of hit / miss
+    rka, _ = shadow_request(ctx, ("F4",), key=ka, system="You are probe A1.")
     obs["K_A_F4"] = (rka.get("report") or {}).get("chunks")
-    rkb, _ = shadow_request(ctx, ("F4",), key=kb)
+    rkb, _ = shadow_request(ctx, ("F4",), key=kb, system="You are probe B1.")
     obs["K_B_F4"] = (rkb.get("report") or {}).get("chunks")
     files_before = ctx.store_files()
     s_ev, ev, _ = h.json("POST", "/v1/chunk-cache/evict", {"mode": "namespace", "dry_run": False}, key=kb)
     obs["K_B_evict_namespace"] = {"status": s_ev, "body": ev}
     files_after = ctx.store_files()
     obs["files_unchanged_by_K_B_evict"] = files_before == files_after
-    rka2, _ = shadow_request(ctx, ("F4",), key=ka)
+    rka2, _ = shadow_request(ctx, ("F4",), key=ka, system="You are probe A2.")
     obs["K_A_F4_after_K_B_evict"] = (rka2.get("report") or {}).get("chunks")
     sb, jb = ctx.caps(kb)
     sa, ja = ctx.caps(ka)
@@ -953,7 +1006,9 @@ def chk_V2(ctx):
 def store_snapshot(store):
     snap = {}
     for p in sorted(Path(store).rglob("*")):
-        if p.is_file():
+        if p.is_file() and p.name.startswith(".chunkstore") and p.name.endswith(".lock"):
+            snap[str(p.relative_to(store)).replace("\\", "/")] = [p.stat().st_size, "lock file held open by the server: size only"]
+        elif p.is_file():
             h = hashlib.sha256()
             with open(p, "rb") as f:
                 for blk in iter(lambda: f.read(1 << 20), b""):
@@ -999,13 +1054,19 @@ def chk_VOH(ctx):
     return result("VOH", med is not None and med < 5, {"median(annotated) - median(plain) prompt_ms": "< 5"}, obs)
 
 
-CHECKS = {"A0": chk_A0, "A1": chk_A1, "A2": chk_A2, "A3": chk_A3, "A3g": chk_A3g, "A4": chk_A4, "A4b": chk_A4b, "A5": chk_A5, "A6": chk_A6,
-          "A7": chk_A7, "A8": chk_A8, "A9": chk_A9, "A10": chk_A10, "A11": chk_A11, "A12": chk_A12,
+CHECKS = {"A0": chk_A0, "A1": chk_A1, "A2": chk_A2, "A3": chk_A3, "A3g": chk_A3g, "A4": chk_A4, "A4b": chk_A4b, "A5": chk_A5, "A6": chk_A6, "A6m": chk_A6m,
+          "A7": chk_A7, "A8": chk_A8, "A9": chk_A9, "A10": chk_A10, "A10r": chk_A10r, "A0r": chk_A0r, "A11": chk_A11, "A12": chk_A12,
           "V1": chk_V1, "V2": chk_V2, "V3": chk_V3, "VOH": chk_VOH}
 
 
 def cmd_check(a):
     ctx = Ctx(a)
+    if a.expect_backend and ctx.http is not None:
+        st, cj = ctx.caps()  # guard (run0 finding: `serve` defaults to --device auto): never judge checks on the wrong backend
+        got = ((cj or {}).get("model") or {}).get("backend") if st == 200 else None
+        if st == 200 and got != a.expect_backend:
+            print(f"ABORT: server backend is {got!r}, expected {a.expect_backend!r}")
+            return 3
     overall = 0
     for cid in a.ids:
         t0 = time.time()
@@ -1072,6 +1133,7 @@ def main(argv=None):
     p.add_argument("--smoke-dll")
     p.add_argument("--server-log")
     p.add_argument("--phase", default="phase")
+    p.add_argument("--expect-backend")
     p.add_argument("--repeats", type=int, default=5)
     p = sub.add_parser("summarize")
     p.add_argument("--out", required=True)

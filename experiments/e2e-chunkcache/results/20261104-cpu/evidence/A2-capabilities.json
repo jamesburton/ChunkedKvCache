@@ -1,0 +1,42 @@
+{
+ "versions": [
+  1
+ ],
+ "policies": [
+  "exact",
+  "shadow",
+  "balanced",
+  "fast",
+  "auto"
+ ],
+ "selectors": [
+  "chunk_starts"
+ ],
+ "wire_chunkers": [
+  "symbol-512"
+ ],
+ "auto_validated": [],
+ "model": {
+  "id": "gguf-sha256:383e0dc94d87e73eb6a4557b5f4a2b4b13cc3e1768fccf2baee379da8337ee0f",
+  "supported": true,
+  "reason": null,
+  "id_kind": "sampled",
+  "tokenizer_id": "gguf-tokenizer-sha256:ac4d5cb527a07861fd94f8af868b71d821719e8dff806ac3eff4f855bc757e26",
+  "producer": "8984200dea1d4f14063979999883951f00368156465cf3bbd3ca0b0c935d7951",
+  "quantization": "ftype-15",
+  "backend": "cpu",
+  "kv_dtype": "f32",
+  "rope": {
+   "dim": 128,
+   "theta": 5000000,
+   "type": "neox"
+  }
+ },
+ "store": {
+  "entries": 10,
+  "bytes": 458598970,
+  "budget_bytes": 0,
+  "dtype": "f32"
+ },
+ "max_chunks_per_request": 4096
+}

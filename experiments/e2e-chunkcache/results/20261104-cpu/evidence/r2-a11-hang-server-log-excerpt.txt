@@ -1,0 +1,13 @@
+35:2026-11-04 00:28:28.330 [dotllm] req#4 POST /v1/chat/completions
+36:2026-11-04 00:28:28.331 [dotllm] req#4 model=bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+37:2026-11-04 00:28:28.334 [dotllm] req#4 waiting for the server lock (generate); held by chunk-cache encode
+38:2026-11-04 00:28:28.764 [dotllm] req#4 acquired the server lock after 429ms
+39:2026-11-04 00:28:29.737 [dotllm] req#4 timing: prompt eval 116.4 ms / 5 tokens (23.28 ms/tok, 43.0 tok/s) | eval 823.4 ms / 15 tokens (54.89 ms/tok, 18.2 tok/s) | prompt cache 224/229 tokens reused
+40:2026-11-04 00:28:29.740 [dotllm] req#4 done 200 in 1.4s
+89:2026-11-04 00:29:33.125 [dotllm] req#17 POST /v1/chat/completions
+90:2026-11-04 00:29:33.126 [dotllm] req#17 model=bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+91:2026-11-04 00:29:34.060 [dotllm] req#17 timing: prompt eval 111.1 ms / 5 tokens (22.21 ms/tok, 45.0 tok/s) | eval 811.4 ms / 15 tokens (54.10 ms/tok, 18.5 tok/s) | prompt cache 224/229 tokens reused
+92:2026-11-04 00:29:34.062 [dotllm] req#17 done 200 in 936ms
+93:2026-11-04 00:29:38.066 [dotllm] req#18 POST /v1/chat/completions
+94:2026-11-04 00:29:38.067 [dotllm] req#18 model=bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+95:2026-11-04 01:06:23.499 [dotllm] req#18 cancelled (client disconnected) after 36m45s

@@ -1,0 +1,44 @@
+{
+ "id": "A6",
+ "passed": false,
+ "void": false,
+ "expected": {
+  "message_delta.chunk_cache.chunks": {
+   "hit": 2,
+   "miss": 1,
+   "ignored": 0
+  }
+ },
+ "observed": {
+  "events": [
+   "content_block_delta",
+   "content_block_start",
+   "content_block_stop",
+   "message_delta",
+   "message_start",
+   "message_stop",
+   "ping"
+  ],
+  "report_present": true,
+  "annotated_safe_chunks": 3,
+  "chunks_left_plain_because_they_start_with_newline": 9,
+  "chunks": {
+   "annotated": 3,
+   "prefix": 0,
+   "hit": 0,
+   "miss": 0,
+   "ignored": 3
+  },
+  "warnings": [
+   {
+    "code": "chunk_template_altered",
+    "count": 3
+   }
+  ]
+ },
+ "evidence_files": [
+  "evidence/A6-report.json"
+ ],
+ "wall_s": 58.3,
+ "phase": "ro"
+}

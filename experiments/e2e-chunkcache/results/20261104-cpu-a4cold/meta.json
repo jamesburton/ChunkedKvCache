@@ -1,0 +1,23 @@
+{
+  "run_id": "20261104-cpu-a4cold",
+  "backend": "cpu",
+  "date": "2026-11-04T01:24:06.5883914+00:00",
+  "server_commit": "ea2279cf",
+  "client_commit": "5f003693",
+  "export_dirty": 0,
+  "research_repo_commit": "db8cb3f31ee6d2a4416c143cf2af38d4204567c2",
+  "research_repo_dirty_in_e2e_dir": 3,
+  "model_file": "Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+  "model_hf_revision": "ae44f08e1392f39c0e474af10c3ff8355c8b6688",
+  "model_path": "C:\\Users\\james\\.cache\\huggingface\\hub\\models--bartowski--Qwen_Qwen3-4B-Instruct-2507-GGUF\\snapshots\\ae44f08e1392f39c0e474af10c3ff8355c8b6688\\Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+  "driver": "AMD Radeon(TM) 8060S Graphics 32.0.32015.7029",
+  "lock_holder": "claude A2 session 3ce8490d (cpu-bench supplementary 01:24Z)",
+  "server_args_base": "serve <model> --no-warmup --no-browser --no-ui --threads 8 --ctx-size 8192",
+  "kv_note": "server branch has no F16-default Vulkan KV (PR #1597): on Vulkan its KV is F32",
+  "wall_s": {
+    "A0_build": 28.1,
+    "phase_ro": 135.1,
+    "phase_nopaged": 135.3,
+    "total": 319.0
+  }
+}

@@ -1,0 +1,28 @@
+{
+ "id": "A6m",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "message_delta.chunk_cache.chunks": {
+   "hit": 8,
+   "miss": 4,
+   "ignored": 0
+  }
+ },
+ "observed": {
+  "report_present": true,
+  "chunks": {
+   "annotated": 12,
+   "prefix": 0,
+   "hit": 8,
+   "miss": 4,
+   "ignored": 0
+  },
+  "warnings": []
+ },
+ "evidence_files": [
+  "evidence/A6m-report.json"
+ ],
+ "wall_s": 58.7,
+ "phase": "ro"
+}

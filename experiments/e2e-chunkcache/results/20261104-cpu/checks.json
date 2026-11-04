@@ -1,0 +1,832 @@
+{
+ "A0": {
+  "id": "A0",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "exit": 0,
+   "encoded": 10,
+   "store_ckv_files": 10,
+   "wall_s": "<= 180"
+  },
+  "observed": {
+   "exit": 0,
+   "encoded": 10,
+   "store_ckv_files": 10,
+   "wall_s": 28.1,
+   "tokens_per_second": 66.59169997197367,
+   "encoded_tokens": 1555
+  },
+  "evidence_files": [
+   "evidence/A0-build.json"
+  ],
+  "wall_s": 28.1,
+  "phase": "build"
+ },
+ "A0r": {
+  "id": "A0r",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "encoded": 10,
+   "indexed_chunks": 10
+  },
+  "observed": {
+   "exit": 0,
+   "encoded": 10,
+   "indexed_chunks": 10,
+   "store_ckv_files": 10,
+   "wall_s": 23.2
+  },
+  "evidence_files": [],
+  "wall_s": 23.2,
+  "phase": "build2"
+ },
+ "A1": {
+  "id": "A1",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "capabilities_status": 404,
+   "annotated_has_chunk_cache": false,
+   "tokens_equal": true
+  },
+  "observed": {
+   "capabilities_status": 404,
+   "annotated_has_chunk_cache": false,
+   "tokens_equal": true,
+   "token_source": "logprobs"
+  },
+  "evidence_files": [],
+  "wall_s": 61.0,
+  "phase": "off"
+ },
+ "A10": {
+  "id": "A10",
+  "passed": false,
+  "void": false,
+  "expected": {
+   "prewarm.queued": 1,
+   "default evict deletes nothing": true,
+   "path evict removes F3 files": true,
+   "CLI F1/F2 files kept": 10,
+   "post-forget F3 request queues": 0
+  },
+  "observed": {
+   "prewarm": {
+    "status": 200,
+    "body": {
+     "requested": 1,
+     "already_stored": 0,
+     "queued": 1,
+     "queued_tokens": 169,
+     "refused": 0,
+     "refused_reasons": []
+    }
+   },
+   "entries_after_prewarm": [
+    14,
+    15
+   ],
+   "default_evict": {
+    "status": 200,
+    "body": {
+     "evicted": 0,
+     "freed_bytes": 0,
+     "kept_referenced": 0,
+     "dry_run": true,
+     "removed": {
+      "ledger_rows": 0,
+      "index_files": 0,
+      "sightings": 0,
+      "queued": 0
+     }
+    }
+   },
+   "path_evict": {
+    "status": 200,
+    "body": {
+     "evicted": 0,
+     "freed_bytes": 0,
+     "kept_referenced": 4,
+     "dry_run": false,
+     "removed": {
+      "ledger_rows": 4,
+      "index_files": 0,
+      "sightings": 4,
+      "queued": 0
+     }
+    }
+   },
+   "f3_files_before_evict": 4,
+   "f3_files_after": 4,
+   "cli_files_after": 10,
+   "default_evict_deleted_nothing": true,
+   "cli_index_covers_f3": true,
+   "post_forget_encode_queued": 0,
+   "post_forget_warnings": []
+  },
+  "evidence_files": [
+   "evidence/A10.json"
+  ],
+  "wall_s": 7.5,
+  "phase": "write"
+ },
+ "A10r": {
+  "id": "A10r",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "prewarm.queued": 1,
+   "default evict deletes nothing": true,
+   "path evict removes F3 files": true,
+   "CLI F1/F2 files kept": 10,
+   "post-forget F3 request queues": 0
+  },
+  "observed": {
+   "entries_after_f3_encode": 14,
+   "prewarm": {
+    "status": 200,
+    "body": {
+     "requested": 1,
+     "already_stored": 0,
+     "queued": 1,
+     "queued_tokens": 169,
+     "refused": 0,
+     "refused_reasons": []
+    }
+   },
+   "entries_after_prewarm": [
+    14,
+    15
+   ],
+   "default_evict": {
+    "status": 200,
+    "body": {
+     "evicted": 0,
+     "freed_bytes": 0,
+     "kept_referenced": 0,
+     "dry_run": true,
+     "removed": {
+      "ledger_rows": 0,
+      "index_files": 0,
+      "sightings": 0,
+      "queued": 0
+     }
+    }
+   },
+   "path_evict": {
+    "status": 200,
+    "body": {
+     "evicted": 4,
+     "freed_bytes": 212046440,
+     "kept_referenced": 0,
+     "dry_run": false,
+     "removed": {
+      "ledger_rows": 4,
+      "index_files": 0,
+      "sightings": 4,
+      "queued": 0
+     }
+    }
+   },
+   "f3_files_before_evict": 4,
+   "f3_files_after": 0,
+   "cli_files_after": 10,
+   "default_evict_deleted_nothing": true,
+   "cli_index_covers_f3": false,
+   "post_forget_encode_queued": 0,
+   "post_forget_warnings": [
+    {
+     "code": "chunk_encode_skipped",
+     "count": 4
+    }
+   ]
+  },
+  "evidence_files": [
+   "evidence/A10r.json"
+  ],
+  "wall_s": 155.1,
+  "phase": "write2"
+ },
+ "A11": {
+  "id": "A11",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "no key": 401,
+   "K_A F1 hit": 0,
+   "K_A F4 hit": 1,
+   "K_B F4 hit": 0,
+   "K_B namespace evict leaves K_A": true,
+   "K_B capabilities entries": 0,
+   "namespace strings leaked": []
+  },
+  "observed": {
+   "no_key_status": 401,
+   "K_A_shadow_F1_hit": {
+    "annotated": 4,
+    "prefix": 0,
+    "hit": 0,
+    "miss": 4,
+    "ignored": 0
+   },
+   "prewarm_K_A": {
+    "status": 200,
+    "queued": 1
+   },
+   "entries_before_after_prewarm": [
+    15,
+    16
+   ],
+   "K_A_F4": {
+    "annotated": 1,
+    "prefix": 0,
+    "hit": 1,
+    "miss": 0,
+    "ignored": 0
+   },
+   "K_B_F4": {
+    "annotated": 1,
+    "prefix": 0,
+    "hit": 0,
+    "miss": 1,
+    "ignored": 0
+   },
+   "K_B_evict_namespace": {
+    "status": 200,
+    "body": {
+     "evicted": 0,
+     "freed_bytes": 0,
+     "kept_referenced": 0,
+     "dry_run": false,
+     "removed": {
+      "ledger_rows": 0,
+      "index_files": 0,
+      "sightings": 1,
+      "queued": 0
+     }
+    }
+   },
+   "files_unchanged_by_K_B_evict": true,
+   "K_A_F4_after_K_B_evict": {
+    "annotated": 1,
+    "prefix": 0,
+    "hit": 1,
+    "miss": 0,
+    "ignored": 0
+   },
+   "caps_K_B_entries": 0,
+   "caps_K_A_entries": 16,
+   "namespace_strings_found": []
+  },
+  "evidence_files": [
+   "evidence/A11.json"
+  ],
+  "wall_s": 40.1,
+  "phase": "auth"
+ },
+ "A12": {
+  "id": "A12",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "hit": 2,
+   "miss": 5,
+   "prefix": 0,
+   "ignored": 0,
+   "tokens": {
+    "prompt": 1896,
+    "prefix_reused": 0,
+    "prefix_reused_approx": 0,
+    "chunk_reused": 0,
+    "chunk_recomputed": 0,
+    "prefilled": 1896,
+    "encode_queued": 0
+   }
+  },
+  "observed": {
+   "delta_hit": 2.0,
+   "delta_miss": 5.0,
+   "delta_prefix": 0.0,
+   "delta_ignored": 0.0,
+   "tokens_prompt": {
+    "delta": 1896.0,
+    "present": true
+   },
+   "tokens_prefix_reused": {
+    "delta": 0.0,
+    "present": true
+   },
+   "tokens_prefix_reused_approx": {
+    "delta": 0.0,
+    "present": true
+   },
+   "tokens_chunk_reused": {
+    "delta": 0.0,
+    "present": true
+   },
+   "tokens_chunk_recomputed": {
+    "delta": 0.0,
+    "present": true
+   },
+   "tokens_prefilled": {
+    "delta": 1896.0,
+    "present": true
+   },
+   "tokens_encode_queued": {
+    "delta": 0.0,
+    "present": true
+   },
+   "namespace_labels": []
+  },
+  "evidence_files": [],
+  "wall_s": 0.0,
+  "phase": "auth"
+ },
+ "A2": {
+  "id": "A2",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "versions": [
+    1
+   ],
+   "selectors": [
+    "chunk_starts"
+   ],
+   "wire_chunkers": [
+    "symbol-512"
+   ],
+   "auto_validated": [],
+   "model.supported": true,
+   "store.entries": 10,
+   "store.dtype": "f32"
+  },
+  "observed": {
+   "status": 200,
+   "versions": [
+    1
+   ],
+   "policies": [
+    "exact",
+    "shadow",
+    "balanced",
+    "fast",
+    "auto"
+   ],
+   "selectors": [
+    "chunk_starts"
+   ],
+   "wire_chunkers": [
+    "symbol-512"
+   ],
+   "auto_validated": [],
+   "model_supported": true,
+   "model_backend": "cpu",
+   "expected_backend": "cpu",
+   "kv_dtype": "f32",
+   "store_entries": 10,
+   "store_dtype": "f32"
+  },
+  "evidence_files": [
+   "evidence/A2-capabilities.json"
+  ],
+  "wall_s": 0.0,
+  "phase": "ro"
+ },
+ "A3": {
+  "id": "A3",
+  "passed": false,
+  "void": false,
+  "expected": {
+   "hit": 8,
+   "miss": 4,
+   "ignored": 0,
+   "hit_tokens": 1500
+  },
+  "observed": {
+   "chunks": {
+    "annotated": 12,
+    "prefix": 0,
+    "hit": 0,
+    "miss": 0,
+    "ignored": 12
+   },
+   "policy_applied": "exact",
+   "plan_chunk_reused": 0,
+   "predicted_ttft_ms": 50094,
+   "full_prefill_estimate_ms": 50094,
+   "per_chunk_mismatch": {
+    "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:1-27@0": [
+     "ignored",
+     "hit"
+    ],
+    "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:28-43@1438": [
+     "ignored",
+     "hit"
+    ],
+    "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:44-57@2437": [
+     "ignored",
+     "hit"
+    ],
+    "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:58-74@3311": [
+     "ignored",
+     "hit"
+    ],
+    "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:1-18@0": [
+     "ignored",
+     "hit"
+    ],
+    "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:19-23@952": [
+     "ignored",
+     "hit"
+    ],
+    "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:24-28@1239": [
+     "ignored",
+     "hit"
+    ],
+    "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:36-40@1679": [
+     "ignored",
+     "hit"
+    ],
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0": [
+     "ignored",
+     "miss"
+    ],
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585": [
+     "ignored",
+     "miss"
+    ],
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993": [
+     "ignored",
+     "miss"
+    ],
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155": [
+     "ignored",
+     "miss"
+    ]
+   },
+   "layout": "file",
+   "warnings": [
+    {
+     "code": "chunk_template_altered",
+     "count": 12
+    }
+   ],
+   "prompt_tokens": 2392,
+   "prompt_ms": 50094.4937
+  },
+  "evidence_files": [
+   "evidence/A3-response-report.json"
+  ],
+  "wall_s": 60.2,
+  "phase": "ro"
+ },
+ "A3g": {
+  "id": "A3g",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "hit": 8,
+   "miss": 4,
+   "ignored": 0,
+   "hit_tokens": 1500
+  },
+  "observed": {
+   "chunks": {
+    "annotated": 12,
+    "prefix": 0,
+    "hit": 8,
+    "miss": 4,
+    "ignored": 0
+   },
+   "policy_applied": "exact",
+   "plan_chunk_reused": 1500,
+   "predicted_ttft_ms": 24735,
+   "full_prefill_estimate_ms": 56663,
+   "per_chunk_mismatch": {},
+   "layout": "chunk",
+   "warnings": [],
+   "prompt_tokens": 2676,
+   "prompt_ms": 56662.923200000005
+  },
+  "evidence_files": [
+   "evidence/A3g-response-report.json"
+  ],
+  "wall_s": 66.5,
+  "phase": "ro"
+ },
+ "A4": {
+  "id": "A4",
+  "passed": true,
+  "void": false,
+  "expected": "all token ids identical to plain1 (blocking and streaming)",
+  "observed": {
+   "blocking": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 2672,
+     "ann1": 2672,
+     "plain2": 2672,
+     "ann2": 2672,
+     "shadow_warm": 2672,
+     "exact_warm": 2672
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 157.1506,
+     "ann1": 162.2896,
+     "plain2": 160.5337,
+     "ann2": 158.4072,
+     "shadow_warm": 161.9393,
+     "exact_warm": 162.01289999999997
+    }
+   },
+   "streaming": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 2672,
+     "ann1": 2672,
+     "plain2": 2672,
+     "ann2": 2672,
+     "shadow_warm": 2672,
+     "exact_warm": 2672
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 166.8825,
+     "ann1": 160.4343,
+     "plain2": 163.88240000000002,
+     "ann2": 161.933,
+     "shadow_warm": 160.9504,
+     "exact_warm": 161.685
+    }
+   }
+  },
+  "evidence_files": [
+   "evidence/A4-blocking.json",
+   "evidence/A4-streaming.json"
+  ],
+  "wall_s": 16.3,
+  "phase": "ro"
+ },
+ "A4b": {
+  "id": "A4b",
+  "passed": true,
+  "void": false,
+  "expected": "all token ids identical to plain1 (blocking and streaming)",
+  "observed": {
+   "blocking": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 0,
+     "ann1": 2676,
+     "plain2": 2676,
+     "ann2": 2676,
+     "shadow_warm": 2676,
+     "exact_warm": 2676
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 58760.3076,
+     "ann1": 83.4699,
+     "plain2": 78.08909999999999,
+     "ann2": 84.8644,
+     "shadow_warm": 90.25750000000001,
+     "exact_warm": 87.6589
+    }
+   },
+   "streaming": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 2676,
+     "ann1": 2676,
+     "plain2": 2676,
+     "ann2": 2676,
+     "shadow_warm": 2676,
+     "exact_warm": 2676
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 84.80319999999999,
+     "ann1": 81.98819999999999,
+     "plain2": 80.25110000000001,
+     "ann2": 81.1589,
+     "shadow_warm": 81.9841,
+     "exact_warm": 87.1233
+    }
+   }
+  },
+  "evidence_files": [
+   "evidence/A4b-blocking.json",
+   "evidence/A4b-streaming.json"
+  ],
+  "wall_s": 75.5,
+  "phase": "nopaged"
+ },
+ "A5": {
+  "id": "A5",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "strict": "400 invalid_request_error chunk_hash_mismatch",
+   "non_strict": "200 + warning chunk_hash_mismatch"
+  },
+  "observed": {
+   "strict_status": 400,
+   "strict_type": "invalid_request_error",
+   "strict_code": "chunk_hash_mismatch",
+   "nonstrict_status": 200,
+   "nonstrict_warnings": [
+    "chunk_hash_mismatch"
+   ]
+  },
+  "evidence_files": [],
+  "wall_s": 1.3,
+  "phase": "ro"
+ },
+ "A6": {
+  "id": "A6",
+  "passed": false,
+  "void": false,
+  "expected": {
+   "message_delta.chunk_cache.chunks": {
+    "hit": 2,
+    "miss": 1,
+    "ignored": 0
+   }
+  },
+  "observed": {
+   "events": [
+    "content_block_delta",
+    "content_block_start",
+    "content_block_stop",
+    "message_delta",
+    "message_start",
+    "message_stop",
+    "ping"
+   ],
+   "report_present": true,
+   "annotated_safe_chunks": 3,
+   "chunks_left_plain_because_they_start_with_newline": 9,
+   "chunks": {
+    "annotated": 3,
+    "prefix": 0,
+    "hit": 0,
+    "miss": 0,
+    "ignored": 3
+   },
+   "warnings": [
+    {
+     "code": "chunk_template_altered",
+     "count": 3
+    }
+   ]
+  },
+  "evidence_files": [
+   "evidence/A6-report.json"
+  ],
+  "wall_s": 58.3,
+  "phase": "ro"
+ },
+ "A6m": {
+  "id": "A6m",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "message_delta.chunk_cache.chunks": {
+    "hit": 8,
+    "miss": 4,
+    "ignored": 0
+   }
+  },
+  "observed": {
+   "report_present": true,
+   "chunks": {
+    "annotated": 12,
+    "prefix": 0,
+    "hit": 8,
+    "miss": 4,
+    "ignored": 0
+   },
+   "warnings": []
+  },
+  "evidence_files": [
+   "evidence/A6m-report.json"
+  ],
+  "wall_s": 58.7,
+  "phase": "ro"
+ },
+ "A7": {
+  "id": "A7",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "exit": 0,
+   "chunks": {
+    "hit": 8,
+    "miss": 4,
+    "ignored": 0
+   }
+  },
+  "observed": {
+   "exit": 0,
+   "chunks": {
+    "annotated": 12,
+    "prefix": 0,
+    "hit": 8,
+    "miss": 4,
+    "ignored": 0
+   },
+   "outcome": {
+    "annotated": true,
+    "skip_reason": null,
+    "registered": 12,
+    "sent": 12
+   },
+   "stderr": ""
+  },
+  "evidence_files": [
+   "evidence/A7-smoke-output.json"
+  ],
+  "wall_s": 61.4,
+  "phase": "ro"
+ },
+ "A8": {
+  "id": "A8",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "encode_queued_1st": 0,
+   "encode_queued_2nd": 719,
+   "store.entries": 14,
+   "third_request_F3_status": "hit"
+  },
+  "observed": {
+   "f3_annotated_chunks": 4,
+   "f3_tokens": 719,
+   "max_f3_chunk_tokens": 368,
+   "encode_queued_1st": 0,
+   "encode_queued_2nd": 719,
+   "warnings_2nd": [
+    {
+     "code": "chunk_encode_queued",
+     "count": 4
+    }
+   ],
+   "entries_after": 14,
+   "entries_expected": 14,
+   "poll_s": 18.1,
+   "third_chunks": {
+    "annotated": 12,
+    "prefix": 0,
+    "hit": 12,
+    "miss": 0,
+    "ignored": 0
+   },
+   "f3_third_status": {
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0": "hit",
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585": "hit",
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993": "hit",
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155": "hit"
+   }
+  },
+  "evidence_files": [
+   "evidence/A8-requests.json"
+  ],
+  "wall_s": 139.0,
+  "phase": "write"
+ },
+ "A9": {
+  "id": "A9",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "same key file names": true,
+   "payload bytes equal": true,
+   "status lists F3 stored": true
+  },
+  "observed": {
+   "cli_exit": 0,
+   "cli_files": 5,
+   "server_f3_files": 4,
+   "f3_keys": 5,
+   "names_equal_for_server_written": true,
+   "payload_differences": {},
+   "select_stored_annotated_f3": {
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0": true,
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585": true,
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993": true,
+    "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155": true
+   }
+  },
+  "evidence_files": [],
+  "wall_s": 19.3,
+  "phase": "write"
+ }
+}

@@ -1,0 +1,146 @@
+{
+ "V1": {
+  "id": "V1",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "model.backend": "vulkan",
+   "A4 passes": true
+  },
+  "observed": {
+   "blocking": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 0,
+     "ann1": 0,
+     "plain2": 0,
+     "ann2": 0,
+     "shadow_warm": 0,
+     "exact_warm": 0
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 1445.1014,
+     "ann1": 1362.9742,
+     "plain2": 1359.1741,
+     "ann2": 1375.2358,
+     "shadow_warm": 1363.5393,
+     "exact_warm": 1358.9182
+    }
+   },
+   "streaming": {
+    "token_diffs": {},
+    "cached_tokens": {
+     "plain1": 0,
+     "ann1": 0,
+     "plain2": 0,
+     "ann2": 0,
+     "shadow_warm": 0,
+     "exact_warm": 0
+    },
+    "cached_tokens_ann2_equals_plain2": true,
+    "token_source": "logprobs",
+    "prompt_ms": {
+     "plain1": 1361.577,
+     "ann1": 1359.7884,
+     "plain2": 1359.2416,
+     "ann2": 1358.9467,
+     "shadow_warm": 1362.9119999999998,
+     "exact_warm": 1365.6417999999999
+    }
+   },
+   "capabilities": {
+    "status": 200,
+    "backend": "vulkan",
+    "supported": true,
+    "kv_dtype": "f32",
+    "store_entries": 16
+   }
+  },
+  "evidence_files": [
+   "evidence/V1-blocking.json",
+   "evidence/V1-streaming.json"
+  ],
+  "wall_s": 23.3,
+  "phase": "vk-ro"
+ },
+ "V2": {
+  "id": "V2",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "hit": 0,
+   "miss": 12
+  },
+  "observed": {
+   "chunks": {
+    "annotated": 12,
+    "prefix": 0,
+    "hit": 0,
+    "miss": 12,
+    "ignored": 0
+   },
+   "policy_applied": "exact",
+   "warnings": []
+  },
+  "evidence_files": [
+   "evidence/V2-report.json"
+  ],
+  "wall_s": 1.9,
+  "phase": "vk-ro"
+ },
+ "V3": {
+  "id": "V3",
+  "passed": true,
+  "void": false,
+  "expected": {
+   "warning": "chunk_encode_skipped",
+   "store listing byte-identical": true
+  },
+  "observed": {
+   "warning_codes": [
+    "chunk_encode_skipped"
+   ],
+   "listing_identical": true,
+   "files": 22,
+   "encode_queued": [
+    0,
+    0
+   ]
+  },
+  "evidence_files": [],
+  "wall_s": 13.3,
+  "phase": "vk-write"
+ },
+ "VOH": {
+  "id": "VOH",
+  "passed": false,
+  "void": false,
+  "expected": {
+   "median(annotated) - median(plain) prompt_ms": "< 5"
+  },
+  "observed": {
+   "plain_prompt_ms": [
+    1355.5477,
+    1360.4468000000002,
+    1357.1390000000001,
+    1363.4831000000001,
+    1358.8569
+   ],
+   "annotated_prompt_ms": [
+    1364.8042,
+    1387.0207,
+    1350.7721,
+    1354.0163,
+    1377.1055000000001
+   ],
+   "median_overhead_ms": 5.947300000000041,
+   "median_plain_ms": 1358.8569,
+   "median_annotated_ms": 1364.8042
+  },
+  "evidence_files": [],
+  "wall_s": 17.3,
+  "phase": "vk-ro"
+ }
+}

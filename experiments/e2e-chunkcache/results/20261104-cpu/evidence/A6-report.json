@@ -1,0 +1,67 @@
+{
+ "v": 1,
+ "policy_requested": "shadow",
+ "policy_applied": "exact",
+ "reason": null,
+ "chunks": {
+  "annotated": 3,
+  "prefix": 0,
+  "hit": 0,
+  "miss": 0,
+  "ignored": 3
+ },
+ "tokens": {
+  "prompt": 2671,
+  "prefix_reused": 0,
+  "prefix_reused_approx": 0,
+  "chunk_reused": 0,
+  "chunk_recomputed": 0,
+  "prefilled": 2671,
+  "encode_queued": 0
+ },
+ "plan": {
+  "selector": "chunk_starts",
+  "budget": 0.05,
+  "tokens": {
+   "prompt": 2671,
+   "prefix_reused": 0,
+   "prefix_reused_approx": 0,
+   "chunk_reused": 0,
+   "chunk_recomputed": 0,
+   "prefilled": 2671,
+   "encode_queued": 0
+  },
+  "predicted_ttft_ms": 57103,
+  "full_prefill_estimate_ms": 57103
+ },
+ "timings_ms": {
+  "assembly": 0,
+  "probe": 0,
+  "recompute": 0,
+  "prefill": 57103,
+  "full_prefill_estimate": 57103
+ },
+ "warnings": [
+  {
+   "code": "chunk_template_altered",
+   "count": 3
+  }
+ ],
+ "per_chunk": [
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:1-27@0",
+   "status": "ignored",
+   "why": "chunk_template_altered"
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:1-18@0",
+   "status": "ignored",
+   "why": "chunk_template_altered"
+  },
+  {
+   "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0",
+   "status": "ignored",
+   "why": "chunk_template_altered"
+  }
+ ]
+}

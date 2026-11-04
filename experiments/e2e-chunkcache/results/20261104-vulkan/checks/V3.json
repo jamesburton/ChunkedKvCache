@@ -1,0 +1,23 @@
+{
+ "id": "V3",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "warning": "chunk_encode_skipped",
+  "store listing byte-identical": true
+ },
+ "observed": {
+  "warning_codes": [
+   "chunk_encode_skipped"
+  ],
+  "listing_identical": true,
+  "files": 22,
+  "encode_queued": [
+   0,
+   0
+  ]
+ },
+ "evidence_files": [],
+ "wall_s": 13.3,
+ "phase": "vk-write"
+}

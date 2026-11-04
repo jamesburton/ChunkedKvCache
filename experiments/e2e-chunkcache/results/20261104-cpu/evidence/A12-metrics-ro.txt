@@ -1,0 +1,117 @@
+# HELP dotllm_chunk_cache_chunks_total Annotated chunks by outcome (prefix, hit, miss, ignored).
+# TYPE dotllm_chunk_cache_chunks_total counter
+dotllm_chunk_cache_chunks_total{status="hit"} 25
+dotllm_chunk_cache_chunks_total{status="ignored"} 16
+dotllm_chunk_cache_chunks_total{status="miss"} 12
+dotllm_chunk_cache_chunks_total{status="prefix"} 102
+# HELP dotllm_chunk_cache_tokens_total Prompt tokens of chunk-annotated requests by kind (the chunk_cache tokens partition).
+# TYPE dotllm_chunk_cache_tokens_total counter
+dotllm_chunk_cache_tokens_total{kind="chunk_recomputed"} 0
+dotllm_chunk_cache_tokens_total{kind="chunk_reused"} 0
+dotllm_chunk_cache_tokens_total{kind="encode_queued"} 0
+dotllm_chunk_cache_tokens_total{kind="prefilled"} 13124
+dotllm_chunk_cache_tokens_total{kind="prefix_reused"} 23184
+dotllm_chunk_cache_tokens_total{kind="prefix_reused_approx"} 0
+dotllm_chunk_cache_tokens_total{kind="prompt"} 36308
+# HELP dotllm_chunk_store_queue_depth Background encodes queued or running.
+# TYPE dotllm_chunk_store_queue_depth gauge
+dotllm_chunk_store_queue_depth 0
+# HELP dotllm_engine_kvcache_utilization Fraction of paged KV-cache blocks in use (0..1). -1 until paged scheduler (Step 35) is wired.
+# TYPE dotllm_engine_kvcache_utilization gauge
+dotllm_engine_kvcache_utilization 0.07763671875
+# HELP dotllm_engine_request_duration_ms Wall time of a completed generation request (prefill + decode).
+# TYPE dotllm_engine_request_duration_ms histogram
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="1"} 0
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="5"} 0
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="10"} 0
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="25"} 0
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="50"} 0
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="100"} 0
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="250"} 0
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="500"} 0
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="1000"} 0
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="2500"} 13
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="5000"} 13
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="10000"} 13
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="30000"} 13
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="60000"} 17
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="120000"} 18
+dotllm_engine_request_duration_ms_bucket{model="Qwen",le="+Inf"} 18
+dotllm_engine_request_duration_ms_sum{model="Qwen"} 304333.5617
+dotllm_engine_request_duration_ms_count{model="Qwen"} 18
+# HELP dotllm_engine_request_queue_depth Requests waiting for admission in the scheduler queue. -1 until the scheduler (Step 35) is wired.
+# TYPE dotllm_engine_request_queue_depth gauge
+dotllm_engine_request_queue_depth 0
+# HELP dotllm_engine_requests_total Completed generation requests by finish reason.
+# TYPE dotllm_engine_requests_total counter
+dotllm_engine_requests_total{finish_reason="Length",model="Qwen"} 17
+dotllm_engine_requests_total{finish_reason="Stop",model="Qwen"} 1
+# HELP dotllm_engine_time_to_first_token_ms Time from request start to first generated token.
+# TYPE dotllm_engine_time_to_first_token_ms histogram
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="1"} 0
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="5"} 0
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="10"} 0
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="25"} 0
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="50"} 0
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="100"} 0
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="250"} 12
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="500"} 12
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="1000"} 12
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="2500"} 13
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="5000"} 13
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="10000"} 13
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="30000"} 13
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="60000"} 15
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="120000"} 15
+dotllm_engine_time_to_first_token_ms_bucket{model="Qwen",le="+Inf"} 15
+dotllm_engine_time_to_first_token_ms_sum{model="Qwen"} 109766.08550000002
+dotllm_engine_time_to_first_token_ms_count{model="Qwen"} 15
+# HELP dotllm_engine_tokens_cached_total Prompt tokens reused from the prefix cache.
+# TYPE dotllm_engine_tokens_cached_total counter
+dotllm_engine_tokens_cached_total{model="Qwen"} 33872
+# HELP dotllm_engine_tokens_decode_total Tokens generated during the decode phase.
+# TYPE dotllm_engine_tokens_decode_total counter
+dotllm_engine_tokens_decode_total{model="Qwen"} 284
+# HELP dotllm_engine_tokens_per_second_decode Decode throughput in tokens per second.
+# TYPE dotllm_engine_tokens_per_second_decode histogram
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="1"} 0
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="5"} 0
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="10"} 0
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="25"} 18
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="50"} 18
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="100"} 18
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="250"} 18
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="500"} 18
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="1000"} 18
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="2500"} 18
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="5000"} 18
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="10000"} 18
+dotllm_engine_tokens_per_second_decode_bucket{model="Qwen",le="+Inf"} 18
+dotllm_engine_tokens_per_second_decode_sum{model="Qwen"} 233.21459405540833
+dotllm_engine_tokens_per_second_decode_count{model="Qwen"} 18
+# HELP dotllm_engine_tokens_per_second_prefill Prefill throughput in tokens per second.
+# TYPE dotllm_engine_tokens_per_second_prefill histogram
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="1"} 0
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="5"} 0
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="10"} 0
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="25"} 10
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="50"} 18
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="100"} 18
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="250"} 18
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="500"} 18
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="1000"} 18
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="2500"} 18
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="5000"} 18
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="10000"} 18
+dotllm_engine_tokens_per_second_prefill_bucket{model="Qwen",le="+Inf"} 18
+dotllm_engine_tokens_per_second_prefill_sum{model="Qwen"} 568.3801206345926
+dotllm_engine_tokens_per_second_prefill_count{model="Qwen"} 18
+# HELP dotllm_engine_tokens_prefill_total Prompt tokens processed during prefill (excludes prefix-cache hits).
+# TYPE dotllm_engine_tokens_prefill_total counter
+dotllm_engine_tokens_prefill_total{model="Qwen"} 13140
+# HELP dotllm_server_ready 1 when a model is loaded and serving.
+# TYPE dotllm_server_ready gauge
+dotllm_server_ready 1
+# HELP dotllm_model_info The loaded model (value is always 1).
+# TYPE dotllm_model_info gauge
+dotllm_model_info{model="bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf"} 1

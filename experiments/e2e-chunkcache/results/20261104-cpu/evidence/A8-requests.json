@@ -1,0 +1,333 @@
+{
+ "r1": {
+  "v": 1,
+  "policy_requested": "shadow",
+  "policy_applied": "exact",
+  "reason": null,
+  "chunks": {
+   "annotated": 12,
+   "prefix": 0,
+   "hit": 8,
+   "miss": 4,
+   "ignored": 0
+  },
+  "tokens": {
+   "prompt": 2676,
+   "prefix_reused": 0,
+   "prefix_reused_approx": 0,
+   "chunk_reused": 0,
+   "chunk_recomputed": 0,
+   "prefilled": 2676,
+   "encode_queued": 0
+  },
+  "plan": {
+   "selector": "chunk_starts",
+   "budget": 0.05,
+   "tokens": {
+    "prompt": 2676,
+    "prefix_reused": 0,
+    "prefix_reused_approx": 0,
+    "chunk_reused": 1500,
+    "chunk_recomputed": 78,
+    "prefilled": 1176,
+    "encode_queued": 0
+   },
+   "predicted_ttft_ms": 26173,
+   "full_prefill_estimate_ms": 59062
+  },
+  "timings_ms": {
+   "assembly": 0,
+   "probe": 0,
+   "recompute": 0,
+   "prefill": 59062,
+   "full_prefill_estimate": 59062
+  },
+  "warnings": [
+   {
+    "code": "chunk_encode_skipped",
+    "count": 4
+   }
+  ],
+  "per_chunk": [
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:1-27@0",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:28-43@1438",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:44-57@2437",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:58-74@3311",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:1-18@0",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:19-23@952",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:24-28@1239",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:36-40@1679",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0",
+    "status": "miss",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585",
+    "status": "miss",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993",
+    "status": "miss",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155",
+    "status": "miss",
+    "why": null
+   }
+  ]
+ },
+ "r2": {
+  "v": 1,
+  "policy_requested": "shadow",
+  "policy_applied": "exact",
+  "reason": null,
+  "chunks": {
+   "annotated": 12,
+   "prefix": 12,
+   "hit": 0,
+   "miss": 0,
+   "ignored": 0
+  },
+  "tokens": {
+   "prompt": 2676,
+   "prefix_reused": 2672,
+   "prefix_reused_approx": 0,
+   "chunk_reused": 0,
+   "chunk_recomputed": 0,
+   "prefilled": 4,
+   "encode_queued": 719
+  },
+  "plan": {
+   "selector": "chunk_starts",
+   "budget": 0.05,
+   "tokens": {
+    "prompt": 2676,
+    "prefix_reused": 2672,
+    "prefix_reused_approx": 0,
+    "chunk_reused": 0,
+    "chunk_recomputed": 0,
+    "prefilled": 4,
+    "encode_queued": 0
+   },
+   "predicted_ttft_ms": 161,
+   "full_prefill_estimate_ms": 161
+  },
+  "timings_ms": {
+   "assembly": 0,
+   "probe": 0,
+   "recompute": 0,
+   "prefill": 161,
+   "full_prefill_estimate": 161
+  },
+  "warnings": [
+   {
+    "code": "chunk_encode_queued",
+    "count": 4
+   }
+  ],
+  "per_chunk": [
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:1-27@0",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:28-43@1438",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:44-57@2437",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:58-74@3311",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:1-18@0",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:19-23@952",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:24-28@1239",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:36-40@1679",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993",
+    "status": "prefix",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155",
+    "status": "prefix",
+    "why": null
+   }
+  ]
+ },
+ "r3": {
+  "v": 1,
+  "policy_requested": "shadow",
+  "policy_applied": "exact",
+  "reason": null,
+  "chunks": {
+   "annotated": 12,
+   "prefix": 0,
+   "hit": 12,
+   "miss": 0,
+   "ignored": 0
+  },
+  "tokens": {
+   "prompt": 2676,
+   "prefix_reused": 0,
+   "prefix_reused_approx": 0,
+   "chunk_reused": 0,
+   "chunk_recomputed": 0,
+   "prefilled": 2676,
+   "encode_queued": 0
+  },
+  "plan": {
+   "selector": "chunk_starts",
+   "budget": 0.05,
+   "tokens": {
+    "prompt": 2676,
+    "prefix_reused": 0,
+    "prefix_reused_approx": 0,
+    "chunk_reused": 2219,
+    "chunk_recomputed": 115,
+    "prefilled": 457,
+    "encode_queued": 0
+   },
+   "predicted_ttft_ms": 10221,
+   "full_prefill_estimate_ms": 57703
+  },
+  "timings_ms": {
+   "assembly": 0,
+   "probe": 0,
+   "recompute": 0,
+   "prefill": 57703,
+   "full_prefill_estimate": 57703
+  },
+  "warnings": [],
+  "per_chunk": [
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:1-27@0",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:28-43@1438",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:44-57@2437",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkNamespace.cs:58-74@3311",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:1-18@0",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:19-23@952",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:24-28@1239",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/IChunkStore.cs:36-40@1679",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:1-22@0",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:23-30@1585",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:31-34@1993",
+    "status": "hit",
+    "why": null
+   },
+   {
+    "id": "src/DotLLM.ChunkReuse/Store/ChunkStoreBusyException.cs:35-48@2155",
+    "status": "hit",
+    "why": null
+   }
+  ]
+ }
+}

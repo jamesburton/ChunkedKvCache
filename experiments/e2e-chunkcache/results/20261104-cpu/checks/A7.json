@@ -1,0 +1,35 @@
+{
+ "id": "A7",
+ "passed": true,
+ "void": false,
+ "expected": {
+  "exit": 0,
+  "chunks": {
+   "hit": 8,
+   "miss": 4,
+   "ignored": 0
+  }
+ },
+ "observed": {
+  "exit": 0,
+  "chunks": {
+   "annotated": 12,
+   "prefix": 0,
+   "hit": 8,
+   "miss": 4,
+   "ignored": 0
+  },
+  "outcome": {
+   "annotated": true,
+   "skip_reason": null,
+   "registered": 12,
+   "sent": 12
+  },
+  "stderr": ""
+ },
+ "evidence_files": [
+  "evidence/A7-smoke-output.json"
+ ],
+ "wall_s": 61.4,
+ "phase": "ro"
+}
