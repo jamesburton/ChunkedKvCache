@@ -1,8 +1,8 @@
 # PR 10 body draft: ChunkReuse: chunk index, store locks, server ledger and store registry
 
-> DRAFT, not pushed, not opened. Branch `pr/chunkreuse-index` (local, worktree `C:\Development\dotLLM\.claude\worktrees\pr10`), one commit
-> (`git log` in the worktree) stacked on `pr/chunkreuse-csharp` (#1646). Do NOT open until #1646 has merged; then merge `dev` into the
-> branch, re-run Windows + Linux Docker on the merged head, and ask James for the explicit push go. Route push/merge through dotllm-93.
+> DRAFT, not pushed, not opened. Branch `pr/chunkreuse-index` (local, worktree `C:\Development\dotLLM\.claude\worktrees\pr10`): commit
+> `52a036bf` plus the merge of `dev` `fa9b72ec` (which contains #1646) = head `81465ddc`. Verified on that head: Windows, Linux Docker, mutants.
+> Needs James's explicit push go; route push/merge through dotllm-93.
 
 ## Title
 
@@ -72,8 +72,8 @@ call back into `ChunkIndex`), so it is one PR.
 
 ### Testing
 
-- Windows: `ChunkReuse` + `Server.ChunkCache` unit tests 573 passed / 0 failed.
-- Linux Docker (non-root, CI filter) on the stacked head: 567 passed / 0 failed / 6 skipped. To be re-run on the merged head (after #1646 and `dev`) before opening.
+- Windows: `ChunkReuse` + `Server.ChunkCache` unit tests 591 passed / 0 failed / 1 skipped (merged head).
+- Linux Docker (non-root, CI filter, `git archive` of the merged head): 586 passed / 0 failed / 6 skipped.
 - Mutants on fresh archive copies: the original lock / ledger / registry / naming scripts: 59 killed, no survivor except one real gap (name parser
   accepted an upper-case model tag; fixed, test added); 12 stale-anchor mutants rewritten for the current code plus 5 new: 16 / 17 killed, the survivor
   (released handles still counted in the per-flow store-lock list) is behaviour-equivalent (every reader filters on `IsHeld`; it only changes how many
