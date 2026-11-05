@@ -28,8 +28,7 @@ is untouched: `exact` (default) and `shadow` produce byte-identical output to th
   `ProfileSystemPrompt.Apply`); new endpoint tests cover both surfaces with and without a profile.
 - **Bounded work (#1632).** The overlap check keeps accepted ranges sorted and looks at the two neighbours (O(log n) per span,
   was a scan of every earlier range). `--chunk-cache-max-chunks` is now 1 to 65536 (was "no upper bound"); docs updated.
-- **Lone surrogate.** Over HTTP an Anthropic text block holding a lone surrogate is decoded to U+FFFD and served (200, span
-  `chunk_span_invalid`); the converter exception only occurs for in-process requests. Pinned by a test, no extra guard.
+- **Lone surrogate.** CORRECTED after review: a JSON `\ud800` escape in an Anthropic text block made the converter throw (HTTP 500). Fixed on the PR branch by dotllm-93's agent: 400 on both paths, escaped-JSON test. (My first draft claimed it was not reproducible; that test was vacuous.)
 - **Metrics.** `ChunkCacheMetrics` counters under `/metrics`; `docs/TELEMETRY.md` row.
 - **Cost model.** `chunk-cost-model.json` (per backend) feeds `full_prefill_estimate`.
 - **Docs.** `docs/CHUNK_CACHE.md`, `docs/SERVER.md`.
