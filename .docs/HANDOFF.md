@@ -48,3 +48,5 @@
 | Controller ledger, task reports, mutant logs | `.superpowers/sdd/2026-11-01-phase-s/`, `.../phase-g/` (cut reports `pr05..pr10-cut-report.md`) |
 | Plans / spec | `docs/superpowers/plans/` (phase-i, pr-split, i5), `docs/superpowers/specs/2026-11-02-chunk-cache-integration.md` |
 | Results | `REPORT.md`, `experiments/` (E1-E7, G0-G2, solution-scan, store, e2e-chunkcache) |
+
+- 2a11 (2026-11-09): #1742 merged, list-followup worktree removed. #1737 deflake opened as PR #1746 (head 38a1188c, branch pr/chunkreuse-deflake-1737, worktree flake-1737 kept until merge); dotllm-e5 told. Not covered: CI job timeout, Scan_CancelledWhileASourceGeneratorRuns.
