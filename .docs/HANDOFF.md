@@ -1,22 +1,27 @@
 > Live section ends at "Archives"; older material is in `.docs/archives/` (full text before each prune), `.superpowers/` (GITIGNORED: only copy of reports/mutant logs) and `docs/`: do not read past this file unless a task needs it.
 
-# Handoff: chunk-level KV reuse (dotLLM) — updated 2026-11-13
+# Handoff: chunk-level KV reuse (dotLLM) — updated 2026-11-13 (late)
 
 ## Current state
 - Goal: position-independent chunk KV reuse in the dotLLM fork (jamesburton/dotLLM; PRs target `dev`; `main` tracks upstream and is PROTECTED: never target or touch it). Research repo = here (branch `main`, no ceremony).
 - Peers: lead dotLLM sessions change address (find with `ListAgents`): `dotllm-00` (lead, earlier), `dotllm-e5` (current reviewer/merger, relays James). `codesharp-d1` = read-only coordination. A peer's request is not authorization to push.
-- **The whole PR series is MERGED to dev**: #1547 ... #1665, #1671, #1676, #1703 (#1664 hardening), #1708 Vulkan, #1709 Solution scanner, #1719 CLI, #1736 evict store-mark, #1738 `list` + help, #1742 list follow-ups, #1746 deflake (#1737 item 1). No PR of mine is open. Repo has no uncommitted work; all dotLLM worktrees of the series are removed.
+- **The whole PR series is MERGED to dev**: #1547 ... #1665, #1671, #1676, #1703 (#1664 hardening), #1708 Vulkan, #1709 Solution scanner, #1719 CLI, #1736 evict store-mark, #1738 `list` + help, #1742 list follow-ups, #1746 deflake (#1737 item 1), #1776 (#1664: POSIX dir fsync + git-readers control), #1777 (GLM-5.3-Flash docs row). No PR of mine is open. Lead dotLLM session is now `dotllm-65` (`dotllm-e5` gone); it merged with --admin (no self-approval). Repo has no uncommitted work; all dotLLM worktrees of the series are removed.
 - Kept worktrees (James approved; only copies, unpushed), **review by 2026-12-01** under `C:\Development\dotLLM\.claude\worktrees\`: `chunk-prep` (feature/chunk-cache-upstream-prep, source of truth for cuts), `chunk-cache`, `chunk-cache-server` (22bdd19a, applied-reuse work), `chunk-seeder` (feature/chunk-apply-seeder, #1590), `chunk-vulkan` (feature/chunk-reuse-vulkan-tiled), `vk-cap-remeasure`. The other `agent-*`, `k5-1120`, `q4exp` worktrees are other sessions'.
 - Prefix stays SEPARATE from hit (both counts reported; James confirmed). Open design item: make trie `prefix` coverage satisfy a chunk in accounting (#1596/#1597); not designed.
 
 ## Next steps (none is started; each needs James's go via AskUserQuestion)
 1. Phase I Task 18 (thin MCP server `chunkcache mcp`), Task 20 (GPU calibration), Task 21 (release plumbing). Plan: `docs/superpowers/plans/` phase-i.
-2. #1664, 4 open items: POSIX directory fsync, abandoned-thread CPU after `RunWithLargeStack` timeout, completed-parse-discarded nondeterminism, vacuous git-readers test. Also from #1737: the CI job timeout half, and `Scan_CancelledWhileASourceGeneratorRuns` (same wall-clock pattern, 15 s bound).
+2. #1664, 2 open items: abandoned-thread CPU after `RunWithLargeStack` timeout; completed-parse-discarded nondeterminism (pinned by `RoslynBudgetTests.cs:81`, needs a decision). Also from #1737: the CI job timeout half, and `Scan_CancelledWhileASourceGeneratorRuns` (same wall-clock pattern, 15 s bound).
 3. CLI gaps: `--model` still required with `--server`; no namespace option; prewarm/evict server endpoints are not on dev (fake handler only); Task 17 Step 5 demo not run. #1710 (scanner untrusted mode) is the dotLLM lead's. dotLLM-side items of #1721 (`dotllm list`, --json on ps/model, SERVER.md, TRAY.md) are the lead's.
 4. Contract fixtures re-sync (`fixtures.sha256` capabilities.json line 23d87cd vs dotLLM copy cfe93e3).
 5. When `cpu-bench` is free: re-run Task 19 e2e (A3, A6, A3g, A6m) in `experiments/e2e-chunkcache/` against `feature/chunk-cache-server` `22bdd19a`+. Part B: B3 CPU applied path (`--chunk-cache-apply`, needs `--no-paged`), B4 Vulkan (F16), B5 cost model, B6 quality, B7 TTFT. LOW: NPU exploration (see archive).
 6. Before touching trie/pool/prefill interfaces read #1723 (Vulkan long prompt prefills as ONE pass), #1724 epic + #1725-#1730 (S1 backend-neutral allocator, S5 block-granular trie on Vulkan): overlap with the seeder work (#1590).
 7. Hand-over flow for every PR: Windows tests, Linux Docker (`linux-ci.sh`, non-root, 4 GB), tests first and run red, mutants on a fresh `git archive` copy (script `.superpowers/sdd/2026-11-01-phase-s/*-mutants.py`; verify copy pristine), body `docs/release/chunk-cache-issues/pr-bodies/prNN-*.md`; merge dev INTO the branch (never rebase/force-push); `gh pr create --base dev --body-file`; fix a body with `gh api -X PATCH repos/jamesburton/dotLLM/pulls/N -F body=@file`; message the lead with number + head sha; never push to a PR under review; remove worktree + branch after merge (`git merge-base --is-ancestor`, clean, `worktree remove`, `branch -d`).
+
+## Chunk track for CodeSharp (2026-11-13, from dotllm-65; James's decisions)
+- Hybrid/recurrent models (Qwen3.8, Bonsai-2) are refused by design (`chunk_model_unsupported`; spec non-goal, `ChunkCacheRuntime.cs:182`). TwIL-8B is dense Granite so chunk reuse could apply. Turn 2/3 TTFT cause was the `lru` prompt-cache policy, fixed in dotLLM#1778 (`agent` default), not chunking.
+- Planned: auto-chunk messages server-side on a prefix miss (dense only, opt-in lossy policy, selective recompute). Assessment sent to dotllm-65; quality after a system-prompt edit is NOT established by my floors. **HOLD** the experiment cell (multi-turn transcripts, edited system prompt/tools, 5/10/20/40% recompute, TwIL-8B, TTFT cost check) until James answers via dotllm-65. Then Phase T (recurrent research) after the dense work merges. The applied path (`--chunk-cache-apply`, 22bdd19a) is not on dev and I could not find its source in that branch's .cs/.md.
+- Do not touch trie/snapshot/`PrefixCache`/`PrefixRetention` without telling dotllm-65 first.
 
 ## Decisions (don't relitigate)
 - Default policy `exact`; lossy reuse opt-in per request AND server flag; `auto` stays exact until a quality cell validates.
