@@ -1,0 +1,4 @@
+[
+  {"id": "docagent-ingest", "repo": "C:\Development\CSharpDocAgentFrameworkMCP", "prompt": "Find the class that performs incremental ingestion and list its public methods with one line on what each does."},
+  {"id": "afclaude-tools", "repo": "C:\Development\AFClaude", "prompt": "Find FoundryTools.cs and explain which tools it exposes and how it validates their arguments."}
+]
