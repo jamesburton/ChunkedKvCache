@@ -28,8 +28,10 @@ every message chunk is stale (not only its start), and assistant turns encode th
 - Pass bar (same as E4c): lower 95 % bound of EM >= 0.95 x full at <= 20 %, >= 30 valid instances; otherwise report the
   budget at which it holds. The policy stays opt-in regardless.
 
+## Decided
+1. Transcript source (James, 2026-11-13): RECORD fresh multi-turn agent runs on the exact models (TwIL-8B, Qwen3-4B) over the
+   corpus tasks, so assistant turns are on-distribution. TwIL-8B weights: HF cache `models--webAI-Official--TwIL-8B`.
+
 ## Open before running
-1. Transcript source: record fresh runs (TwIL / Qwen3 on the corpora) vs synthesize from corpus tasks. Recommend recording
-   with the exact model so assistant turns are on-distribution.
 2. Confirm `ChunkKvLab` has what is needed (E4 arms and selectors exist; a `transcript` context builder is new code).
 3. Do not mix with E4 data; new `jobs.csv` and provenance block as in E4c `run.ps1`.
